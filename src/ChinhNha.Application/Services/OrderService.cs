@@ -118,6 +118,16 @@ public class OrderService : IOrderService
         return _mapper.Map<IEnumerable<OrderDto>>(orders);
     }
 
+    public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync(OrderStatus? status = null)
+    {
+        var orders = await _orderRepository.GetAllOrdersWithDetailsAsync();
+        if (status.HasValue)
+        {
+            orders = orders.Where(o => o.Status == status.Value);
+        }
+        return _mapper.Map<IEnumerable<OrderDto>>(orders);
+    }
+
     public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus newStatus)
     {
         var order = await _orderRepository.GetByIdAsync(orderId);

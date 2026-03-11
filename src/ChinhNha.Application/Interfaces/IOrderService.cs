@@ -6,6 +6,7 @@ public interface IOrderService
 {
     Task<OrderDto?> GetOrderByIdAsync(int id);
     Task<IEnumerable<OrderDto>> GetUserOrdersAsync(string userId);
+    Task<IEnumerable<OrderDto>> GetAllOrdersAsync(ChinhNha.Domain.Enums.OrderStatus? status = null);
     
     // Core Checkout logic
     Task<OrderDto> CreateOrderFromCartAsync(int cartId, string userId, string shippingName, string shippingPhone, string shippingAddress, string? shippingNote);

@@ -1,0 +1,91 @@
+@model IEnumerable<ChinhNha.Application.DTOs.Products.ProductDto>
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Quản lý Sản phẩm</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Create" class="btn btn-sm btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Thêm mới
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th scope="col" width="60">ID</th>
+                <th scope="col">Hình ảnh</th>
+                <th scope="col">Tên sản phẩm</th>
+                <th scope="col">Mã SKU</th>
+                <th scope="col">Danh mục</th>
+                <th scope="col">Giá bán</th>
+                <th scope="col">Tồn kho</th>
+                <th scope="col" class="text-center">Active</th>
+                <th scope="col" class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                var img = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? "/images/no-image.jpg";
+                <tr>
+                    <td class="fw-bold">@p.Id</td>
+                    <td>
+                        <img src="@img" alt="@p.Name" class="rounded" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #ddd;" />
+                    </td>
+                    <td>
+                        <div class="fw-bold">@p.Name</div>
+                        <small class="text-muted">@p.Slug</small>
+                    </td>
+                    <td>@(p.SKU ?? "-")</td>
+                    <td>@p.CategoryName</td>
+                    <td>@p.BasePrice.ToString("N0")₫</td>
+                    <td>
+                        @if (p.StockQuantity <= p.MinStockLevel)
+                        {
+                            <span class="badge bg-danger">@p.StockQuantity / @p.MinStockLevel</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">@p.StockQuantity</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @if (p.IsActive)
+                        {
+                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc xoá sản phẩm này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xoá">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

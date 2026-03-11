@@ -1,0 +1,163 @@
+@using ChinhNha.Domain.Enums
+@model ChinhNha.Application.DTOs.Orders.OrderDto
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 d-inline-block me-3">Đơn hàng <span class="text-primary">#@Model.Id</span></h1>
+        
+        @switch (Model.Status)
+        {
+            case OrderStatus.Pending: <span class="badge bg-warning text-dark fs-6 align-text-top">Chờ xử lý</span>; break;
+            case OrderStatus.Processing: <span class="badge bg-primary fs-6 align-text-top">Đang xử lý</span>; break;
+            case OrderStatus.Shipping: <span class="badge bg-info text-dark fs-6 align-text-top">Đang giao</span>; break;
+            case OrderStatus.Delivered: <span class="badge bg-success fs-6 align-text-top">Đã giao hoàn tất</span>; break;
+            case OrderStatus.Cancelled: <span class="badge bg-danger fs-6 align-text-top">Đã huỷ</span>; break;
+        }
+    </div>
+    
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row">
+    <!-- Cột trái: Thông tin đơn -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold py-3">Danh sách sản phẩm</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@item.ProductName</div>
+                                    @if(item.VariantId.HasValue){ <small class="text-muted">Biến thể: @item.VariantId</small> }
+                                </td>
+                                <td class="text-end">@item.UnitPrice.ToString("N0")₫</td>
+                                <td class="text-center">@item.Quantity</td>
+                                <td class="text-end fw-bold">@item.TotalPrice.ToString("N0")₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Tạm tính:</td>
+                            <td class="text-end">@Model.Items.Sum(i => i.TotalPrice).ToString("N0")₫</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Phí vận chuyển:</td>
+                            <td class="text-end">@((Model.TotalAmount - Model.Items.Sum(i => i.TotalPrice)).ToString("N0"))₫</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold fs-5 text-danger">TỔNG THEO ĐƠN:</td>
+                            <td class="text-end fw-bold fs-5 text-danger">@Model.TotalAmount.ToString("N0")₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ShippingNote))
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white fw-bold py-3"><i class="bi bi-chat-text me-2"></i> Ghi chú của khách hàng</div>
+                <div class="card-body">
+                    <p class="mb-0">@Model.ShippingNote</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Cột phải: Khách hàng & Cập nhật trạng thái -->
+    <div class="col-lg-4">
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold py-3"><i class="bi bi-person-lines-fill me-2"></i> Thông tin giao hàng</div>
+            <div class="card-body">
+                <p><strong>Khách hàng:</strong> @Model.ShippingName</p>
+                <p><strong>Điện thoại:</strong> @Model.ShippingPhone</p>
+                <p><strong>Địa chỉ:</strong> @Model.ShippingAddress</p>
+                
+                <hr />
+                
+                <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                <p>
+                    <strong>Thanh toán:</strong> 
+                    @if (Model.PaymentStatus == PaymentStatus.Paid)
+                    {
+                        <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa thanh toán (@Model.PaymentMethod)</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white fw-bold py-3"><i class="bi bi-arrow-repeat me-2"></i> Cập nhật trạng thái</div>
+            <div class="card-body">
+                <form asp-action="UpdateStatus" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Chuyển trạng thái đơn hàng sang:</label>
+                        <select name="newStatus" class="form-select form-select-lg">
+                            @foreach (var val in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+                            {
+                                if (Model.Status == val)
+                                {
+                                    <option value="@val" selected disabled>@val.ToString() (Hiện tại)</option>
+                                }
+                                else
+                                {
+                                    <option value="@val">Chuyển sang: @val.ToString()</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" @(Model.Status == OrderStatus.Delivered || Model.Status == OrderStatus.Cancelled ? "disabled" : "")>
+                        Xác nhận cập nhật
+                    </button>
+                    
+                    @if (Model.Status == OrderStatus.Delivered || Model.Status == OrderStatus.Cancelled)
+                    {
+                        <div class="form-text mt-2 text-danger">Đơn hàng đã chốt (Giao thành công / Huỷ) không thể đổi trạng thái.</div>
+                    }
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>

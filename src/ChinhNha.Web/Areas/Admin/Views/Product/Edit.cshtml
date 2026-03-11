@@ -1,0 +1,152 @@
+@model ChinhNha.Web.Areas.Admin.Models.ProductFormViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa Sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Chỉnh sửa Sản phẩm <span class="text-muted fs-5">#@Model.Id</span></h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-bold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Tên phân bón..." />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SKU" class="form-label fw-bold"></label>
+                            <input asp-for="SKU" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CategoryId" class="form-label fw-bold"></label>
+                            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ShortDescription" class="form-label fw-bold"></label>
+                        <textarea asp-for="ShortDescription" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="UsageInstructions" class="form-label fw-bold"></label>
+                        <textarea asp-for="UsageInstructions" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label fw-bold"></label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <div class="mt-2">
+                                <img src="@Model.ImageUrl" alt="Current Image" class="img-thumbnail" style="max-height: 100px;" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-light border-0 mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2">Giá & Tồn kho</h5>
+                            
+                            <div class="mb-3">
+                                <label asp-for="BasePrice" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="BasePrice" class="form-control" type="number" step="1" />
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                                <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="SalePrice" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="SalePrice" class="form-control" type="number" step="1" />
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label asp-for="StockQuantity" class="form-label"></label>
+                                    <input asp-for="StockQuantity" class="form-control" type="number" />
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label asp-for="MinStockLevel" class="form-label"></label>
+                                    <input asp-for="MinStockLevel" class="form-control" type="number" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label asp-for="Unit" class="form-label"></label>
+                                    <input asp-for="Unit" class="form-control" />
+                                    <span asp-validation-for="Unit" class="text-danger small"></span>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label asp-for="Weight" class="form-label"></label>
+                                    <input asp-for="Weight" class="form-control" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2">Tuỳ chọn</h5>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                            </div>
+
+                            <div class="form-check form-switch mb-2">
+                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsFeatured" class="form-check-label"></label>
+                            </div>
+                            
+                            <div class="mb-3 mt-3">
+                                <label asp-for="SupplierId" class="form-label"></label>
+                                <select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select">
+                                    <option value="">-- Trống --</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 mt-2">
+                                <i class="bi bi-save me-1"></i> Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -31,6 +31,16 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Product>> GetProductsByCategorySlugAsync(string categorySlug)
+    {
+        return await _dbContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Supplier)
+            .Include(p => p.Images)
+            .Where(p => p.Category != null && p.Category.Slug == categorySlug && p.IsActive)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Product>> GetProductsWithDetailsAsync()
     {
         return await _dbContext.Products

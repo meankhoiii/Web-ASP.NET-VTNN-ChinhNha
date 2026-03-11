@@ -9,4 +9,8 @@ public interface IProductService
     Task<ProductDto?> GetProductBySlugAsync(string slug);
     Task<IEnumerable<ProductDto>> GetFeaturedProductsAsync();
     Task<IEnumerable<ProductDto>> GetProductsByCategoryAsync(int categoryId);
+    Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug);
+    Task<int> CreateProductAsync(ChinhNha.Application.DTOs.Requests.CreateProductRequest request);
+    Task<bool> UpdateProductAsync(ChinhNha.Application.DTOs.Requests.UpdateProductRequest request);
+    Task<bool> DeleteProductAsync(int id);
 }

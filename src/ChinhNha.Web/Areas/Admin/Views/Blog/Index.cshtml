@@ -1,0 +1,81 @@
+@model IEnumerable<ChinhNha.Application.DTOs.Blogs.BlogPostDto>
+@{
+    ViewData["Title"] = "Quản lý Bài viết";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Quản lý Bài viết</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Create" class="btn btn-sm btn-success">
+            <i class="bi bi-pencil-square me-1"></i> Viết bài mới
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th scope="col" width="60">ID</th>
+                <th scope="col">Hình ảnh</th>
+                <th scope="col">Tiêu đề / Trích dẫn</th>
+                <th scope="col">Danh mục</th>
+                <th scope="col" class="text-center">Trạng thái</th>
+                <th scope="col">Ngày tạo</th>
+                <th scope="col" class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                var img = p.FeaturedImageUrl ?? "/images/no-image.jpg";
+                <tr>
+                    <td class="fw-bold">@p.Id</td>
+                    <td>
+                        <img src="@img" alt="@p.Title" class="rounded" style="width: 60px; height: 40px; object-fit: cover; border: 1px solid #ddd;" />
+                    </td>
+                    <td>
+                        <div class="fw-bold text-truncate" style="max-width: 250px;" title="@p.Title">@p.Title</div>
+                        <small class="text-muted text-truncate d-block" style="max-width: 250px;">@(p.Summary ?? "...")</small>
+                    </td>
+                    <td><span class="badge bg-secondary">@p.CategoryName</span></td>
+                    <td class="text-center">
+                        @if (p.IsPublished)
+                        {
+                            <span class="badge bg-success">Đã xuất bản</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Bản nháp</span>
+                        }
+                    </td>
+                    <td class="text-muted"><small>@p.CreatedAt.ToString("dd/MM/yyyy")</small></td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <a href="/tin-tuc/@p.Slug" target="_blank" class="btn btn-sm btn-outline-info" title="Xem thử">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary" title="Sửa">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline" onsubmit="return confirm('Xoá bài viết này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xoá">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

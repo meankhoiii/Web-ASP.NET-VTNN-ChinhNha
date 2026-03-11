@@ -20,4 +20,6 @@ public class BlogPostDto
     public int ViewCount { get; set; }
     
     public DateTime CreatedAt { get; set; }
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
 }

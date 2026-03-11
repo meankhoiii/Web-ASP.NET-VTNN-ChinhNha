@@ -15,7 +15,7 @@
     
     @if (TempData["PaymentMessage"] != null)
     {
-        var alertClass = TempData["PaymentMessage"].ToString().Contains("thành công") ? "alert-success" : "alert-warning";
+        var alertClass = TempData["PaymentMessage"]?.ToString()?.Contains("thành công") == true ? "alert-success" : "alert-warning";
         <div class="alert @alertClass mx-auto mb-4" style="max-width: 600px;">
             @TempData["PaymentMessage"]
         </div>

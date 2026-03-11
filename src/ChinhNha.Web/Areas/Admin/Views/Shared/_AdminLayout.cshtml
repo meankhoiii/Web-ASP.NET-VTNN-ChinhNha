@@ -47,18 +47,28 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Order" ? "active" : "")" href="/Admin/Order">
                                 <i class="bi bi-cart3"></i> Đơn hàng
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" href="/Admin/Product">
                                 <i class="bi bi-box-seam"></i> Sản phẩm
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "InventoryManagement" ? "active" : "")" href="/Admin/InventoryManagement">
+                                <i class="bi bi-box-arrow-in-down"></i> Nhập/Xuất kho
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Inventory" ? "active" : "")" href="/Admin/Inventory">
-                                <i class="bi bi-graph-up-arrow text-info"></i> Kho & Dự báo (AI)
+                                <i class="bi bi-graph-up-arrow text-info"></i> Dự báo AI
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Blog" ? "active" : "")" href="/Admin/Blog">
+                                <i class="bi bi-journal-text text-warning"></i> Tin tức & Bài viết
                             </a>
                         </li>
                     </ul>

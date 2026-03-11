@@ -53,7 +53,6 @@ public class ProductController : Controller
         return View(model);
     }
 
-    [Route("Product/Details/{slug}")]
     public async Task<IActionResult> Details(string slug)
     {
         var product = await _productService.GetProductBySlugAsync(slug);
@@ -71,5 +70,34 @@ public class ProductController : Controller
         };
 
         return View(model);
+    }
+
+    public async Task<IActionResult> ByCategory(string slug, string? searchQuery, int pageNumber = 1)
+    {
+        var products = await _productService.GetProductsByCategorySlugAsync(slug);
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            products = products.Where(p => p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) 
+                                        || (p.Description != null && p.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        var productsList = products.ToList();
+        int totalCount = productsList.Count;
+        
+        // Basic in-memory pagination
+        var pagedItems = productsList.Skip((pageNumber - 1) * PageSize).Take(PageSize).ToList();
+
+        var model = new ProductListViewModel
+        {
+            Products = pagedItems,
+            TotalCount = totalCount,
+            CurrentPage = pageNumber,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize),
+            SearchQuery = searchQuery,
+            CategorySlug = slug
+        };
+
+        return View("Index", model); // Use same Index view
     }
 }

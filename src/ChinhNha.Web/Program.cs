@@ -51,12 +51,14 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 
 // ---- Application Services ----
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay.VNPayService>();
 
 // ---- AI / ML.NET Service ----
@@ -100,6 +102,22 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+// SEO Routes
+app.MapControllerRoute(
+    name: "productDetails",
+    pattern: "san-pham/{slug}",
+    defaults: new { controller = "Product", action = "Details" });
+
+app.MapControllerRoute(
+    name: "productCategory",
+    pattern: "danh-muc/{slug}",
+    defaults: new { controller = "Product", action = "ByCategory" });
+
+app.MapControllerRoute(
+    name: "blogDetails",
+    pattern: "tin-tuc/{slug}",
+    defaults: new { controller = "Blog", action = "Details" });
 
 // Default Route
 app.MapControllerRoute(
