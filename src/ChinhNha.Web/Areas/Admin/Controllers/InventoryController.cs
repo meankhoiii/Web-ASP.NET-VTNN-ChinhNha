@@ -1,10 +1,12 @@
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Areas.Admin.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[Authorize(Roles = "Admin")]
 public class InventoryController : Controller
 {
     private readonly IProductService _productService;

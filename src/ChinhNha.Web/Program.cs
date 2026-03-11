@@ -34,6 +34,17 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+// ---- Identity Cookie Options ----
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath        = "/Account/Login";
+    options.LogoutPath       = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/Login";
+    options.Cookie.HttpOnly  = true;
+    options.ExpireTimeSpan   = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+});
+
 // ---- Repositories ----
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();

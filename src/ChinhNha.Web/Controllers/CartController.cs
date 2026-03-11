@@ -1,6 +1,7 @@
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
 
@@ -26,7 +27,7 @@ public class CartController : Controller
 
     public async Task<IActionResult> Index()
     {
-        string? userId = null; // TODO: Lấy UserID thực tế khi tích hợp Auth
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var sessionId = GetOrCreateSessionId();
         
         var cart = await _cartService.GetCartAsync(userId, sessionId);
@@ -44,7 +45,7 @@ public class CartController : Controller
     {
         try
         {
-            string? userId = null; // TODO: Auth
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var sessionId = GetOrCreateSessionId();
 
             await _cartService.AddItemToCartAsync(userId, sessionId, productId, quantity);

@@ -1,10 +1,13 @@
 using ChinhNha.Application.DTOs.Orders;
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
 
+[Authorize]
 public class CheckoutController : Controller
 {
     private readonly ICartService _cartService;
@@ -31,7 +34,7 @@ public class CheckoutController : Controller
 
     public async Task<IActionResult> Index()
     {
-        string? userId = null; // TODO: Auth
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Lấy UserID thực tể từ Claims
         var sessionId = GetOrCreateSessionId();
         
         var cart = await _cartService.GetCartAsync(userId, sessionId);
@@ -53,7 +56,7 @@ public class CheckoutController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(CheckoutViewModel model)
     {
-        string? userId = null; // TODO: Auth
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var sessionId = GetOrCreateSessionId();
         
         var cart = await _cartService.GetCartAsync(userId, sessionId);
