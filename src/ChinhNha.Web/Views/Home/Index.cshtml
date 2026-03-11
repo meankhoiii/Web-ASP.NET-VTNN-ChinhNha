@@ -1,4 +1,4 @@
-﻿@using ChinhNha.Web.Models
+@using ChinhNha.Web.Models
 @model HomeViewModel
 
 @{
@@ -15,30 +15,41 @@
     }
     
     .hero-section {
-        background: linear-gradient(135deg, var(--bg-light) 0%, #ffffff 100%);
+        background: linear-gradient(135deg, rgba(241, 248, 233, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%),
+                    url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIi8+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjZTBlMGUwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgo8L3N2Zz4=');
         border-radius: 20px;
-        padding: 4rem 2rem;
-        margin-bottom: 3rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        padding: 5rem 2rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 10px 40px rgba(46, 125, 50, 0.08);
         position: relative;
         overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url('https://www.transparenttextures.com/patterns/cubes.png');
+        opacity: 0.3;
+        z-index: 1;
+        pointer-events: none;
     }
 
     .hero-section::after {
         content: '';
         position: absolute;
-        top: -50%;
+        bottom: -30%;
         right: -10%;
         width: 60%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(129,199,132,0.15) 0%, transparent 70%);
-        transform: rotate(15deg);
-        z-index: 0;
+        aspect-ratio: 1;
+        background: radial-gradient(circle, rgba(129,199,132,0.2) 0%, transparent 60%);
+        border-radius: 50%;
+        z-index: 1;
     }
 
     .hero-content {
         position: relative;
-        z-index: 1;
+        z-index: 2;
     }
 
     .hero-title {
@@ -168,17 +179,34 @@
             <span class="badge bg-success mb-3 px-3 py-2 rounded-pill">Chất lượng hàng đầu</span>
             <h1 class="hero-title display-4 mb-3">Vật Tư Nông Nghiệp Chính Nha</h1>
             <p class="hero-subtitle">Đồng hành cùng nhà nông vươn tới những vụ mùa bội thu. Cung cấp phân bón, thuốc bảo vệ thực vật chính hãng, chất lượng cao nhất.</p>
-            <div class="d-flex gap-3">
-                <a href="#products" class="btn btn-agri btn-lg">Mua sắm ngay</a>
-                <a href="#" class="btn btn-outline-success btn-lg" style="border-radius: 10px;">Tin tức nông nghiệp</a>
+            <div class="d-flex flex-column mb-3">
+                <div class="d-flex gap-3">
+                    <a href="#products" class="btn btn-agri btn-lg">Mua sắm ngay</a>
+                    <a href="/Blog" class="btn btn-outline-success btn-lg" style="border-radius: 10px;">Tin tức nông nghiệp</a>
+                </div>
+                <div class="mt-3 text-muted small fw-medium">
+                    <i class="bi bi-truck text-success me-1"></i> Giao hàng toàn quốc &nbsp;&middot;&nbsp; 
+                    <i class="bi bi-shield-check text-success me-1"></i> 100% Chính hãng
+                </div>
             </div>
         </div>
         <div class="col-lg-6 d-none d-lg-block text-center">
             <!-- Glassmorphism illustration placeholder -->
             <div style="width: 400px; height: 400px; background: rgba(255,255,255,0.4); backdrop-filter: blur(10px); border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative;">
-                <div style="font-size: 8rem;">🌱</div>
-                <div style="position: absolute; bottom: 10%; right: 10%; background: white; padding: 15px 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); font-weight: 600; color: var(--primary-agri);">
-                    +500 Sản phẩm
+                <div style="font-size: 8rem; animation: float 6s ease-in-out infinite;">🌱</div>
+                <div class="stat-badge" style="position: absolute; top: 10%; left: -5%; background: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); font-weight: 600; color: #333; display: flex; align-items: center; gap: 10px; z-index: 3;">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width:36px; height:36px;"><i class="bi bi-award"></i></div>
+                    <div>
+                        <div class="fs-5 fw-bold text-success lh-1">10+ Năm</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">Kinh nghiệm</small>
+                    </div>
+                </div>
+                <div class="stat-badge" style="position: absolute; bottom: 15%; right: -5%; background: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); font-weight: 600; color: #333; display: flex; align-items: center; gap: 10px; z-index: 3;">
+                    <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:36px; height:36px;"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="fs-5 fw-bold text-success lh-1">+500</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">Sản phẩm</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -210,9 +238,9 @@
                             }
                             else
                             {
-                                <!-- Fallback gradient image -->
-                                <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); display:flex; align-items:center; justify-content:center; color: #9ca3af; font-size: 3rem;">
-                                    🌾
+                                <!-- Fallback earthy gradient image -->
+                                <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #d7ccc8, #a1887f); display:flex; align-items:center; justify-content:center; color: #ffffff; font-size: 3rem;">
+                                    <i class="bi bi-flower1"></i>
                                 </div>
                             }
                         </div>
@@ -220,6 +248,16 @@
                         <div class="product-info">
                             <span class="text-muted small mb-2 d-block">Mã: @product.SKU</span>
                             <a href="/san-pham/@product.Slug" class="product-title text-truncate" title="@product.Name">@product.Name</a>
+                            
+                            <!-- Rating mockup -->
+                            <div class="text-warning small mb-2 d-flex align-items-center gap-1">
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-fill"></i>
+                                <i class="bi bi-star-half"></i>
+                                <span class="text-muted ms-1" style="font-size: 0.8rem;">(4.8)</span>
+                            </div>
                             
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <span class="product-price">@product.BasePrice.ToString("N0")₫</span>
