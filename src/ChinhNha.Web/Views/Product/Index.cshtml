@@ -24,6 +24,16 @@
         position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;
     }
     .product-card:hover .product-img-wrapper img { transform: scale(1.05); }
+    .quick-view-btn {
+        position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.95); color: var(--primary-agri); border: none;
+        padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        text-decoration: none; z-index: 10;
+        white-space: nowrap;
+    }
+    .product-card:hover .quick-view-btn { bottom: 15px; opacity: 1; }
+    .quick-view-btn:hover { background: var(--primary-agri); color: white; }
     .product-info { padding: 1.5rem; }
     .product-title {
         font-weight: 600; font-size: 1.1rem; color: #333; margin-bottom: 0.5rem; text-decoration: none; display: block;
@@ -53,21 +63,65 @@
     </div>
 
     <div class="row">
-        <!-- Filters (Placeholder for Category List) -->
+        <!-- Filters -->
         <div class="col-lg-3 d-none d-lg-block">
-            <div class="filter-card">
+            <div class="filter-card mb-4">
+                <h5 class="fw-bold mb-3">Lọc theo giá</h5>
+                <input type="range" class="form-range" min="0" max="5000000" id="priceRange" oninput="document.getElementById('priceValue').innerText = parseInt(this.value).toLocaleString() + '₫'">
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-muted">0₫</small>
+                    <small class="fw-bold text-success" id="priceValue">2,500,000₫</small>
+                    <small class="text-muted">5M₫</small>
+                </div>
+            </div>
+            
+            <div class="filter-card mb-4">
+                <h5 class="fw-bold mb-3">Loại cây trồng</h5>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="" id="plantRice" checked>
+                    <label class="form-check-label" for="plantRice">Lúa</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="" id="plantVege">
+                    <label class="form-check-label" for="plantVege">Rau màu</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="" id="plantCoffee">
+                    <label class="form-check-label" for="plantCoffee">Cà phê</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" value="" id="plantFruit">
+                    <label class="form-check-label" for="plantFruit">Cây ăn trái</label>
+                </div>
+            </div>
+
+            <div class="filter-card mb-4">
                 <h5 class="fw-bold mb-3">Danh mục</h5>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="/Product" class="text-decoration-none text-dark">Tất cả sản phẩm</a></li>
+                    <li class="mb-2"><a href="/Product" class="text-decoration-none fw-medium text-success">Tất cả sản phẩm</a></li>
                     <!-- We can loop categories here later -->
                     <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Phân vô cơ</a></li>
                     <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Phân hữu cơ</a></li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Thuốc trừ sâu</a></li>
                 </ul>
             </div>
         </div>
 
         <!-- Product Grid -->
         <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="text-muted">Hiển thị <span class="fw-bold text-dark">@(Model.Products?.Count() ?? 0)</span> sản phẩm</div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="text-nowrap mb-0 text-muted">Sắp xếp:</label>
+                    <select class="form-select form-select-sm border-0 bg-light" style="border-radius: 8px; width: 140px; cursor: pointer;">
+                        <option value="newest">Mới nhất</option>
+                        <option value="price_asc">Giá tăng dần</option>
+                        <option value="price_desc">Giá giảm dần</option>
+                        <option value="bestseller">Bán chạy nhất</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
                 @if (Model.Products != null && Model.Products.Any())
                 {
@@ -82,15 +136,25 @@
                                     }
                                     else
                                     {
-                                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); display:flex; align-items:center; justify-content:center; color: #9ca3af; font-size: 3rem;">
-                                            🌾
+                                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #d7ccc8, #a1887f); display:flex; align-items:center; justify-content:center; color: #ffffff; font-size: 3rem;">
+                                            <i class="bi bi-flower1"></i>
                                         </div>
                                     }
+                                    <a href="/san-pham/@product.Slug" class="quick-view-btn"><i class="bi bi-eye me-1"></i> Xem nhanh</a>
                                 </div>
                                 
                                 <div class="product-info">
                                     <span class="text-muted small mb-2 d-block">Mã: @product.SKU</span>
                                     <a href="/san-pham/@product.Slug" class="product-title text-truncate" title="@product.Name">@product.Name</a>
+                                    
+                                    <div class="text-warning small mb-2 d-flex align-items-center gap-1">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                        <span class="text-muted ms-1" style="font-size: 0.8rem;">(4.8)</span>
+                                    </div>
                                     
                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                         <span class="product-price">@product.BasePrice.ToString("N0")₫</span>
