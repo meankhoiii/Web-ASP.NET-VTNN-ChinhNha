@@ -13,6 +13,23 @@
     .btn-checkout { background-color: #2E7D32; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; transition: all 0.3s; }
     .btn-checkout:hover { background-color: #1B5E20; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2); }
     .order-summary { background-color: #f8f9fa; border-radius: 15px; padding: 2rem; position: sticky; top: 100px; }
+    
+    @@keyframes bounce-subtle {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+    .btn-shopping {
+        background: #2E7D32; color: white; border-radius: 30px; 
+        font-weight: 600; padding: 12px 30px; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        animation: bounce-subtle 2.5s infinite ease-in-out;
+        transition: all 0.3s ease;
+    }
+    .btn-shopping:hover { background: #1B5E20; color: white; transform: scale(1.05); animation: none; }
+    
+    .suggested-card {
+        border: none; border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+    }
+    .suggested-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
 </style>
 
 <div class="container mb-5">
@@ -88,11 +105,45 @@
     }
     else
     {
-        <div class="text-center py-5 my-5">
-            <i class="bi bi-cart-x text-muted mb-4" style="font-size: 5rem;"></i>
-            <h3 class="fw-bold mb-3">Giỏ hàng trống</h3>
-            <p class="text-muted mb-4">Bạn chưa chọn sản phẩm nào để thêm vào giỏ hàng.</p>
-            <a href="/Product" class="btn btn-checkout d-inline-block" style="width: auto;">Mua sắm ngay</a>
+        <div class="text-center py-5 my-4">
+            <div class="mb-4 text-center">
+                <!-- SVG Illustration of an empty bag -->
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" class="mx-auto" stroke="#cfd8dc" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    <!-- Small leaves to indicate farming nature -->
+                    <path d="M12 10C10.5 8 9 10 9 10s1.5 2 3 0z" fill="#a5d6a7" stroke="none"></path>
+                    <path d="M15 11.5C14 10 13 11.5 13 11.5s1 1.5 2 0z" fill="#81c784" stroke="none"></path>
+                </svg>
+            </div>
+            <h3 class="fw-bold mb-3 text-dark">Giỏ hàng của bạn đang trống</h3>
+            <p class="text-muted mb-4 pb-2">Hãy lấp đầy giỏ hàng với các loại phân bón và vật tư nông nghiệp chất lượng!</p>
+            <a href="/Product" class="btn btn-shopping text-decoration-none d-inline-block">Tiếp tục mua sắm <i class="bi bi-arrow-right ms-2"></i></a>
+        </div>
+
+        <hr class="my-5 text-muted opacity-25" />
+
+        <div class="suggested-products mb-5">
+            <h4 class="fw-bold mb-4 text-center">Có thể bạn sẽ thích</h4>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+                @for (int i = 1; i <= 4; i++)
+                {
+                    <div class="col">
+                        <div class="card suggested-card h-100 p-2 border-0">
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #d7ccc8, #a1887f); border-radius: 8px;" class="d-flex align-items-center justify-content-center mb-3">
+                                <i class="bi bi-flower1 text-white fs-1"></i>
+                            </div>
+                            <div class="card-body p-2 d-flex flex-column">
+                                <div class="text-warning small mb-1" style="font-size: 0.75rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
+                                <a href="/Product" class="fw-bold text-dark text-truncate d-block mb-1 text-decoration-none">Phân bón Sinh học số @i</a>
+                                <div class="text-success fw-bold flex-grow-1">@(450000 + i * 50000)₫</div>
+                                <a href="/Product" class="btn btn-sm btn-outline-success border-2 mt-3 rounded-pill w-100 fw-bold">Thêm ngay</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>
