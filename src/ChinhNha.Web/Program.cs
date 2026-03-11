@@ -1,7 +1,11 @@
+using ChinhNha.Application.Interfaces;
+using ChinhNha.Application.Mappings;
+using ChinhNha.Application.Services;
 using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
+using ChinhNha.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +34,36 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// Setup Dependency Injection for Repositories & UnitOfWork
+// ---- Repositories ----
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+
+// ---- Application Services ----
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+// ---- AI / ML.NET Service ----
+builder.Services.AddSingleton<IInventoryForecastService, DemandForecastService>();
+
+// ---- AutoMapper ----
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+// Session (for guest cart)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromDays(1);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddScoped<UnitOfWork>();
+
 
 var app = builder.Build();
 
@@ -47,6 +78,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseSession();
 app.UseRouting();
 
 app.UseAuthentication();
