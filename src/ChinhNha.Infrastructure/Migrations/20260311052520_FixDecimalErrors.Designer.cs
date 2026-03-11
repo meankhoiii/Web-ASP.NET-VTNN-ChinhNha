@@ -4,6 +4,7 @@ using ChinhNha.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChinhNha.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260311052520_FixDecimalErrors")]
+    partial class FixDecimalErrors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -898,16 +901,13 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ActualDeliveryDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("ExpectedDeliveryDate")
+                    b.Property<DateTime?>("ExpectedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsAISuggested")
@@ -917,13 +917,13 @@ namespace ChinhNha.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("POCode")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("ReceivedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
