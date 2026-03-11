@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "s2jgt+Mr0UjtswcPjpzUBuLWO+24wk+meZW3csaaVAk=",
+  "Hash": "MyZoPX+HUBereqGbnggMettKxV+0gZUyjJVe7nJV/zo=",
   "Source": "ChinhNha.Web",
   "BasePath": "_content/ChinhNha.Web",
   "Mode": "Default",
@@ -99,6 +99,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Web\\wwwroot\\js\\cart.js",
+      "SourceId": "ChinhNha.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Web\\wwwroot\\",
+      "BasePath": "_content/ChinhNha.Web",
+      "RelativePath": "js/cart#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "evfr79xgcb",
+      "Integrity": "5jvsqcGAPHXNDIsUnGlv/GF89MughfKJZKqj9GbaReU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\cart.js"
     },
     {
       "Identity": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Web\\wwwroot\\js\\site.js",
@@ -1645,6 +1666,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-Jtxf9L+5ITKRc1gIRl4VbUpGkRNfOBXjYTdhJD4facM="
+        }
+      ]
+    },
+    {
+      "Route": "js/cart.evfr79xgcb.js",
+      "AssetFile": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Web\\wwwroot\\js\\cart.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1044"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"5jvsqcGAPHXNDIsUnGlv/GF89MughfKJZKqj9GbaReU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 11 Mar 2026 08:18:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "evfr79xgcb"
+        },
+        {
+          "Name": "label",
+          "Value": "js/cart.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-5jvsqcGAPHXNDIsUnGlv/GF89MughfKJZKqj9GbaReU="
+        }
+      ]
+    },
+    {
+      "Route": "js/cart.js",
+      "AssetFile": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Web\\wwwroot\\js\\cart.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1044"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"5jvsqcGAPHXNDIsUnGlv/GF89MughfKJZKqj9GbaReU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 11 Mar 2026 08:18:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-5jvsqcGAPHXNDIsUnGlv/GF89MughfKJZKqj9GbaReU="
         }
       ]
     },

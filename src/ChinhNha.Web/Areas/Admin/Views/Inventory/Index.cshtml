@@ -1,0 +1,226 @@
+@model ChinhNha.Web.Areas.Admin.Models.InventoryForecastViewModel
+@{
+    ViewData["Title"] = "Dự báo Kế hoạch Nhập kho (AI - ML.NET)";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dự báo Kế hoạch Nhập kho (AI - ML.NET)</h1>
+</div>
+
+<div class="card mb-4 shadow-sm border-0">
+    <div class="card-body bg-light p-4 rounded">
+        <form method="get" action="/Admin/Inventory" class="row align-items-end">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <label for="productId" class="form-label fw-bold">Chọn sản phẩm cần dự báo:</label>
+                <select name="productId" id="productId" class="form-select form-select-lg">
+                    <option value="">-- Chọn sản phẩm --</option>
+                    @foreach (var prod in Model.Products)
+                    {
+                        if (Model.SelectedProductId == prod.Id)
+                        {
+                            <option value="@prod.Id" selected>@prod.Name (Tồn: @prod.StockQuantity)</option>
+                        }
+                        else
+                        {
+                            <option value="@prod.Id">@prod.Name (Tồn: @prod.StockQuantity)</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-magic me-2"></i> Dự báo ngay
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Forecasts != null && Model.Forecasts.Any())
+{
+    var futureForecasts = Model.Forecasts.Where(f => !f.IsHistorical).ToList();
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white pt-3 pb-2 border-bottom">
+                    <h5 class="fw-bold text-success mb-0"><i class="bi bi-graph-up text-success me-2"></i> Biểu đồ Dự báo Cầu (4 tháng tới)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="forecastChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="fw-bold mb-3">Chi tiết Gợi ý Nhập Kho</h5>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered bg-white align-middle">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Thời gian (Tháng)</th>
+                            <th class="text-end">Nhu cầu thực tế</th>
+                            <th class="text-end">Dự báo AI (SSA)</th>
+                            <th class="text-end text-muted">Khoảng tin cậy</th>
+                            <th class="text-center">Hành động Gợi ý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.Forecasts)
+                        {
+                            var rowClass = f.IsHistorical ? "text-muted bg-light" : "fw-bold";
+                            <tr class="@rowClass">
+                                <td>
+                                    @f.TargetDate.ToString("MM/yyyy")
+                                    @if(f.IsHistorical)
+                                    {
+                                        <span class="badge bg-secondary ms-2 small">Lịch sử</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger ms-2 small">Dự báo</span>
+                                    }
+                                </td>
+                                <td class="text-end">@(f.ActualDemand.HasValue ? f.ActualDemand.Value.ToString("N0") : "-")</td>
+                                <td class="text-end text-primary">@Math.Round(f.PredictedDemand, 0).ToString("N0")</td>
+                                <td class="text-end text-muted small">
+                                    [ @Math.Round(f.ConfidenceLower ?? 0, 0).ToString("N0") - @Math.Round(f.ConfidenceUpper ?? 0, 0).ToString("N0") ]
+                                </td>
+                                <td class="text-center">
+                                    @if (!f.IsHistorical)
+                                    {
+                                        if (f.PredictedDemand > 100)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-box-arrow-in-down"></i> Lên KH Nhập Lớn</button>
+                                        }
+                                        else if (f.PredictedDemand > 0)
+                                        {
+                                            <button class="btn btn-sm btn-outline-warning"><i class="bi bi-box-arrow-in-down"></i> Nhập Ít</button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không cần nhập</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts for Chart.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var labels = [];
+            var actualData = [];
+            var predictedData = [];
+            var lowerBound = [];
+            var upperBound = [];
+            
+            @foreach(var f in Model.Forecasts.OrderBy(x => x.TargetDate))
+            {
+                <text>
+                labels.push('@f.TargetDate.ToString("MM/yyyy")');
+                actualData.push(@(f.ActualDemand.HasValue ? f.ActualDemand.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"));
+                predictedData.push(@Math.Round(f.PredictedDemand, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                lowerBound.push(@Math.Round(f.ConfidenceLower ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                upperBound.push(@Math.Round(f.ConfidenceUpper ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                </text>
+            }
+
+            var ctx = document.getElementById('forecastChart').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Nhu cầu Thực tế',
+                            data: actualData,
+                            borderColor: '#6c757d',
+                            backgroundColor: '#6c757d',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointBackgroundColor: '#6c757d',
+                            spanGaps: true
+                        },
+                        {
+                            label: 'Dự báo AI (SSA ML.NET)',
+                            data: predictedData,
+                            borderColor: '#dc3545', // Danger color for forecast
+                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3,
+                            pointBackgroundColor: '#dc3545',
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Mức cao nhất (Khoảng tin cậy)',
+                            data: upperBound,
+                            borderColor: 'rgba(220, 53, 69, 0.3)',
+                            backgroundColor: 'transparent',
+                            borderWidth: 1,
+                            borderDash: [3, 3],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Mức thấp nhất',
+                            data: lowerBound,
+                            borderColor: 'rgba(220, 53, 69, 0.3)',
+                            backgroundColor: 'rgba(220, 53, 69, 0.05)', // Fill between bounds
+                            borderWidth: 1,
+                            borderDash: [3, 3],
+                            pointRadius: 0,
+                            fill: '-1', // Fill to previous dataset (upper)
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Số lượng Sản phẩm (Cầu/Bán)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Thời gian' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
+else if (Model.SelectedProductId.HasValue)
+{
+    <div class="alert alert-warning p-4 shadow-sm border-0 d-flex align-items-center">
+        <i class="bi bi-exclamation-circle-fill fs-2 me-3 text-warning"></i>
+        <div>
+            <h5 class="mb-1 fw-bold">Không có dữ liệu</h5>
+            <p class="mb-0">Chưa có dữ liệu dự báo hoặc cấu hình ML model cho sản phẩm này.</p>
+        </div>
+    </div>
+}

@@ -1,0 +1,140 @@
+@using ChinhNha.Web.Models
+@model ProductListViewModel
+
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+
+<style>
+    :root {
+        --primary-agri: #2E7D32;
+        --secondary-agri: #81C784;
+    }
+    .product-card {
+        border: none; border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+        height: 100%; overflow: hidden;
+    }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(46, 125, 50, 0.1); }
+    .product-img-wrapper {
+        position: relative; padding-top: 100%; background-color: #f8f9fa; overflow: hidden;
+    }
+    .product-img-wrapper img {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;
+    }
+    .product-card:hover .product-img-wrapper img { transform: scale(1.05); }
+    .product-info { padding: 1.5rem; }
+    .product-title {
+        font-weight: 600; font-size: 1.1rem; color: #333; margin-bottom: 0.5rem; text-decoration: none; display: block;
+    }
+    .product-title:hover { color: var(--primary-agri); }
+    .product-price { font-weight: 700; font-size: 1.25rem; color: var(--primary-agri); }
+    .btn-agri {
+        background: var(--primary-agri); color: white; border-radius: 10px; font-weight: 500; transition: all 0.2s; border: none;
+    }
+    .btn-agri:hover { background: #1B5E20; color: white; transform: scale(1.02); }
+    .filter-card {
+        background: #fff; border-radius: 16px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 1.5rem;
+    }
+</style>
+
+<div class="container-fluid px-0 mb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold mb-0">Cửa hàng</h2>
+        </div>
+        <div class="col-md-6">
+            <form method="get" action="/Product" class="d-flex">
+                <input type="text" name="searchQuery" value="@Model.SearchQuery" class="form-control me-2" placeholder="Tìm kiếm sản phẩm..." style="border-radius: 10px;" />
+                <button type="submit" class="btn btn-agri">Tìm</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters (Placeholder for Category List) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="filter-card">
+                <h5 class="fw-bold mb-3">Danh mục</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="/Product" class="text-decoration-none text-dark">Tất cả sản phẩm</a></li>
+                    <!-- We can loop categories here later -->
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Phân vô cơ</a></li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Phân hữu cơ</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="col-lg-9">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+                @if (Model.Products != null && Model.Products.Any())
+                {
+                    foreach (var product in Model.Products)
+                    {
+                        <div class="col">
+                            <div class="card product-card">
+                                <div class="product-img-wrapper">
+                                    @if (product.Images != null && product.Images.Any(i => i.IsPrimary))
+                                    {
+                                        <img src="@product.Images.First(i => i.IsPrimary).ImageUrl" alt="@product.Name" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); display:flex; align-items:center; justify-content:center; color: #9ca3af; font-size: 3rem;">
+                                            🌾
+                                        </div>
+                                    }
+                                </div>
+                                
+                                <div class="product-info">
+                                    <span class="text-muted small mb-2 d-block">Mã: @product.SKU</span>
+                                    <a href="/Product/Details/@product.Slug" class="product-title text-truncate" title="@product.Name">@product.Name</a>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <span class="product-price">@product.BasePrice.ToString("N0")₫</span>
+                                        <button class="btn btn-sm btn-agri rounded-circle p-2" title="Thêm vào giỏ" onclick="addToCart(@product.Id)" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                            <span style="font-weight: bold; font-size: 1.2rem; line-height: 1;">+</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="alert alert-light text-center p-5 border-0" style="background: #f8f9fa; border-radius: 15px;">
+                            <p class="mb-0 text-muted">Không tìm thấy sản phẩm nào.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination Placeholder -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="?pageNumber=@(Model.CurrentPage - 1)&searchQuery=@Model.SearchQuery" tabindex="-1">Trước</a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="?pageNumber=@i&searchQuery=@Model.SearchQuery">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="?pageNumber=@(Model.CurrentPage + 1)&searchQuery=@Model.SearchQuery">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+

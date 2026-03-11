@@ -1,0 +1,115 @@
+@using ChinhNha.Web.Models
+@model ProductDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+<style>
+    :root {
+        --primary-agri: #2E7D32;
+        --secondary-agri: #81C784;
+    }
+    .product-detail-img {
+        width: 100%; border-radius: 16px; background-color: #f8f9fa; object-fit: contain; aspect-ratio: 1;
+    }
+    .btn-agri {
+        background: var(--primary-agri); color: white; border-radius: 10px; font-weight: 500; transition: all 0.2s; border: none;
+    }
+    .btn-agri:hover { background: #1B5E20; color: white; transform: scale(1.02); }
+</style>
+
+<div class="container-fluid px-0 mb-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-success text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="/Product" class="text-success text-decoration-none">Sản phẩm</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Product.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4 mb-md-0">
+            @if (Model.Product.Images != null && Model.Product.Images.Any(i => i.IsPrimary))
+            {
+                <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" alt="@Model.Product.Name" class="product-detail-img shadow-sm" />
+            }
+            else
+            {
+                <div class="product-detail-img d-flex align-items-center justify-content-center shadow-sm" style="background: linear-gradient(45deg, #f3f4f6, #e5e7eb); font-size: 5rem;">🌾</div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <h1 class="fw-bold mb-2">@Model.Product.Name</h1>
+            <p class="text-muted mb-4">Mã sản phẩm: @Model.Product.SKU</p>
+            
+            <h2 class="text-success fw-bold mb-4">@Model.Product.BasePrice.ToString("N0")₫</h2>
+            
+            <div class="mb-4">
+                <h5>Mô tả ngắn:</h5>
+                <p>@Model.Product.Description</p>
+            </div>
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="input-group" style="width: 130px;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(-1)">-</button>
+                    <input type="number" id="qty" class="form-control text-center" value="1" min="1" max="@Model.Product.StockQuantity">
+                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(1)">+</button>
+                </div>
+                <span class="text-muted">Còn @Model.Product.StockQuantity sản phẩm</span>
+            </div>
+
+            <button class="btn btn-agri btn-lg px-5" onclick="addToCartDetails(@Model.Product.Id)">Thêm vào giỏ hàng</button>
+        </div>
+    </div>
+
+    @if (Model.RelatedProducts != null && Model.RelatedProducts.Any())
+    {
+        <h3 class="fw-bold mb-4">Sản phẩm liên quan</h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+            @foreach (var p in Model.RelatedProducts)
+            {
+                <div class="col">
+                    <div class="card product-card" style="border: none; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.04);">
+                        <div style="position: relative; padding-top: 100%; background-color: #f8f9fa;">
+                            @if (p.Images != null && p.Images.Any(i => i.IsPrimary))
+                            {
+                                <img src="@p.Images.First(i => i.IsPrimary).ImageUrl" alt="@p.Name" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size: 2rem;">🌾</div>
+                            }
+                        </div>
+                        <div class="p-3">
+                            <a href="/Product/Details/@p.Slug" class="text-dark fw-bold text-decoration-none text-truncate d-block">@p.Name</a>
+                            <div class="text-success fw-bold mt-2">@p.BasePrice.ToString("N0")₫</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function updateQty(change) {
+            let input = document.getElementById('qty');
+            let val = parseInt(input.value) + change;
+            if(val >= 1 && val <= parseInt(input.max)) {
+                input.value = val;
+            }
+        }
+
+        // Override addToCart locally for the detail view since it has custom quantity
+        function addToCartDetails(productId) {
+            let qty = parseInt(document.getElementById('qty').value);
+            // Calling the global addToCart defined in _Layout (cart.js)
+            if (typeof addToCart === "function") {
+                addToCart(productId, qty);
+            }
+        }
+    </script>
+}

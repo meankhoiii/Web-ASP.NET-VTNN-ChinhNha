@@ -1,8 +1,248 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using ChinhNha.Web.Models
+@model HomeViewModel
+
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    /* Premium UI Styles for Home Page */
+    :root {
+        --primary-agri: #2E7D32; /* Deep modern green */
+        --secondary-agri: #81C784;
+        --accent-agri: #FFB300;
+        --bg-light: #F1F8E9;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, var(--bg-light) 0%, #ffffff 100%);
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(129,199,132,0.15) 0%, transparent 70%);
+        transform: rotate(15deg);
+        z-index: 0;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        color: #1B5E20;
+        letter-spacing: -1px;
+    }
+
+    .hero-subtitle {
+        color: #555;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .product-card {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(46, 125, 50, 0.1);
+    }
+
+    .product-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: var(--accent-agri);
+        color: #000;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        z-index: 2;
+    }
+
+    .product-img-wrapper {
+        position: relative;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        background-color: #f8f9fa;
+        overflow: hidden;
+    }
+
+    .product-img-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-img-wrapper img {
+        transform: scale(1.05);
+    }
+
+    .product-info {
+        padding: 1.5rem;
+    }
+
+    .product-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .product-title:hover {
+        color: var(--primary-agri);
+    }
+
+    .product-price {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--primary-agri);
+    }
+
+    .btn-agri {
+        background: var(--primary-agri);
+        color: white;
+        border-radius: 10px;
+        font-weight: 500;
+        padding: 0.6rem 1.5rem;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-agri:hover {
+        background: #1B5E20;
+        color: white;
+        transform: scale(1.02);
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 2rem;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 50%;
+        height: 3px;
+        background: var(--primary-agri);
+        border-radius: 2px;
+    }
+</style>
+
+<div class="hero-section">
+    <div class="row align-items-center hero-content">
+        <div class="col-lg-6">
+            <span class="badge bg-success mb-3 px-3 py-2 rounded-pill">Chất lượng hàng đầu</span>
+            <h1 class="hero-title display-4 mb-3">Vật Tư Nông Nghiệp Chính Nha</h1>
+            <p class="hero-subtitle">Đồng hành cùng nhà nông vươn tới những vụ mùa bội thu. Cung cấp phân bón, thuốc bảo vệ thực vật chính hãng, chất lượng cao nhất.</p>
+            <div class="d-flex gap-3">
+                <a href="#products" class="btn btn-agri btn-lg">Mua sắm ngay</a>
+                <a href="#" class="btn btn-outline-success btn-lg" style="border-radius: 10px;">Tin tức nông nghiệp</a>
+            </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block text-center">
+            <!-- Glassmorphism illustration placeholder -->
+            <div style="width: 400px; height: 400px; background: rgba(255,255,255,0.4); backdrop-filter: blur(10px); border-radius: 50%; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative;">
+                <div style="font-size: 8rem;">🌱</div>
+                <div style="position: absolute; bottom: 10%; right: 10%; background: white; padding: 15px 25px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); font-weight: 600; color: var(--primary-agri);">
+                    +500 Sản phẩm
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div id="products" class="container-fluid px-0 mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <h2 class="section-title">Sản phẩm nổi bật</h2>
+        <a href="/Product" class="text-success text-decoration-none fw-medium">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
+        {
+            foreach (var product in Model.FeaturedProducts)
+            {
+                <div class="col">
+                    <div class="card product-card">
+                        @if (product.StockQuantity < 20)
+                        {
+                            <span class="product-badge">Sắp hết hàng</span>
+                        }
+                        
+                        <div class="product-img-wrapper">
+                            @if (product.Images != null && product.Images.Any(i => i.IsPrimary))
+                            {
+                                <img src="@product.Images.First(i => i.IsPrimary).ImageUrl" alt="@product.Name" loading="lazy" />
+                            }
+                            else
+                            {
+                                <!-- Fallback gradient image -->
+                                <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(45deg, #f3f4f6, #e5e7eb); display:flex; align-items:center; justify-content:center; color: #9ca3af; font-size: 3rem;">
+                                    🌾
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="product-info">
+                            <span class="text-muted small mb-2 d-block">Mã: @product.SKU</span>
+                            <a href="/Product/Details/@product.Slug" class="product-title text-truncate" title="@product.Name">@product.Name</a>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="product-price">@product.BasePrice.ToString("N0")₫</span>
+                                <button class="btn btn-sm btn-agri rounded-circle p-2" title="Thêm vào giỏ" onclick="addToCart(@product.Id)" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                    <!-- Use simple plus icon for now -->
+                                    <span style="font-weight: bold; font-size: 1.2rem; line-height: 1;">+</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-light text-center p-5 border-0" style="background: #f8f9fa; border-radius: 15px;">
+                    <i class="bi bi-box-seam fs-1 text-muted mb-3 d-block"></i>
+                    <p class="mb-0 text-muted">Chưa có sản phẩm nào được hiển thị.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+

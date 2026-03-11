@@ -1,0 +1,30 @@
+@using ChinhNha.Application.DTOs.Orders
+@model OrderDto
+
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<div class="container text-center py-5 my-5">
+    <div class="mb-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+    </div>
+    
+    <h2 class="fw-bold mb-3">Cảm ơn bạn đã đặt hàng!</h2>
+    <p class="text-muted fs-5 mb-4">Đơn hàng <strong class="text-dark">#@Model.Id</strong> của bạn đã được tiếp nhận thành công.</p>
+    
+    <div class="card bg-light border-0 mx-auto text-start mb-5" style="max-width: 500px; border-radius: 15px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Thông tin giao hàng</h5>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 120px;">Người nhận:</span> <strong>@Model.ShippingName</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 120px;">Số điện thoại:</span> <strong>@Model.ShippingPhone</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 120px;">Địa chỉ:</span> <strong>@Model.ShippingAddress</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 120px;">Thanh toán:</span> <strong>@Model.PaymentMethod</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 120px;">Tổng tiền:</span> <strong class="text-success fs-5">@Model.TotalAmount.ToString("N0")₫</strong></div>
+        </div>
+    </div>
+    
+    <p class="text-muted mb-4">Nhân viên của chúng tôi sẽ gọi lại cho bạn trong thời gian sớm nhất để xác nhận đơn hàng.</p>
+    
+    <a href="/Product" class="btn btn-success btn-lg px-5" style="border-radius: 10px;">Tiếp tục mua hàng</a>
+</div>
