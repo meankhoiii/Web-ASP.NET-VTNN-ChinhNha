@@ -1,0 +1,16 @@
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Application.deps.json
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Application.dll
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Application.pdb
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Domain.dll
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Domain.pdb
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.csproj.AssemblyReference.cache
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.AssemblyInfoInputs.cache
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.AssemblyInfo.cs
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.csproj.CoreCompileInputs.cache
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.D6B77E25.Up2Date
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.dll
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\refint\ChinhNha.Application.dll
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.pdb
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ref\ChinhNha.Application.dll
+D:\Năm 4 - HK2 - ĐACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\obj\Debug\net8.0\ChinhNha.Application.sourcelink.json
