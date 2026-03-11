@@ -1,0 +1,12 @@
+{
+  "name": "Code Web PhanBonChinhNha",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"No dev server configured\"",
+    "build": "echo \"No build script\""
+  },
+  "author": "",
+  "license": "MIT"
+}

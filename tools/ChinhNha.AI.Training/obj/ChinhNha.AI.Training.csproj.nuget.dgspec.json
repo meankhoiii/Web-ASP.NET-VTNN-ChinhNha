@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Domain\\ChinhNha.Domain.csproj": {}
+    "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\tools\\ChinhNha.AI.Training\\ChinhNha.AI.Training.csproj": {}
   },
   "projects": {
-    "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Domain\\ChinhNha.Domain.csproj": {
+    "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\tools\\ChinhNha.AI.Training\\ChinhNha.AI.Training.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Domain\\ChinhNha.Domain.csproj",
-        "projectName": "ChinhNha.Domain",
-        "projectPath": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Domain\\ChinhNha.Domain.csproj",
+        "projectUniqueName": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\tools\\ChinhNha.AI.Training\\ChinhNha.AI.Training.csproj",
+        "projectName": "ChinhNha.AI.Training",
+        "projectPath": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\tools\\ChinhNha.AI.Training\\ChinhNha.AI.Training.csproj",
         "packagesPath": "C:\\Users\\khoip\\.nuget\\packages\\",
-        "outputPath": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\src\\ChinhNha.Domain\\obj\\",
+        "outputPath": "D:\\Năm 4 - HK2 - ĐACS2\\Code Web PhanBonChinhNha\\tools\\ChinhNha.AI.Training\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -49,12 +49,6 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "dependencies": {
-            "Microsoft.Extensions.Identity.Stores": {
-              "target": "Package",
-              "version": "[8.0.2, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
