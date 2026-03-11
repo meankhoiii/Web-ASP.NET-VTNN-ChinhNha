@@ -1,3 +1,4 @@
+using ChinhNha.Domain.Enums;
 using ChinhNha.Domain.Interfaces;
 
 namespace ChinhNha.Domain.Entities;
@@ -9,16 +10,16 @@ public class PurchaseOrder : BaseEntity, IAggregateRoot
     public int SupplierId { get; set; }
     public Supplier Supplier { get; set; } = null!;
 
-    // 0=Draft, 1=Submitted, 2=Received, 3=Cancelled
-    public int Status { get; set; } = 0; 
+    public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.Draft;
     
     public decimal TotalAmount { get; set; }
-    public bool IsAISuggested { get; set; } = false; // Phân biệt PO tạo tay vs AI đề xuất
+    public bool IsAISuggested { get; set; } = false; // Distinguish manual vs AI-suggested PO
     
     public string? Note { get; set; }
     
-    public DateTime? ExpectedDate { get; set; }
-    public DateTime? ReceivedDate { get; set; }
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+    public DateTime? ExpectedDeliveryDate { get; set; }
+    public DateTime? ActualDeliveryDate { get; set; }
     
     public string? CreatedById { get; set; }
     public AppUser? CreatedBy { get; set; }
@@ -27,3 +28,4 @@ public class PurchaseOrder : BaseEntity, IAggregateRoot
 
     public ICollection<PurchaseOrderItem> Items { get; set; } = new List<PurchaseOrderItem>();
 }
+
