@@ -46,6 +46,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay.VNPayService>();
 
 // ---- AI / ML.NET Service ----
 builder.Services.AddSingleton<IInventoryForecastService, DemandForecastService>();

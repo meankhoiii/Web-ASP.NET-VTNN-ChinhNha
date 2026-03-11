@@ -13,6 +13,14 @@
     <h2 class="fw-bold mb-3">Cảm ơn bạn đã đặt hàng!</h2>
     <p class="text-muted fs-5 mb-4">Đơn hàng <strong class="text-dark">#@Model.Id</strong> của bạn đã được tiếp nhận thành công.</p>
     
+    @if (TempData["PaymentMessage"] != null)
+    {
+        var alertClass = TempData["PaymentMessage"].ToString().Contains("thành công") ? "alert-success" : "alert-warning";
+        <div class="alert @alertClass mx-auto mb-4" style="max-width: 600px;">
+            @TempData["PaymentMessage"]
+        </div>
+    }
+
     <div class="card bg-light border-0 mx-auto text-start mb-5" style="max-width: 500px; border-radius: 15px;">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3 border-bottom pb-2">Thông tin giao hàng</h5>

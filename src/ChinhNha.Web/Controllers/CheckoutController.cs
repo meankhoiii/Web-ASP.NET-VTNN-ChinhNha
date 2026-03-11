@@ -9,11 +9,13 @@ public class CheckoutController : Controller
 {
     private readonly ICartService _cartService;
     private readonly IOrderService _orderService;
+    private readonly IVNPayService _vnpayService;
 
-    public CheckoutController(ICartService cartService, IOrderService orderService)
+    public CheckoutController(ICartService cartService, IOrderService orderService, IVNPayService vnpayService)
     {
         _cartService = cartService;
         _orderService = orderService;
+        _vnpayService = vnpayService;
     }
 
     private string GetOrCreateSessionId()
@@ -80,8 +82,19 @@ public class CheckoutController : Controller
 
             if (model.PaymentMethod == "VNPay")
             {
-                // TODO: Integration phase 6 - Redirect to VNPay
-                return RedirectToAction("Success", new { id = order.Id });
+                var paymentInfo = new PaymentInformationDto
+                {
+                    OrderType = "other",
+                    Amount = order.TotalAmount,
+                    OrderDescription = $"Thanh toán đơn hàng CHINHNHA{order.Id}",
+                    Name = model.ReceiverName ?? "Guest",
+                    OrderId = order.Id
+                };
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+                var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress);
+                
+                return Redirect(paymentUrl);
             }
 
             return RedirectToAction("Success", new { id = order.Id });
@@ -99,5 +112,37 @@ public class CheckoutController : Controller
         if (order == null) return NotFound();
 
         return View(order);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> PaymentCallback()
+    {
+        var queryDictionary = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        var response = _vnpayService.PaymentExecute(queryDictionary);
+
+        if (response == null || string.IsNullOrEmpty(response.OrderId))
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        if (int.TryParse(response.OrderId, out int orderId))
+        {
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            if (order == null) return NotFound();
+
+            if (response.Success)
+            {
+                // TODO: Gọi logic cập nhật trạng thái đơn hàng (Đã thanh toán) ở Application layer
+                TempData["PaymentMessage"] = $"Thanh toán VNPay thành công! (Mã giao dịch: {response.TransactionId})";
+            }
+            else
+            {
+                TempData["PaymentMessage"] = $"Thanh toán VNPay thất bại hoặc bị hủy.";
+            }
+
+            return RedirectToAction("Success", new { id = orderId });
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 }
