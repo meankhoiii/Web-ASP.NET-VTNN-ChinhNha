@@ -1,0 +1,336 @@
+@using ChinhNha.Application.DTOs.Admin
+@model IEnumerable<AuditLogDto>
+
+@{
+    ViewData["Title"] = "Audit Logs";
+    var stats = (AuditLogStatsDto?)ViewBag.AuditStats;
+}
+
+<style>
+    .audit-container {
+        padding: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .filter-section {
+        background: #f5f5f5;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-control {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .btn-filter {
+        background-color: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn-filter:hover {
+        background-color: #1B5E20;
+    }
+
+    .log-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .log-table thead {
+        background-color: #E8F5E9;
+        border-bottom: 2px solid #2E7D32;
+    }
+
+    .log-table th, .log-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .log-table th {
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .log-table tbody tr:hover {
+        background-color: #f9f9f9;
+    }
+
+    .status-success {
+        background: #D4EDDA;
+        color: #155724;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .status-failed {
+        background: #F8D7DA;
+        color: #721C24;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .pagination-custom {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination-custom a,
+    .pagination-custom span {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #2E7D32;
+        color: #2E7D32;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .pagination-custom a:hover {
+        background-color: #E8F5E9;
+    }
+
+    .pagination-custom .active {
+        background-color: #2E7D32;
+        color: white;
+    }
+</style>
+
+<div class="audit-container">
+    <h1 class="fw-bold mb-4">
+        <i class="bi bi-database-check"></i> Audit Logs
+    </h1>
+
+    @if (stats != null)
+    {
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">@stats.TotalAuditLogs</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #4CAF50;">@stats.SuccessfulActions</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #f44336;">@stats.FailedActions</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">
+                    @if (stats.TotalAuditLogs > 0)
+                    {
+                        <text>@((stats.SuccessfulActions * 100.0 / stats.TotalAuditLogs).ToString("F0"))%</text>
+                    }
+                    else
+                    {
+                        <span>N/A</span>
+                    }
+                </div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h5 class="fw-bold mb-3">Filter Logs</h5>
+            <form method="get" action="/Admin/Audit/Filter" class="filter-form">
+                <input type="date" name="fromDate" class="form-control" placeholder="From Date" />
+                <input type="date" name="toDate" class="form-control" placeholder="To Date" />
+                <select name="action" class="form-control">
+                    <option value="">Select Action</option>
+                    @foreach (var actionEntry in stats.ActionCounts)
+                    {
+                        <option value="@actionEntry.Key">@actionEntry.Key (@actionEntry.Value)</option>
+                    }
+                </select>
+                <select name="entityType" class="form-control">
+                    <option value="">Select Entity Type</option>
+                    @foreach (var entityEntry in stats.EntityTypeCounts)
+                    {
+                        <option value="@entityEntry.Key">@entityEntry.Key (@entityEntry.Value)</option>
+                    }
+                </select>
+                <button type="submit" class="btn-filter" style="grid-column: 1 / -1;">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+            </form>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Date/Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Entity Type</th>
+                    <th>Entity ID</th>
+                    <th>Status</th>
+                    <th>IP Address</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td>@log.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td>
+                            <strong>@log.UserName</strong>
+                            <br>
+                            <small class="text-muted">@log.UserEmail</small>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  style="background-color: @GetActionColor(log.Action)">
+                                @log.Action
+                            </span>
+                        </td>
+                        <td>@log.EntityType</td>
+                        <td>
+                            @if (log.EntityId.HasValue)
+                            {
+                                @log.EntityId
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (log.IsSuccessful)
+                            {
+                                <span class="status-success">
+                                    <i class="bi bi-check-circle"></i> Success
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-failed">
+                                    <i class="bi bi-x-circle"></i> Failed
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(log.IPAddress))
+                            {
+                                <code style="font-size: 0.85rem;">@log.IPAddress</code>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="/Admin/Audit/Details/@log.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-custom">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <a href="/Admin/Audit?page=1">First</a>
+                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage - 1)">Previous</a>
+                }
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    @if (i == ViewBag.CurrentPage)
+                    {
+                        <span class="active">@i</span>
+                    }
+                    else
+                    {
+                        <a href="/Admin/Audit?page=@i">@i</a>
+                    }
+                }
+
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage + 1)">Next</a>
+                    <a href="/Admin/Audit?page=@(ViewBag.TotalPages)">Last</a>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle-fill"></i> No audit logs found.
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetActionColor(string action)
+    {
+        return action switch
+        {
+            "Created" => "#4CAF50",
+            "Updated" => "#2196F3",
+            "Deleted" => "#f44336",
+            "Approved" => "#4CAF50",
+            "Rejected" => "#f44336",
+            "Login" => "#2196F3",
+            "Logout" => "#666",
+            _ => "#9E9E9E"
+        };
+    }
+}

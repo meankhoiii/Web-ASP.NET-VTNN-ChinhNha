@@ -34,6 +34,7 @@ public class AppDbContext : DbContext
     public DbSet<Banner> Banners => Set<Banner>();
     public DbSet<PolicyPage> PolicyPages => Set<PolicyPage>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();

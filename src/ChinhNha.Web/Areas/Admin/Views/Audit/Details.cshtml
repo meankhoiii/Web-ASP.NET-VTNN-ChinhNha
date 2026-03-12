@@ -1,0 +1,369 @@
+@using ChinhNha.Application.DTOs.Admin
+@using System.Text.Json
+@model AuditLogDto
+
+@{
+    ViewData["Title"] = "Audit Log Details";
+    
+    if (Model == null)
+    {
+        <div class="alert alert-danger">Audit log not found</div>
+        return;
+    }
+    
+    var oldValues = string.IsNullOrEmpty(Model.OldValues) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Model.OldValues) ?? new Dictionary<string, object>();
+    var newValues = string.IsNullOrEmpty(Model.NewValues) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Model.NewValues) ?? new Dictionary<string, object>();
+}
+
+<style>
+    .detail-container {
+        padding: 2rem;
+    }
+
+    .back-link {
+        margin-bottom: 1rem;
+    }
+
+    .detail-card {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .detail-card h5 {
+        color: #1B5E20;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #E8F5E9;
+        padding-bottom: 0.5rem;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .detail-label {
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .detail-value {
+        color: #333;
+        word-break: break-word;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .status-success {
+        background: #D4EDDA;
+        color: #155724;
+    }
+
+    .status-failed {
+        background: #F8D7DA;
+        color: #721C24;
+    }
+
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .comparison-table th {
+        background-color: #E8F5E9;
+        border: 1px solid #2E7D32;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .comparison-table td {
+        border: 1px solid #ddd;
+        padding: 0.75rem;
+        max-width: 400px;
+        word-break: break-word;
+    }
+
+    .old-value {
+        background-color: #FFEBEE;
+    }
+
+    .new-value {
+        background-color: #E8F5E9;
+    }
+
+    .json-box {
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .error-box {
+        background-color: #FFE5E5;
+        border: 2px solid #f44336;
+        border-radius: 5px;
+        padding: 1rem;
+        color: #721C24;
+        margin-top: 1rem;
+    }
+
+    .btn-back {
+        background-color: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn-back:hover {
+        background-color: #1B5E20;
+    }
+</style>
+
+<div class="detail-container">
+    <div class="back-link">
+        <a href="/Admin/Audit" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Logs
+        </a>
+    </div>
+
+    <h1 class="fw-bold mb-4">
+        <i class="bi bi-file-text"></i> Audit Log Details
+    </h1>
+
+    <div class="detail-card">
+        <h5>
+            <i class="bi bi-info-circle"></i> Basic Information
+        </h5>
+
+        <div class="detail-row">
+            <div class="detail-label">Log ID:</div>
+            <div class="detail-value"><strong>@Model.Id</strong></div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Timestamp:</div>
+            <div class="detail-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss.fff")</div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Status:</div>
+            <div class="detail-value">
+                @if (Model.IsSuccessful)
+                {
+                    <span class="status-badge status-success">
+                        <i class="bi bi-check-circle"></i> Success
+                    </span>
+                }
+                else
+                {
+                    <span class="status-badge status-failed">
+                        <i class="bi bi-x-circle"></i> Failed
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h5>
+            <i class="bi bi-person"></i> User Information
+        </h5>
+
+        <div class="detail-row">
+            <div class="detail-label">User ID:</div>
+            <div class="detail-value"><strong>@Model.UserId</strong></div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">User Name:</div>
+            <div class="detail-value">@Model.UserName</div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">User Email:</div>
+            <div class="detail-value">
+                <a href="mailto:@Model.UserEmail">@Model.UserEmail</a>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">IP Address:</div>
+            <div class="detail-value">
+                @if (!string.IsNullOrEmpty(Model.IPAddress))
+                {
+                    <code>@Model.IPAddress</code>
+                }
+                else
+                {
+                    <span class="text-muted">Not recorded</span>
+                }
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">User Agent:</div>
+            <div class="detail-value">
+                @if (!string.IsNullOrEmpty(Model.UserAgent))
+                {
+                    <code style="font-size: 0.85rem;">@Model.UserAgent</code>
+                }
+                else
+                {
+                    <span class="text-muted">Not recorded</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h5>
+            <i class="bi bi-lightning-charge"></i> Action Information
+        </h5>
+
+        <div class="detail-row">
+            <div class="detail-label">Action:</div>
+            <div class="detail-value">
+                <span class="badge" style="background-color: @GetActionColor(Model.Action); font-size: 1rem;">
+                    @Model.Action
+                </span>
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Entity Type:</div>
+            <div class="detail-value"><strong>@Model.EntityType</strong></div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Entity ID:</div>
+            <div class="detail-value">
+                @if (Model.EntityId.HasValue)
+                {
+                    <strong>@Model.EntityId</strong>
+                }
+                else
+                {
+                    <span class="text-muted">N/A</span>
+                }
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">Description:</div>
+            <div class="detail-value">@Model.Description</div>
+        </div>
+    </div>
+
+    @if (!Model.IsSuccessful && !string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="detail-card" style="border-color: #f44336;">
+            <h5 style="color: #721C24;">
+                <i class="bi bi-exclamation-triangle"></i> Error Details
+            </h5>
+            <div class="error-box">
+                @Model.ErrorMessage
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.OldValues) || !string.IsNullOrEmpty(Model.NewValues))
+    {
+        <div class="detail-card">
+            <h5>
+                <i class="bi bi-arrow-left-right"></i> Value Changes
+            </h5>
+
+            @if (oldValues.Count > 0 || newValues.Count > 0)
+            {
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Field</th>
+                            <th style="width: 37.5%;">Old Value</th>
+                            <th style="width: 37.5%;">New Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var allKeys = new HashSet<string>(oldValues.Keys.Union(newValues.Keys));
+                            foreach (var key in allKeys)
+                            {
+                                var oldVal = oldValues.ContainsKey(key) ? oldValues[key]?.ToString() : "(not set)";
+                                var newVal = newValues.ContainsKey(key) ? newValues[key]?.ToString() : "(not set)";
+
+                                <tr>
+                                    <td><strong>@key</strong></td>
+                                    <td class="old-value">@oldVal</td>
+                                    <td class="new-value">@newVal</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No value changes recorded.</p>
+            }
+        </div>
+    }
+
+    <div class="detail-card">
+        <h5>
+            <i class="bi bi-code"></i> Raw JSON Data
+        </h5>
+
+        @if (!string.IsNullOrEmpty(Model.OldValues))
+        {
+            <p class="fw-bold">Old Values:</p>
+            <div class="json-box">@Model.OldValues</div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.NewValues))
+        {
+            <p class="fw-bold mt-3">New Values:</p>
+            <div class="json-box">@Model.NewValues</div>
+        }
+    </div>
+</div>
+
+@functions {
+    private string GetActionColor(string action)
+    {
+        return action switch
+        {
+            "Created" => "#4CAF50",
+            "Updated" => "#2196F3",
+            "Deleted" => "#f44336",
+            "Approved" => "#4CAF50",
+            "Rejected" => "#f44336",
+            "Login" => "#2196F3",
+            "Logout" => "#666",
+            _ => "#9E9E9E"
+        };
+    }
+}
