@@ -262,6 +262,9 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AiSettings" ? "active" : "")" href="/Admin/AiSettings">
             <i class="bi bi-cpu text-secondary"></i> Cài đặt mô hình AI
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Chatbot" ? "active" : "")" href="/Admin/Chatbot">
+            <i class="bi bi-robot text-primary"></i> Trợ lý AI Admin
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Nội dung</span>
@@ -278,11 +281,53 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"
+            integrity="sha512-NbPpCr3TuvQXaHLBFYbFqGHk+LnVkDBi2YSBqpfTpYxE1Q0YFfbP2s4eL5SnMOiJ4KMhWoIAh5e7VDaQ10Aw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         document.getElementById('sidebarToggle')?.addEventListener('click', function () {
             document.getElementById('adminSidebar').classList.toggle('open');
         });
+
+        // ── SignalR: Real-time new order notifications ──────────────────────
+        (function () {
+            const toastContainer = document.getElementById('adminToastContainer');
+
+            function showToast(title, message, type) {
+                const id = 'toast-' + Date.now();
+                const html = `
+                    <div id="${id}" class="toast align-items-center text-bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body"><strong>${title}</strong><br>${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>`;
+                toastContainer.insertAdjacentHTML('beforeend', html);
+                const el = document.getElementById(id);
+                new bootstrap.Toast(el, { delay: 6000 }).show();
+                el.addEventListener('hidden.bs.toast', () => el.remove());
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/notification')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('NewOrderNotification', function (data) {
+                showToast('🛒 Đơn hàng mới!',
+                    `#${data.orderId} — ${data.customerName} — ${Number(data.totalAmount).toLocaleString('vi-VN')}đ`,
+                    'success');
+            });
+
+            connection.start()
+                .then(() => connection.invoke('JoinAdminGroup'))
+                .catch(err => console.warn('[SignalR] Connection failed:', err));
+        })();
     </script>
+    <!-- Toast container (top-right) -->
+    <div id="adminToastContainer"
+         style="position:fixed;top:16px;right:16px;z-index:9999;min-width:280px;max-width:360px;">
+    </div>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

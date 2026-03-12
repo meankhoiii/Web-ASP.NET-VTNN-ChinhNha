@@ -275,6 +275,206 @@
         </div>
     </footer>
 
+    <!-- ===== CHATBOT WIDGET (Floating) ===== -->
+    <div id="chatbot-widget">
+        <!-- Toggle button -->
+        <button id="chatbot-toggle" aria-label="Mở chatbot tư vấn AI"
+                title="Tư vấn AI - Chính Nha">
+            <i class="bi bi-robot fs-4"></i>
+            <span class="chatbot-badge" id="chatbot-badge" style="display:none">1</span>
+        </button>
+
+        <!-- Chat panel -->
+        <div id="chatbot-panel" class="shadow-lg" style="display:none">
+            <div class="chatbot-header d-flex justify-content-between align-items-center p-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-robot text-white fs-5"></i>
+                    <div>
+                        <div class="fw-bold text-white small">Trợ lý AI Chính Nha</div>
+                        <div class="text-white-50" style="font-size:0.72rem">Hỏi về sản phẩm, đơn hàng, giá cả...</div>
+                    </div>
+                </div>
+                <button class="btn btn-sm text-white border-0 p-1" id="chatbot-close" aria-label="Đóng">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="chatbot-messages p-3" id="chatbot-messages">
+                <div class="cb-bubble cb-assistant">
+                    👋 Xin chào! Tôi có thể giúp bạn tra cứu sản phẩm, kiểm tra đơn hàng hoặc tư vấn phân bón phù hợp với cây trồng. Hỏi tôi nhé!
+                </div>
+            </div>
+
+            <div class="chatbot-typing d-none" id="chatbot-typing">
+                <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+            </div>
+
+            <div class="chatbot-input p-2">
+                <div class="input-group input-group-sm">
+                    <input type="text" id="chatbot-input" class="form-control border-0 bg-light"
+                           placeholder="Nhập tin nhắn..." maxlength="400" />
+                    <button class="btn btn-success px-3" id="chatbot-send">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #chatbot-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1055;
+            font-family: 'Roboto', sans-serif;
+        }
+        #chatbot-toggle {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: #1B5E20;
+            border: none;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(27,94,32,.45);
+            cursor: pointer;
+            position: relative;
+            transition: transform .15s;
+        }
+        #chatbot-toggle:hover { transform: scale(1.08); }
+        .chatbot-badge {
+            position: absolute; top: 4px; right: 4px;
+            background: #dc3545; color: #fff;
+            font-size: 10px; font-weight: 700;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #chatbot-panel {
+            position: absolute;
+            bottom: 68px; right: 0;
+            width: 340px;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }
+        .chatbot-header { background: #1B5E20; }
+        .chatbot-messages {
+            height: 320px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        .cb-bubble {
+            max-width: 88%;
+            padding: .5rem .85rem;
+            border-radius: 12px;
+            margin-bottom: .5rem;
+            font-size: .87rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .cb-user {
+            background: #1B5E20;
+            color: #fff;
+            margin-left: auto;
+            border-bottom-right-radius: 3px;
+        }
+        .cb-assistant {
+            background: #f1f3f5;
+            color: #212529;
+            border-bottom-left-radius: 3px;
+        }
+        .chatbot-typing {
+            padding: .4rem .75rem;
+            display: flex !important;
+            gap: 5px;
+        }
+        .typing-dot {
+            width: 7px; height: 7px;
+            background: #adb5bd;
+            border-radius: 50%;
+            animation: cb-typing 1.2s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: .2s; }
+        .typing-dot:nth-child(3) { animation-delay: .4s; }
+        @@keyframes cb-typing {
+            0%,80%,100% { transform: scale(1); opacity:.5; }
+            40% { transform: scale(1.35); opacity:1; }
+        }
+        @@media (max-width: 500px) {
+            #chatbot-panel { width: calc(100vw - 32px); right: -8px; }
+            #chatbot-widget { bottom: 16px; right: 16px; }
+        }
+    </style>
+
+    <script>
+    (function () {
+        const toggle = document.getElementById('chatbot-toggle');
+        const panel = document.getElementById('chatbot-panel');
+        const closeBtn = document.getElementById('chatbot-close');
+        const msgsEl = document.getElementById('chatbot-messages');
+        const inputEl = document.getElementById('chatbot-input');
+        const sendBtn = document.getElementById('chatbot-send');
+        const typingEl = document.getElementById('chatbot-typing');
+
+        let sessionId = sessionStorage.getItem('cbSession') || '';
+
+        toggle.addEventListener('click', () => {
+            const isHidden = panel.style.display === 'none';
+            panel.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                inputEl.focus();
+                document.getElementById('chatbot-badge').style.display = 'none';
+            }
+        });
+        closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
+
+        function appendBubble(role, text) {
+            const div = document.createElement('div');
+            div.className = 'cb-bubble ' + (role === 'user' ? 'cb-user' : 'cb-assistant');
+            div.innerHTML = text
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+                .replace(/\n/g,'<br>');
+            msgsEl.appendChild(div);
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+        }
+
+        async function sendMessage(msg) {
+            if (!msg.trim()) return;
+            appendBubble('user', msg);
+            inputEl.value = '';
+            sendBtn.disabled = true;
+            typingEl.classList.remove('d-none');
+
+            try {
+                const res = await fetch('/api/chatbot/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, sessionId })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                sessionId = data.sessionId || sessionId;
+                sessionStorage.setItem('cbSession', sessionId);
+                appendBubble('assistant', data.reply || 'Xin lỗi, không nhận được phản hồi.');
+            } catch {
+                appendBubble('assistant', '❌ Lỗi kết nối. Vui lòng thử lại.');
+            } finally {
+                sendBtn.disabled = false;
+                typingEl.classList.add('d-none');
+            }
+        }
+
+        sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
+        inputEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl.value); }
+        });
+    })();
+    </script>
+    <!-- ===== END CHATBOT WIDGET ===== -->
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

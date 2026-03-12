@@ -12,6 +12,6 @@ public class AiModelSettingsDto
     public bool OllamaReachable { get; set; }
 
     public IReadOnlyList<string> InstalledModels { get; set; } = Array.Empty<string>();
-    public string RecommendedModel { get; set; } = "Sailor2-1B-Chat";
-    public string EffectiveModel { get; set; } = "Sailor2-1B-Chat";
+    public string RecommendedModel { get; set; } = "qwen3:8b";
+    public string EffectiveModel { get; set; } = "qwen3:8b";
 }

@@ -6,6 +6,7 @@ using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
+using ChinhNha.Web.Hubs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -105,6 +106,10 @@ builder.Services.AddHttpClient();
 
 // ---- AI / ML.NET Service ----
 builder.Services.AddSingleton<IInventoryForecastService, DemandForecastService>();
+builder.Services.AddScoped<IChatbotService, ChatbotService>();
+
+// ---- SignalR ----
+builder.Services.AddSignalR();
 
 // ---- AutoMapper ----
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -139,6 +144,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// SignalR Hubs
+app.MapHub<NotificationHub>("/hubs/notification");
 
 // Route for Admin Area
 app.MapControllerRoute(

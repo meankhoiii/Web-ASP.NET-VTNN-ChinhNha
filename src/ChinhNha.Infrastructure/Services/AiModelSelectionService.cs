@@ -17,9 +17,20 @@ public class AiModelSelectionService : IAiModelSelectionService
 
     private static readonly string[] AllowedModels =
     {
+        // Sailor2 series
         "Sailor2-1B-Chat",
         "Sailor2-8B-Chat",
-        "Sailor2-20B-Chat"
+        "Sailor2-20B-Chat",
+        // Qwen3 (tiếng Việt tốt, recommended by design doc)
+        "qwen3:8b",
+        "qwen3:4b",
+        "qwen3:1.7b",
+        // Llama3 (OpenAI-compatible function calling)
+        "llama3.1:8b",
+        "llama3.2:3b",
+        // Phi-4
+        "phi4",
+        "phi4-mini"
     };
 
     private readonly AppDbContext _context;
@@ -84,17 +95,18 @@ public class AiModelSelectionService : IAiModelSelectionService
 
     private static string GetRecommendedModel(double ramGb, int cpuCores, bool hasNvidiaGpu)
     {
-        if (ramGb >= 22 && (hasNvidiaGpu || cpuCores >= 12))
+        // Qwen3 preferred for Vietnamese language quality (per design doc)
+        if (ramGb >= 10 && (hasNvidiaGpu || cpuCores >= 6))
         {
-            return "Sailor2-20B-Chat";
+            return "qwen3:8b";
         }
 
-        if (ramGb >= 10 && cpuCores >= 6)
+        if (ramGb >= 6)
         {
-            return "Sailor2-8B-Chat";
+            return "qwen3:4b";
         }
 
-        return "Sailor2-1B-Chat";
+        return "llama3.2:3b";
     }
 
     private static string ResolveEffectiveModel(bool autoSelect, string? manualModel, string recommendedModel, IReadOnlyList<string> installedModels)
@@ -114,10 +126,16 @@ public class AiModelSelectionService : IAiModelSelectionService
             return recommendedModel;
         }
 
-        var fallbackOrder = new[] { "Sailor2-20B-Chat", "Sailor2-8B-Chat", "Sailor2-1B-Chat" };
+        // Fallback order: prefer Qwen3, then Llama3, then Sailor2
+        var fallbackOrder = new[]
+        {
+            "qwen3:8b", "qwen3:4b", "qwen3:1.7b",
+            "llama3.1:8b", "llama3.2:3b",
+            "Sailor2-20B-Chat", "Sailor2-8B-Chat", "Sailor2-1B-Chat"
+        };
         var fallback = fallbackOrder.FirstOrDefault(m => installedModels.Contains(m, StringComparer.OrdinalIgnoreCase));
 
-        return fallback ?? recommendedModel;
+        return fallback ?? installedModels[0];
     }
 
     private (double DetectedRamGb, int CpuCores, bool HasNvidiaGpu) DetectHardware()

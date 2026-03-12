@@ -1,9 +1,11 @@
 using ChinhNha.Application.DTOs.Orders;
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Domain.Enums;
+using ChinhNha.Web.Hubs;
 using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
@@ -18,6 +20,7 @@ public class CheckoutController : Controller
     private readonly IVNPayService _vnpayService;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
+    private readonly IHubContext<NotificationHub> _notificationHub;
     private readonly ILogger<CheckoutController> _logger;
 
     public CheckoutController(
@@ -26,6 +29,7 @@ public class CheckoutController : Controller
         IVNPayService vnpayService,
         IEmailService emailService,
         IConfiguration configuration,
+        IHubContext<NotificationHub> notificationHub,
         ILogger<CheckoutController> logger)
     {
         _cartService = cartService;
@@ -33,6 +37,7 @@ public class CheckoutController : Controller
         _vnpayService = vnpayService;
         _emailService = emailService;
         _configuration = configuration;
+        _notificationHub = notificationHub;
         _logger = logger;
     }
 
@@ -182,6 +187,15 @@ public class CheckoutController : Controller
 
     private async Task SendOrderCreatedNotificationsAsync(OrderDto order, CheckoutViewModel model)
     {
+        // Real-time notification to admin via SignalR
+        await _notificationHub.Clients.Group("AdminGroup").SendAsync("NewOrderNotification", new
+        {
+            orderId = order.Id,
+            customerName = order.UserFullName ?? model.ReceiverName ?? "Khách",
+            totalAmount = order.TotalAmount,
+            message = $"Đơn hàng mới #{order.Id} — {order.UserFullName ?? model.ReceiverName} — {order.TotalAmount:N0}đ"
+        });
+
         if (!string.IsNullOrWhiteSpace(order.UserEmail))
         {
             await _emailService.SendAsync(
