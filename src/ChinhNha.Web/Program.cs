@@ -6,6 +6,7 @@ using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,9 +32,37 @@ builder.Services
         options.Cookie.HttpOnly = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(30);
         options.SlidingExpiration = true;
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                var returnUrl = Uri.EscapeDataString(context.Request.GetEncodedPathAndQuery());
+                var isAdminArea = context.Request.Path.StartsWithSegments("/Admin", StringComparison.OrdinalIgnoreCase);
+                var redirectPath = isAdminArea
+                    ? $"/Admin/Auth/Login?returnUrl={returnUrl}"
+                    : $"/Account/Login?returnUrl={returnUrl}";
+
+                context.Response.Redirect(redirectPath);
+                return Task.CompletedTask;
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                var returnUrl = Uri.EscapeDataString(context.Request.GetEncodedPathAndQuery());
+                var isAdminArea = context.Request.Path.StartsWithSegments("/Admin", StringComparison.OrdinalIgnoreCase);
+                var redirectPath = isAdminArea
+                    ? $"/Admin/Auth/Login?returnUrl={returnUrl}"
+                    : $"/Account/Login?returnUrl={returnUrl}";
+
+                context.Response.Redirect(redirectPath);
+                return Task.CompletedTask;
+            }
+        };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
 
 // ---- Repositories ----
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));

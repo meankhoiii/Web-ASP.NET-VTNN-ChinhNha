@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class BlogController : Controller
 {
     private readonly IBlogService _blogService;

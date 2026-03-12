@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class InventoryManagementController : Controller
 {
     private readonly IInventoryService _inventoryService;

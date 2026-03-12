@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class InventoryController : Controller
 {
     private readonly IProductService _productService;

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class OrderController : Controller
 {
     private readonly IOrderService _orderService;
