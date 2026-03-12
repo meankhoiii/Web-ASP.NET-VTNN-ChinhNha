@@ -1,0 +1,21 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ChinhNha.Domain -> D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Domain\bin\Debug\net8.0\ChinhNha.Domain.dll
+  ChinhNha.Application -> D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Application\bin\Debug\net8.0\ChinhNha.Application.dll
+  ChinhNha.Infrastructure -> D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Infrastructure\bin\Debug\net8.0\ChinhNha.Infrastructure.dll
+  ChinhNha.AI.Training -> D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\tools\ChinhNha.AI.Training\bin\Debug\net8.0\ChinhNha.AI.Training.dll
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Views\Checkout\Success.cshtml(19,127): error CS1061: 'OrderDto' does not contain a definition for 'ReceiverName' and no accessible extension method 'ReceiverName' accepting a first argument of type 'OrderDto' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Views\Checkout\Success.cshtml(20,130): error CS1061: 'OrderDto' does not contain a definition for 'ReceiverPhone' and no accessible extension method 'ReceiverPhone' accepting a first argument of type 'OrderDto' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Controllers\CheckoutController.cs(72,42): error CS0246: The type or namespace name 'CreateOrderRequest' could not be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Controllers\CheckoutController.cs(84,47): error CS1061: 'IOrderService' does not contain a definition for 'CreateOrderAsync' and no accessible extension method 'CreateOrderAsync' accepting a first argument of type 'IOrderService' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+
+Build FAILED.
+
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Views\Checkout\Success.cshtml(19,127): error CS1061: 'OrderDto' does not contain a definition for 'ReceiverName' and no accessible extension method 'ReceiverName' accepting a first argument of type 'OrderDto' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Views\Checkout\Success.cshtml(20,130): error CS1061: 'OrderDto' does not contain a definition for 'ReceiverPhone' and no accessible extension method 'ReceiverPhone' accepting a first argument of type 'OrderDto' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Controllers\CheckoutController.cs(72,42): error CS0246: The type or namespace name 'CreateOrderRequest' could not be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\Controllers\CheckoutController.cs(84,47): error CS1061: 'IOrderService' does not contain a definition for 'CreateOrderAsync' and no accessible extension method 'CreateOrderAsync' accepting a first argument of type 'IOrderService' could be found (are you missing a using directive or an assembly reference?) [D:\N─âm 4 - HK2 - ─ÉACS2\Code Web PhanBonChinhNha\src\ChinhNha.Web\ChinhNha.Web.csproj]
+    0 Warning(s)
+    4 Error(s)
+
+Time Elapsed 00:00:02.82
