@@ -73,8 +73,22 @@
             white-space: nowrap;
         }
         .cart-box:hover { border-color: #2E7D32; color: #1B5E20; }
+        .wishlist-box {
+            background: #fff5f7;
+            border: 2px solid #f8bbd0;
+            color: #ad1457;
+        }
+        .wishlist-box:hover { border-color: #ec407a; color: #880e4f; }
         .cart-count {
             background: #B71C1C;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        .wishlist-count {
+            background: #ad1457;
             color: #fff;
             padding: 2px 8px;
             border-radius: 12px;
@@ -148,6 +162,10 @@
                 </a>
                 
                 <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
+                    <a href="/Customer/Wishlist" class="cart-box wishlist-box py-1 px-2" title="Danh sach yeu thich">
+                        <i class="bi bi-heart-fill fs-5"></i>
+                        <span class="wishlist-count">0</span>
+                    </a>
                     <a href="/Cart" class="cart-box py-1 px-2">
                         <i class="bi bi-cart4 fs-4"></i>
                         <span class="cart-count">0</span>
@@ -168,6 +186,11 @@
                     </ul>
                     
                     <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 mt-2 mt-lg-0">
+                        <a href="/Customer/Wishlist" class="cart-box wishlist-box d-none d-lg-flex" title="Danh sach yeu thich">
+                            <i class="bi bi-heart-fill fs-5"></i>
+                            <span>YEU THICH</span>
+                            <span class="wishlist-count">0</span>
+                        </a>
                         <a href="/Cart" class="cart-box d-none d-lg-flex">
                             <i class="bi bi-cart4 fs-4"></i>
                             <span>GIỎ HÀNG</span>
@@ -186,7 +209,8 @@
                                         <li><a class="dropdown-item fs-5 py-2" href="/Admin/Dashboard"><i class="bi bi-shield-lock me-1"></i> Trang Quản Lý</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     }
-                                    <li><a class="dropdown-item fs-5 py-2" href="#"><i class="bi bi-clock-history me-1"></i> Lịch sử mua hàng</a></li>
+                                    <li><a class="dropdown-item fs-5 py-2" href="/Customer/Orders"><i class="bi bi-clock-history me-1"></i> Lịch sử mua hàng</a></li>
+                                    <li><a class="dropdown-item fs-5 py-2" href="/Customer/Wishlist"><i class="bi bi-heart me-1"></i> Danh sách yêu thích</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-action="Logout" asp-controller="Account" method="post" class="m-0">
@@ -247,6 +271,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/cart.js" asp-append-version="true"></script>
+    <script src="~/js/wishlist.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

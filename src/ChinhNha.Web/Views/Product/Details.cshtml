@@ -102,6 +102,19 @@
         margin-top: 15px;
     }
     .btn-buy-large:hover { background-color: #BF360C; color: #fff; }
+    .btn-wishlist-large {
+        background-color: #fff;
+        color: #ad1457;
+        font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+        font-weight: 800;
+        padding: 12px 20px;
+        border: 2px solid #f8bbd0;
+        border-radius: 8px;
+        text-transform: uppercase;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .btn-wishlist-large:hover { border-color: #ec407a; color: #880e4f; }
 
     .section-header {
         background: linear-gradient(135deg, var(--green-main), var(--green-dark));
@@ -196,6 +209,9 @@
             <button class="btn-buy-large" onclick="addToCartDetails(@Model.Product.Id)">
                 <i class="bi bi-cart-plus-fill me-2"></i> BỎ VÀO GIỎ / MUA NGAY
             </button>
+            <button class="btn-wishlist-large" onclick="addToWishlistDetails(@Model.Product.Id)">
+                <i class="bi bi-heart-fill me-2"></i> THÊM VÀO YÊU THÍCH
+            </button>
         </div>
     </div>
 </div>
@@ -260,6 +276,22 @@
                 addToCart(productId, qty);
                 // Có thể thêm hàm hiển thị thông báo alert thật to "Đã bỏ vào giỏ báo thành công!" 
                 alert("Đã thêm thành công " + qty + " sản phẩm vào giỏ hàng!");
+            }
+        }
+
+        async function addToWishlistDetails(productId) {
+            if (typeof addToWishlist !== "function") {
+                alert("Chức năng wishlist chưa sẵn sàng.");
+                return;
+            }
+
+            const result = await addToWishlist(productId);
+            if (result && result.success) {
+                const btn = document.querySelector('.btn-wishlist-large');
+                if (btn) {
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> ĐÃ THÊM VÀO YÊU THÍCH';
+                    btn.disabled = true;
+                }
             }
         }
     </script>

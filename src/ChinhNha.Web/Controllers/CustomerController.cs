@@ -87,6 +87,11 @@ public class CustomerController : Controller
         return View(profile);
     }
 
+    public IActionResult Wishlist()
+    {
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateProfile(string fullName, string phone)

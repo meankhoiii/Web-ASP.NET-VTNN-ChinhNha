@@ -1,0 +1,200 @@
+@{
+    ViewData["Title"] = "Danh sach yeu thich";
+}
+
+<style>
+    .wishlist-wrap {
+        background: #f8fff8;
+        border: 2px solid #c8e6c9;
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+
+    .wishlist-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .wishlist-table th {
+        background: #e8f5e9;
+        color: #1b5e20;
+        font-weight: 700;
+    }
+
+    .wishlist-img {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        background: #fff;
+    }
+
+    .wishlist-action-btn {
+        min-width: 120px;
+    }
+</style>
+
+<div class="container my-4 my-md-5">
+    <div class="wishlist-wrap">
+        <div class="wishlist-header">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-heart-fill text-danger me-2"></i>Danh sach yeu thich</h2>
+                <small class="text-muted">Theo doi san pham ban quan tam va phat hien gia giam nhanh.</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-outline-success btn-sm" href="/Product"><i class="bi bi-shop me-1"></i>Tiep tuc mua sam</a>
+                <button class="btn btn-success btn-sm" type="button" onclick="loadWishlist()"><i class="bi bi-arrow-repeat me-1"></i>Tai lai</button>
+            </div>
+        </div>
+
+        <div id="wishlistAlert"></div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle wishlist-table">
+                <thead>
+                    <tr>
+                        <th>San pham</th>
+                        <th class="text-end">Gia hien tai</th>
+                        <th class="text-end">Bien dong gia</th>
+                        <th class="text-center">Uu tien</th>
+                        <th class="text-center">Trang thai</th>
+                        <th class="text-end">Hanh dong</th>
+                    </tr>
+                </thead>
+                <tbody id="wishlistBody">
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Dang tai du lieu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function fmtPrice(value) {
+            if (value == null) return '-';
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+
+        function renderAlert(message, type) {
+            const holder = document.getElementById('wishlistAlert');
+            holder.innerHTML = '<div class="alert alert-' + type + ' py-2">' + message + '</div>';
+        }
+
+        async function markPurchased(productId) {
+            const res = await fetch('/api/Wishlist/product/' + productId + '/purchased', {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!res.ok) {
+                renderAlert('Khong the cap nhat trang thai da mua.', 'danger');
+                return;
+            }
+
+            renderAlert('Da danh dau san pham la da mua.', 'success');
+            await loadWishlist();
+        }
+
+        async function removeItem(productId) {
+            if (typeof removeFromWishlist !== 'function') {
+                return;
+            }
+
+            if (!confirm('Ban chac chan muon xoa san pham nay khoi wishlist?')) {
+                return;
+            }
+
+            const result = await removeFromWishlist(productId);
+            if (result && result.success) {
+                renderAlert('Da xoa san pham khoi wishlist.', 'success');
+                await loadWishlist();
+            } else {
+                renderAlert('Khong the xoa san pham khoi wishlist.', 'danger');
+            }
+        }
+
+        function renderRows(items) {
+            const body = document.getElementById('wishlistBody');
+            if (!items || items.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Wishlist dang trong. <a href="/Product">Kham pha san pham ngay</a>.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = items.map(function (item) {
+                const currentPrice = item.productSalePrice ?? item.productPrice;
+                const priceChange = item.priceChange;
+                let priceChangeHtml = '<span class="text-muted">-</span>';
+                if (priceChange != null) {
+                    if (priceChange < 0) {
+                        priceChangeHtml = '<span class="text-success fw-bold">' + fmtPrice(priceChange) + '</span>';
+                    } else if (priceChange > 0) {
+                        priceChangeHtml = '<span class="text-danger fw-bold">+' + fmtPrice(priceChange) + '</span>';
+                    } else {
+                        priceChangeHtml = '<span class="text-muted">0đ</span>';
+                    }
+                }
+
+                const purchasedBadge = item.purchasedAt
+                    ? '<span class="badge text-bg-success">Da mua</span>'
+                    : '<span class="badge text-bg-warning">Dang theo doi</span>';
+
+                return '<tr>'
+                    + '<td>'
+                    + '<div class="d-flex align-items-center gap-2">'
+                    + '<img class="wishlist-img" src="' + (item.productImage || '/images/no-image.png') + '" alt="' + (item.productName || '') + '" onerror="this.src=\'/images/no-image.png\'" />'
+                    + '<div>'
+                    + '<div class="fw-semibold">' + (item.productName || 'San pham') + '</div>'
+                    + '<small class="text-muted">Them luc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</small>'
+                    + '</div></div></td>'
+                    + '<td class="text-end fw-bold">' + fmtPrice(currentPrice) + '</td>'
+                    + '<td class="text-end">' + priceChangeHtml + '</td>'
+                    + '<td class="text-center">' + (item.priority || 3) + '/5</td>'
+                    + '<td class="text-center">' + purchasedBadge + '</td>'
+                    + '<td class="text-end">'
+                    + '<div class="d-flex justify-content-end flex-wrap gap-2">'
+                    + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
+                    + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Da mua</button>')
+                    + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xoa</button>'
+                    + '</div></td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        async function loadWishlist() {
+            const body = document.getElementById('wishlistBody');
+            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Dang tai du lieu...</td></tr>';
+
+            try {
+                const res = await fetch('/api/Wishlist', { credentials: 'include' });
+                if (res.status === 401) {
+                    window.location.href = '/Account/Login';
+                    return;
+                }
+                if (!res.ok) {
+                    renderAlert('Khong the tai du lieu wishlist.', 'danger');
+                    body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Loi tai du lieu.</td></tr>';
+                    return;
+                }
+
+                const data = await res.json();
+                renderRows(data);
+                if (typeof updateWishlistCount === 'function') {
+                    updateWishlistCount();
+                }
+            } catch {
+                renderAlert('Co loi ket noi khi tai wishlist.', 'danger');
+                body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Khong ket noi duoc may chu.</td></tr>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadWishlist);
+    </script>
+}
