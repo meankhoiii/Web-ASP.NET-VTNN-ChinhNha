@@ -95,18 +95,18 @@ public class AiModelSelectionService : IAiModelSelectionService
 
     private static string GetRecommendedModel(double ramGb, int cpuCores, bool hasNvidiaGpu)
     {
-        // Qwen3 preferred for Vietnamese language quality (per design doc)
+        // Sailor2 is prioritized for the chat experience in this project.
+        if (ramGb >= 18 && (hasNvidiaGpu || cpuCores >= 8))
+        {
+            return "Sailor2-20B-Chat";
+        }
+
         if (ramGb >= 10 && (hasNvidiaGpu || cpuCores >= 6))
         {
-            return "qwen3:8b";
+            return "Sailor2-8B-Chat";
         }
 
-        if (ramGb >= 6)
-        {
-            return "qwen3:4b";
-        }
-
-        return "llama3.2:3b";
+        return "Sailor2-1B-Chat";
     }
 
     private static string ResolveEffectiveModel(bool autoSelect, string? manualModel, string recommendedModel, IReadOnlyList<string> installedModels)
@@ -126,12 +126,13 @@ public class AiModelSelectionService : IAiModelSelectionService
             return recommendedModel;
         }
 
-        // Fallback order: prefer Qwen3, then Llama3, then Sailor2
+        // Fallback order: prefer Sailor2 first, then Qwen3, then Llama3, then Phi-4.
         var fallbackOrder = new[]
         {
+            "Sailor2-20B-Chat", "Sailor2-8B-Chat", "Sailor2-1B-Chat",
             "qwen3:8b", "qwen3:4b", "qwen3:1.7b",
             "llama3.1:8b", "llama3.2:3b",
-            "Sailor2-20B-Chat", "Sailor2-8B-Chat", "Sailor2-1B-Chat"
+            "phi4", "phi4-mini"
         };
         var fallback = fallbackOrder.FirstOrDefault(m => installedModels.Contains(m, StringComparer.OrdinalIgnoreCase));
 
