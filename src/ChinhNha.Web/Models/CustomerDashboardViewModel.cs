@@ -7,6 +7,14 @@ public class CustomerDashboardViewModel
 {
     public CustomerProfileDto Profile { get; set; } = new();
     public List<OrderDto> RecentOrders { get; set; } = new();
+    public List<CustomerNotificationItemViewModel> Notifications { get; set; } = new();
+}
+
+public class CustomerNotificationItemViewModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = "info"; // info|success|warning|danger
 }
 
 public class CustomerOrdersViewModel

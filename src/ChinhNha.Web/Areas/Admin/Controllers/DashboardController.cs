@@ -182,6 +182,19 @@ public class DashboardController : Controller
             ForecastMiniCharts = miniCharts
         };
 
+        if (model.LowStockCount > 0)
+        {
+            model.AdminAlerts.Add($"Canh bao: co {model.LowStockCount} san pham dang o muc ton kho thap.");
+            foreach (var p in model.LowStockProducts.Take(3))
+            {
+                model.AdminAlerts.Add($"{p.ProductName}: ton {p.StockQuantity}, muc toi thieu {p.MinStockLevel}.");
+            }
+        }
+        else
+        {
+            model.AdminAlerts.Add("Khong co canh bao ton kho thap trong he thong.");
+        }
+
         return View(model);
     }
 }

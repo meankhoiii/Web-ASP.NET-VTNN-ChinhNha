@@ -11,6 +11,7 @@ public class DashboardViewModel
     public List<RecentOrderViewModel> RecentOrders { get; set; } = new();
     public List<TopSellingProductViewModel> TopSellingProducts { get; set; } = new();
     public List<ForecastMiniChartViewModel> ForecastMiniCharts { get; set; } = new();
+    public List<string> AdminAlerts { get; set; } = new();
 
     public DateTime GeneratedAt { get; set; } = DateTime.Now;
 }
