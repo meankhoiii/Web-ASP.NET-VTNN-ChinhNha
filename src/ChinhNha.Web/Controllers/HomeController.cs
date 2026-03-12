@@ -60,6 +60,29 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult Contact()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Contact(string name, string email, string phone, string message)
+    {
+        // TODO: In a real application, save contact form to database or send email
+        // For now, just return success message
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(message))
+        {
+            TempData["Error"] = "Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Email, Tin nhắn)";
+            return RedirectToAction(nameof(Contact));
+        }
+
+        // Log the contact form submission
+        _logger.LogInformation($"Contact form submitted: Name={name}, Email={email}, Phone={phone}, Message={message}");
+        
+        TempData["Success"] = "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong 24 giờ.";
+        return RedirectToAction(nameof(Contact));
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
