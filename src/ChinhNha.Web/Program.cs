@@ -79,6 +79,7 @@ builder.Services.AddScoped<IAppUserService, AppUserService>();
 
 // ---- Application Services ----
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IInventoryImportExportService, InventoryImportExportService>();
 builder.Services.AddScoped<ICartService, CartService>();

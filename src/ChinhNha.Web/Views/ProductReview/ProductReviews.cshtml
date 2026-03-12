@@ -1,0 +1,414 @@
+@using ChinhNha.Application.DTOs.Products
+@model IEnumerable<ProductReviewDto>
+
+@{
+    var stats = (ProductReviewStatsDto?)ViewBag.ReviewStats;
+    var productId = (int)ViewBag.ProductId;
+}
+
+<style>
+    .reviews-container {
+        background-color: #E8F5E9;
+        border-radius: 10px;
+        padding: 2rem;
+        margin: 2rem 0;
+    }
+
+    .review-title h2 {
+        color: #1B5E20;
+        margin-bottom: 1.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-card {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .avg-rating {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        margin: 0.5rem 0;
+        gap: 0.5rem;
+    }
+
+    .rating-bar-label {
+        width: 40px;
+        text-align: right;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .rating-bar-fill {
+        flex-grow: 1;
+        height: 6px;
+        background-color: #E8F5E9;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .rating-bar-inner {
+        height: 100%;
+        background-color: #FFC107;
+        border-radius: 3px;
+    }
+
+    .review-form {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        font-weight: bold;
+        color: #1B5E20;
+        margin-bottom: 0.5rem;
+    }
+
+    .star-rating {
+        font-size: 2rem;
+        cursor: pointer;
+        margin: 1rem 0;
+    }
+
+    .star {
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .star.active,
+    .star:hover {
+        color: #FFC107;
+    }
+
+    .review-card {
+        background: white;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .reviewer-info {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #E8F5E9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .reviewer-name {
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .review-date {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .review-rating {
+        color: #FFC107;
+        font-size: 0.9rem;
+    }
+
+    .verified-badge {
+        display: inline-block;
+        background: #D4EDDA;
+        color: #155724;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+
+    .review-content {
+        margin: 1rem 0;
+    }
+
+    .review-content h5 {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 1rem;
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: #2E7D32;
+        cursor: pointer;
+        text-decoration: underline;
+        font-size: 0.9rem;
+        padding: 0;
+    }
+
+    .action-btn:hover {
+        color: #1B5E20;
+    }
+
+    .btn-primary {
+        background-color: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background-color: #1B5E20;
+    }
+</style>
+
+<div class="reviews-container">
+    <div class="review-title">
+        <h2><i class="bi bi-star-fill"></i> Đánh Giá Từ Khách Hàng</h2>
+    </div>
+
+    @if (stats != null)
+    {
+        <div class="stats-grid">
+            <div class="stats-card">
+                <div class="avg-rating">@stats.AverageRating.ToString("F1")</div>
+                <div class="review-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= stats.AverageRating)
+                        {
+                            <span class="bi bi-star-fill"></span>
+                        }
+                        else if (i - stats.AverageRating < 1)
+                        {
+                            <span class="bi bi-star-half"></span>
+                        }
+                        else
+                        {
+                            <span class="bi bi-star"></span>
+                        }
+                    }
+                </div>
+                <small class="text-muted">Trên @stats.TotalReviews đánh giá</small>
+            </div>
+
+            <div class="stats-card">
+                @for (int star = 5; star >= 1; star--)
+                {
+                    var percent = stats.RatingPercentages[star];
+                    <div class="rating-bar">
+                        <span class="rating-bar-label">@star ⭐</span>
+                        <div class="rating-bar-fill">
+                            <div class="rating-bar-inner" style="width: @percent%"></div>
+                        </div>
+                        <span style="width: 30px; text-align: right;">@percent.ToString("F0")%</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <div class="review-form">
+            <h4 class="form-label">Viết Đánh Giá Của Bạn</h4>
+
+            <form method="post" action="/ProductReview/Create">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="ProductId" value="@productId" />
+
+                <div class="mb-3">
+                    <label class="form-label">Đánh Giá</label>
+                    <div class="star-rating" id="ratingStars">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span class="star" data-value="@i">★</span>
+                        }
+                    </div>
+                    <input type="hidden" id="rating" name="Rating" value="0" required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Tiêu Đề</label>
+                    <input type="text" class="form-control" id="title" name="Title" 
+                           placeholder="Tiêu đề đánh giá" maxlength="200" required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="content" class="form-label">Nội Dung Đánh Giá</label>
+                    <textarea class="form-control" id="content" name="Content" 
+                              placeholder="Chia sẻ trải nghiệm của bạn..." rows="5" 
+                              minlength="10" maxlength="2000" required></textarea>
+                    <small class="text-muted">Tối thiểu 10 ký tự, tối đa 2000 ký tự</small>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-check-circle"></i> Gửi Đánh Giá
+                </button>
+            </form>
+        </div>
+
+        <script>
+            document.querySelectorAll('.star-rating .star').forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.dataset.value;
+                    document.getElementById('rating').value = rating;
+                    document.querySelectorAll('.star-rating .star').forEach(s => s.classList.remove('active'));
+                    for (let i = 0; i < rating; i++) {
+                        document.querySelectorAll('.star-rating .star')[i].classList.add('active');
+                    }
+                });
+
+                star.addEventListener('mouseover', function() {
+                    const rating = this.dataset.value;
+                    document.querySelectorAll('.star-rating .star').forEach(s => s.classList.remove('active'));
+                    for (let i = 0; i < rating; i++) {
+                        document.querySelectorAll('.star-rating .star')[i].classList.add('active');
+                    }
+                });
+            });
+
+            document.querySelector('.star-rating').addEventListener('mouseout', function() {
+                const currentRating = document.getElementById('rating').value;
+                document.querySelectorAll('.star-rating .star').forEach(s => s.classList.remove('active'));
+                for (let i = 0; i < currentRating; i++) {
+                    document.querySelectorAll('.star-rating .star')[i].classList.add('active');
+                }
+            });
+        </script>
+    }
+    else
+    {
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i>
+            <a href="/Account/Login">Đăng nhập</a> để viết đánh giá
+        </div>
+    }
+
+    <h5 class="form-label mt-4">Tất Cả Đánh Giá (@ViewBag.ReviewStats?.TotalReviews ?? 0)</h5>
+
+    @if (Model.Any())
+    {
+        @foreach (var review in Model)
+        {
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div>
+                            <div class="reviewer-name">@review.UserName</div>
+                            <div class="review-date">@review.CreatedAt.ToString("dd/MM/yyyy")</div>
+                            @if (review.IsVerifiedPurchase)
+                            {
+                                <span class="verified-badge">✓ Đã xác minh</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="review-rating">
+                    @for (int i = 0; i < review.Rating; i++)
+                    {
+                        <span class="bi bi-star-fill"></span>
+                    }
+                    @for (int i = review.Rating; i < 5; i++)
+                    {
+                        <span class="bi bi-star"></span>
+                    }
+                    <span class="ms-2">@review.Rating.0/5</span>
+                </div>
+
+                <div class="review-content">
+                    <h5>@review.Title</h5>
+                    <p>@review.Content</p>
+                </div>
+
+                <div class="review-actions">
+                    <button class="action-btn" onclick="markHelpful(@review.Id)">
+                        <i class="bi bi-hand-thumbs-up"></i> Hữu ích (@review.HelpfulCount)
+                    </button>
+                    <button class="action-btn" onclick="markUnhelpful(@review.Id)">
+                        <i class="bi bi-hand-thumbs-down"></i> Không hữu ích (@review.UnhelpfulCount)
+                    </button>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        @if (currentUserId == review.UserId)
+                        {
+                            <form method="post" action="/ProductReview/DeleteReview" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="reviewId" value="@review.Id" />
+                                <input type="hidden" name="productId" value="@review.ProductId" />
+                                <button type="submit" class="action-btn" style="color: #d32f2f;">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Chưa có đánh giá nào. Hãy là người đầu tiên để đánh giá sản phẩm này!
+        </div>
+    }
+</div>
+
+<script>
+    function markHelpful(reviewId) {
+        fetch(`/ProductReview/MarkHelpful?reviewId=${reviewId}`, { method: 'POST' })
+            .then(r => location.reload());
+    }
+
+    function markUnhelpful(reviewId) {
+        fetch(`/ProductReview/MarkUnhelpful?reviewId=${reviewId}`, { method: 'POST' })
+            .then(r => location.reload());
+    }
+</script>

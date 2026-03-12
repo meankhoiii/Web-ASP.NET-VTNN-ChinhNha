@@ -75,5 +75,11 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? src.Author.FullName : string.Empty))
             .ReverseMap();
         CreateMap<BlogCategory, BlogCategoryDto>().ReverseMap();
+
+        // Product Reviews
+        CreateMap<ProductReview, ProductReviewDto>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "Anonymous"))
+            .ForMember(dest => dest.UserAvatarUrl, opt => opt.MapFrom(src => src.User != null ? src.User.AvatarUrl : null))
+            .ReverseMap();
     }
 }
