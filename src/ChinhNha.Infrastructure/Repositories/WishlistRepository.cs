@@ -88,6 +88,16 @@ public class WishlistRepository : GenericRepository<Wishlist>, IWishlistReposito
             .ToList();
     }
 
+    /// <summary>Get wishlist items that include a specific product</summary>
+    public async Task<IEnumerable<Wishlist>> GetWishlistsByProductAsync(int productId)
+    {
+        var all = await ListAllAsync();
+        return all
+            .Where(w => w.ProductId == productId && w.PurchasedAt == null)
+            .OrderByDescending(w => w.AddedAt)
+            .ToList();
+    }
+
     /// <summary>Count total items in user's wishlists</summary>
     public async Task<int> GetWishlistCountAsync(string userId)
     {

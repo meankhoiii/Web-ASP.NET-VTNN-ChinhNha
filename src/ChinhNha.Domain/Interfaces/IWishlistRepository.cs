@@ -26,6 +26,9 @@ public interface IWishlistRepository : IRepository<Wishlist>
     /// <summary>Get products with price drops</summary>
     Task<IEnumerable<Wishlist>> GetPriceDropsAsync(string userId);
 
+    /// <summary>Get wishlist items that include a specific product</summary>
+    Task<IEnumerable<Wishlist>> GetWishlistsByProductAsync(int productId);
+
     /// <summary>Count total items in user's wishlists</summary>
     Task<int> GetWishlistCountAsync(string userId);
 }
