@@ -15,6 +15,7 @@ public class BlogController : Controller
     [Route("tin-tuc")]
     public async Task<IActionResult> Index()
     {
+        ViewData["MetaDescription"] = "Tin tuc ky thuat mua vu, huong dan su dung phan bon va kinh nghiem canh tac tu ChinhNha.";
         var posts = await _blogService.GetPublishedPostsAsync();
         return View(posts);
     }
@@ -26,6 +27,9 @@ public class BlogController : Controller
         
         // Ensure the post is published or user is Admin
         if (post == null || (!post.IsPublished && !User.IsInRole("Admin"))) return NotFound();
+
+        ViewData["MetaDescription"] = post.MetaDescription ?? post.Summary ?? post.Title;
+        ViewData["OgImage"] = post.FeaturedImageUrl;
 
         return View(post);
     }

@@ -3,6 +3,11 @@
 
 @{
     ViewData["Title"] = Model.Product.Name;
+    ViewData["MetaDescription"] = Model.Product.MetaDescription ?? Model.Product.ShortDescription ?? Model.Product.Description ?? Model.Product.Name;
+    ViewData["OgImage"] = Model.Product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl;
+    var productUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{Model.Product.Slug}";
+    var encodedProductUrl = Uri.EscapeDataString(productUrl);
+    var encodedProductTitle = Uri.EscapeDataString(Model.Product.Name);
 }
 
 <style>
@@ -253,6 +258,18 @@
             <button class="btn-wishlist-large" onclick="addToWishlistDetails(@Model.Product.Id)">
                 <i class="bi bi-heart-fill me-2"></i> THÊM VÀO YÊU THÍCH
             </button>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=@encodedProductUrl">
+                    <i class="bi bi-facebook me-1"></i> Chia se Facebook
+                </a>
+                <a class="btn btn-outline-info" target="_blank" rel="noopener noreferrer" href="https://zalo.me/share?url=@encodedProductUrl">
+                    <i class="bi bi-chat-dots-fill me-1"></i> Chia se Zalo
+                </a>
+                <a class="btn btn-outline-secondary" target="_blank" rel="noopener noreferrer" href="https://twitter.com/intent/tweet?url=@encodedProductUrl&text=@encodedProductTitle">
+                    <i class="bi bi-share-fill me-1"></i> Chia se X
+                </a>
+            </div>
         </div>
     </div>
 </div>

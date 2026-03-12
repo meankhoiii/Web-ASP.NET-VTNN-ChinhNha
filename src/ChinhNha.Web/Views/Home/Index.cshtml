@@ -3,6 +3,7 @@
 
 @{
     ViewData["Title"] = "Trang chủ";
+    ViewData["MetaDescription"] = "Chinh Nha cung cap phan bon, vat tu nong nghiep, tin tuc ky thuat mua vu va goi y san pham thong minh.";
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -233,10 +234,37 @@
 
 <div class="row mb-4">
     <div class="col-12">
+        @if (TempData["NewsletterSuccess"] != null)
+        {
+            <div class="alert alert-success fw-bold">@TempData["NewsletterSuccess"]</div>
+        }
+        @if (TempData["NewsletterError"] != null)
+        {
+            <div class="alert alert-danger fw-bold">@TempData["NewsletterError"]</div>
+        }
         <div class="alert-box d-flex align-items-center">
             <i class="bi bi-megaphone-fill fs-2 me-3 text-danger"></i>
             <div>
                 <strong>THÔNG BÁO:</strong> Đại lý đang có chương trình giảm giá 5% cho phân bón NPK mùa vụ Đông Xuân. Gọi <strong class="text-danger">0909.123.456</strong> để đặt hàng ngay!
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-5 mt-5">
+    <h2 class="section-heading"><i class="bi bi-envelope-paper-fill text-warning me-2"></i> NHAN BAN TIN KHUYEN MAI</h2>
+    <div class="p-4 bg-white border border-2 border-success rounded">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-6">
+                <h4 class="fw-bold text-success mb-2">Dang ky newsletter ChinhNha</h4>
+                <p class="mb-0 text-muted">Nhan tin khuyen mai, thong bao giam gia va meo canh tac moi qua email.</p>
+            </div>
+            <div class="col-lg-6">
+                <form method="post" action="/Home/SubscribeNewsletter" class="d-flex flex-column flex-sm-row gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="email" name="email" class="form-control form-control-lg" placeholder="Nhap email cua ban" required />
+                    <button type="submit" class="btn btn-success btn-lg fw-bold">Dang ky</button>
+                </form>
             </div>
         </div>
     </div>

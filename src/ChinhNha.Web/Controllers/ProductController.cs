@@ -17,6 +17,8 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Index(int? categoryId, string? searchQuery, int pageNumber = 1)
     {
+        ViewData["MetaDescription"] = "Cua hang phan bon Chinh Nha voi bo loc tim kiem, danh muc, gia va thong tin san pham nong nghiep chi tiet.";
+
         IEnumerable<ProductDto> products;
         
         if (categoryId.HasValue)
@@ -68,6 +70,9 @@ public class ProductController : Controller
             Product = product,
             RelatedProducts = relatedResult.Where(p => p.Id != product.Id).Take(4)
         };
+
+        ViewData["MetaDescription"] = product.MetaDescription ?? product.ShortDescription ?? product.Description ?? product.Name;
+        ViewData["OgImage"] = product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl;
 
         return View(model);
     }

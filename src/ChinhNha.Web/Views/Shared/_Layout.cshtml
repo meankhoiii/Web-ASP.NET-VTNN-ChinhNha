@@ -3,6 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "Chinh Nha - cua hang vat tu nong nghiep, phan bon chinh hang va tu van mua vu.")" />
+    <meta property="og:title" content="@(ViewData["Title"] ?? "VTNN Chinh Nha")" />
+    <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "Chinh Nha - cua hang vat tu nong nghiep, phan bon chinh hang va tu van mua vu.")" />
+    <meta property="og:type" content="website" />
+    @if (ViewData["OgImage"] is string ogImage && !string.IsNullOrWhiteSpace(ogImage))
+    {
+        <meta property="og:image" content="@ogImage" />
+    }
     <title>@ViewData["Title"] - VTNN Chính Nha</title>
     
     <!-- Fonts & Icons -->

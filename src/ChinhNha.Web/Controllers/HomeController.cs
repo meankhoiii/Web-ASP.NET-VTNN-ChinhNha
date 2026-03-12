@@ -5,6 +5,7 @@ using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace ChinhNha.Web.Controllers;
 
@@ -38,6 +39,8 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        ViewData["MetaDescription"] = "Chinh Nha cung cap phan bon va vat tu nong nghiep chinh hang, tu van mua vu, dat hang nhanh va giao tan noi.";
+
         // Use GetFeaturedProductsAsync (or fallback to top 8 from GetAll if empty)
         var featured = await _productService.GetFeaturedProductsAsync();
         
@@ -63,6 +66,56 @@ public class HomeController : Controller
         };
 
         return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubscribeNewsletter(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+        {
+            TempData["NewsletterError"] = "Email khong hop le.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(
+                adminEmail,
+                "[ChinhNha] Dang ky newsletter moi",
+                $"<p>Co nguoi dang ky nhan ban tin moi.</p><p><strong>Email:</strong> {email.Trim()}</p>");
+        }
+
+        await _emailService.SendAsync(
+            email.Trim(),
+            "Dang ky ban tin ChinhNha thanh cong",
+            "<p>Cam on ban da dang ky nhan ban tin tu ChinhNha. Chung toi se gui thong tin khuyen mai va kinh nghiem canh tac phu hop.</p>");
+
+        TempData["NewsletterSuccess"] = "Dang ky nhan ban tin thanh cong.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet("sitemap.xml")]
+    public async Task<IActionResult> Sitemap()
+    {
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var products = await _productService.GetAllProductsAsync();
+        var blogs = await _blogService.GetPublishedPostsAsync();
+
+        var urlset = new XElement("urlset",
+            new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
+            new XAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9"),
+            BuildUrlElement(baseUrl + "/"),
+            BuildUrlElement(baseUrl + "/Product"),
+            BuildUrlElement(baseUrl + "/tin-tuc"),
+            BuildUrlElement(baseUrl + "/Home/Contact"),
+            products.Select(p => BuildUrlElement(baseUrl + "/san-pham/" + p.Slug)),
+            blogs.Select(b => BuildUrlElement(baseUrl + "/tin-tuc/" + b.Slug))
+        );
+
+        var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), urlset);
+        return Content(document.ToString(), "application/xml");
     }
 
     public IActionResult Privacy()
@@ -124,5 +177,13 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    private static XElement BuildUrlElement(string url)
+    {
+        return new XElement("url",
+            new XElement("loc", url),
+            new XElement("changefreq", "daily"),
+            new XElement("priority", "0.8"));
     }
 }
