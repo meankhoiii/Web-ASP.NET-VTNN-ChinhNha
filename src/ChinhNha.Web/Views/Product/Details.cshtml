@@ -331,14 +331,17 @@
             let qty = parseInt(document.getElementById('qty').value);
             if (typeof addToCart === "function") {
                 addToCart(productId, qty);
-                // Có thể thêm hàm hiển thị thông báo alert thật to "Đã bỏ vào giỏ báo thành công!" 
-                alert("Đã thêm thành công " + qty + " sản phẩm vào giỏ hàng!");
+                if (typeof showToast === "function") {
+                    showToast("Thanh cong", "Da them " + qty + " san pham vao gio hang.");
+                }
             }
         }
 
         async function addToWishlistDetails(productId) {
             if (typeof addToWishlist !== "function") {
-                alert("Chức năng wishlist chưa sẵn sàng.");
+                if (typeof showToast === "function") {
+                    showToast("Thong bao", "Chuc nang wishlist chua san sang.", "warning");
+                }
                 return;
             }
 

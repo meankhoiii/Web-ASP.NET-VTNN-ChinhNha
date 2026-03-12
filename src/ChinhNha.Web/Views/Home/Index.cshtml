@@ -437,20 +437,54 @@
             return new Intl.NumberFormat('vi-VN').format(value || 0) + 'đ';
         }
 
+        async function recordRecommendationInteraction(recommendationId, interactionType) {
+            if (!recommendationId || recommendationId <= 0) {
+                return;
+            }
+
+            try {
+                await fetch('/api/Recommendation/' + recommendationId + '/interaction', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interactionType: interactionType })
+                });
+            } catch {
+                // Keep UI responsive even if tracking fails.
+            }
+        }
+
+        function onHomeRecommendationClick(event, recommendationId) {
+            event.preventDefault();
+            recordRecommendationInteraction(recommendationId, 'click');
+            const targetUrl = event.currentTarget ? event.currentTarget.href : '/Product';
+            window.location.href = targetUrl;
+            return false;
+        }
+
+        function addRecommendedToCart(recommendedProductId, recommendationId) {
+            recordRecommendationInteraction(recommendationId, 'cart');
+            if (typeof addToCart === 'function') {
+                addToCart(recommendedProductId, 1);
+            }
+        }
+
         function buildHomeRecCard(item) {
             const image = item.recommendedProductImage || '/images/no-image.png';
             const name = item.recommendedProductName || 'San pham';
             const price = item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0;
             const link = '/Product?searchQuery=' + encodeURIComponent(name);
+            const recommendationId = item.id || 0;
+            const productId = item.recommendedProductId || 0;
 
             return '<div class="home-rec-card">'
                 + '<img src="' + image + '" alt="' + name + '" onerror="this.src=\'/images/no-image.png\'" />'
-                + '<a class="home-rec-name" href="' + link + '">' + name + '</a>'
+                + '<a class="home-rec-name" href="' + link + '" onclick="return onHomeRecommendationClick(event, ' + recommendationId + ')">' + name + '</a>'
                 + '<div class="small text-muted">' + (item.recommendationReason || 'De xuat cho ban') + '</div>'
                 + '<div class="home-rec-price">' + formatHomeRecPrice(price) + '</div>'
                 + '<div class="d-flex gap-2 mt-auto">'
-                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addToCart(' + item.recommendedProductId + ', 1)">Them gio</button>'
-                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + item.recommendedProductId + ')">Yeu thich</button>'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addRecommendedToCart(' + productId + ', ' + recommendationId + ')">Them gio</button>'
+                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + productId + ')">Yeu thich</button>'
                 + '</div>'
                 + '</div>';
         }
@@ -485,6 +519,10 @@
 
                 grid.innerHTML = items.map(buildHomeRecCard).join('');
                 grid.style.display = 'grid';
+
+                items.forEach(function (item) {
+                    recordRecommendationInteraction(item.id || 0, 'view');
+                });
             } catch {
                 loading.style.display = 'none';
                 empty.style.display = 'block';
@@ -549,7 +587,9 @@
                     document.getElementById('weather-desc').innerText = desc;
                 })
                 .catch(err => {
-                    alert("Không lấy được thời tiết lúc này do lỗi mạng!");
+                    if (typeof showToast === 'function') {
+                        showToast('Canh bao', 'Khong lay duoc thong tin thoi tiet luc nay.', 'warning');
+                    }
                 });
         }
 
