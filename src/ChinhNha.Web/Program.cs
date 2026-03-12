@@ -76,6 +76,8 @@ builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 builder.Services.AddScoped<ISavedSearchFilterRepository, SavedSearchFilterRepository>();
 builder.Services.AddScoped<ISearchAnalyticsRepository, SearchAnalyticsRepository>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IProductRecommendationRepository, ProductRecommendationRepository>();
 
 // ---- Domain Services ----
 builder.Services.AddScoped<IAppUserService, AppUserService>();
@@ -96,6 +98,8 @@ builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay
 builder.Services.AddScoped<IAuthService, CookieAuthService>();
 builder.Services.AddScoped<IPasswordHashService, Pbkdf2PasswordHashService>();
 builder.Services.AddScoped<IAiModelSelectionService, AiModelSelectionService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IProductRecommendationService, ProductRecommendationService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 

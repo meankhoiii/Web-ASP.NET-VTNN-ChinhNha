@@ -37,6 +37,8 @@ public class AppDbContext : DbContext
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<SearchAnalytics> SearchAnalytics => Set<SearchAnalytics>();
+    public DbSet<Wishlist> Wishlists => Set<Wishlist>();
+    public DbSet<ProductRecommendation> ProductRecommendations => Set<ProductRecommendation>();
     
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
