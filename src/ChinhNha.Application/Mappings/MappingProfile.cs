@@ -87,5 +87,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "Unknown User"))
             .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
             .ReverseMap();
+
+        // Saved Search Filters
+        CreateMap<SavedSearchFilter, ChinhNha.Application.DTOs.Products.SavedSearchFilterDto>()
+            .ForMember(dest => dest.Filters, opt => opt.Ignore()) // Handled manually in service
+            .ReverseMap();
     }
 }

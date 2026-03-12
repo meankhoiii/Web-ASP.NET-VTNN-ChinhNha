@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<SavedSearchFilter> SavedSearchFilters => Set<SavedSearchFilter>();
     
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();

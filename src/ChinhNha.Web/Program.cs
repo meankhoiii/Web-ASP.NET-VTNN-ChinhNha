@@ -74,6 +74,7 @@ builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IAuditRepository, AuditRepository>();
+builder.Services.AddScoped<ISavedSearchFilterRepository, SavedSearchFilterRepository>();
 
 // ---- Domain Services ----
 builder.Services.AddScoped<IAppUserService, AppUserService>();
@@ -81,6 +82,7 @@ builder.Services.AddScoped<IAppUserService, AppUserService>();
 // ---- Application Services ----
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
+builder.Services.AddScoped<IProductSearchService, ProductSearchService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IInventoryImportExportService, InventoryImportExportService>();
