@@ -6,7 +6,6 @@ using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,15 +35,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequiredLength = 6;
-});
-
 // ---- Repositories ----
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -61,8 +51,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay.VNPayService>();
 builder.Services.AddScoped<IAuthService, CookieAuthService>();
+builder.Services.AddScoped<IPasswordHashService, Pbkdf2PasswordHashService>();
 builder.Services.AddScoped<IAiModelSelectionService, AiModelSelectionService>();
-builder.Services.AddScoped<IPasswordHasher<ChinhNha.Domain.Entities.AppUser>, PasswordHasher<ChinhNha.Domain.Entities.AppUser>>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
@@ -136,10 +126,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        var passwordHasher = services.GetRequiredService<IPasswordHasher<ChinhNha.Domain.Entities.AppUser>>();
+        var passwordHashService = services.GetRequiredService<IPasswordHashService>();
         
         await context.Database.MigrateAsync(); // Ensure DB is completely migrated
-        await DbSeeder.SeedAsync(context, passwordHasher);
+        await DbSeeder.SeedAsync(context, passwordHashService);
     }
     catch (Exception ex)
     {

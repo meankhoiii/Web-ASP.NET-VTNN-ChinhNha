@@ -5,7 +5,6 @@ using ChinhNha.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -15,16 +14,16 @@ public class CookieAuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IPasswordHasher<AppUser> _passwordHasher;
+    private readonly IPasswordHashService _passwordHashService;
 
     public CookieAuthService(
         AppDbContext context,
         IHttpContextAccessor httpContextAccessor,
-        IPasswordHasher<AppUser> passwordHasher)
+        IPasswordHashService passwordHashService)
     {
         _context = context;
         _httpContextAccessor = httpContextAccessor;
-        _passwordHasher = passwordHasher;
+        _passwordHashService = passwordHashService;
     }
 
     public async Task<AuthResult> LoginAsync(string email, string password, bool rememberMe)
@@ -39,8 +38,8 @@ public class CookieAuthService : IAuthService
             return new AuthResult { Succeeded = false, ErrorMessage = "Email hoặc mật khẩu không chính xác." };
         }
 
-        var verification = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-        if (verification == PasswordVerificationResult.Failed)
+        var isValidPassword = _passwordHashService.VerifyPassword(password, user.PasswordHash);
+        if (!isValidPassword)
         {
             return new AuthResult { Succeeded = false, ErrorMessage = "Email hoặc mật khẩu không chính xác." };
         }
@@ -85,7 +84,7 @@ public class CookieAuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        user.PasswordHash = _passwordHasher.HashPassword(user, password);
+        user.PasswordHash = _passwordHashService.HashPassword(password);
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();

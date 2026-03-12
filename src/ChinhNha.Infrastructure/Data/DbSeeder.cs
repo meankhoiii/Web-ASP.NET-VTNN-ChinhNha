@@ -1,12 +1,12 @@
 using ChinhNha.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ChinhNha.Application.Interfaces;
 
 namespace ChinhNha.Infrastructure.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext context, IPasswordHasher<AppUser> passwordHasher)
+    public static async Task SeedAsync(AppDbContext context, IPasswordHashService passwordHashService)
     {
         // 1. Tạo Roles
         if (!await context.Roles.AnyAsync(r => r.Name == "Admin"))
@@ -36,7 +36,7 @@ public static class DbSeeder
                 CreatedAt = DateTime.UtcNow
             };
 
-            adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "Admin@123");
+            adminUser.PasswordHash = passwordHashService.HashPassword("Admin@123");
             context.Users.Add(adminUser);
             await context.SaveChangesAsync();
         }
