@@ -4,6 +4,7 @@ using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using AutoMapper;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace ChinhNha.Application.Services;
 
@@ -11,19 +12,25 @@ public class ProductSearchService : IProductSearchService
 {
     private readonly IProductRepository _productRepository;
     private readonly ISavedSearchFilterRepository _savedFilterRepository;
+    private readonly ISearchAnalyticsRepository _searchAnalyticsRepository;
     private readonly IProductReviewService _reviewService;
     private readonly IMapper _mapper;
+    private readonly ILogger<ProductSearchService> _logger;
 
     public ProductSearchService(
         IProductRepository productRepository,
         ISavedSearchFilterRepository savedFilterRepository,
+        ISearchAnalyticsRepository searchAnalyticsRepository,
         IProductReviewService reviewService,
-        IMapper mapper)
+        IMapper mapper,
+        ILogger<ProductSearchService> logger)
     {
         _productRepository = productRepository;
         _savedFilterRepository = savedFilterRepository;
+        _searchAnalyticsRepository = searchAnalyticsRepository;
         _reviewService = reviewService;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<ProductSearchPagedResultDto> SearchProductsAsync(ProductSearchFilterDto filters)
@@ -73,6 +80,22 @@ public class ProductSearchService : IProductSearchService
         }
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)filters.PageSize);
+
+        // Log search analytics
+        try
+        {
+            var filtersJson = System.Text.Json.JsonSerializer.Serialize(filters);
+            await _searchAnalyticsRepository.LogSearchAsync(
+                filters.SearchQuery ?? "all",
+                totalCount,
+                null,
+                filtersJson);
+            _logger.LogInformation($"Search logged: '{filters.SearchQuery}' - {totalCount} results");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error logging search analytics");
+        }
 
         return new ProductSearchPagedResultDto
         {

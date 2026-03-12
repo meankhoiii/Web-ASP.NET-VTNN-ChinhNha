@@ -75,6 +75,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 builder.Services.AddScoped<ISavedSearchFilterRepository, SavedSearchFilterRepository>();
+builder.Services.AddScoped<ISearchAnalyticsRepository, SearchAnalyticsRepository>();
 
 // ---- Domain Services ----
 builder.Services.AddScoped<IAppUserService, AppUserService>();
