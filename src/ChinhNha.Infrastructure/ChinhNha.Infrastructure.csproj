@@ -12,6 +12,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.ML" Version="3.0.1" />
     <PackageReference Include="Microsoft.ML.TimeSeries" Version="3.0.1" />
+    <PackageReference Include="EPPlus" Version="7.1.2" />
   </ItemGroup>
 
   <ItemGroup>

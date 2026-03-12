@@ -14,6 +14,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetUserOrdersWithDetailsAsync(string userId)
     {
         return await _dbContext.Orders
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
             .ThenInclude(i => i.Product)
             .Include(o => o.OrderItems)
@@ -26,6 +27,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public async Task<Order?> GetOrderWithDetailsByIdAsync(int id)
     {
         return await _dbContext.Orders
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
             .ThenInclude(i => i.Product)
             .Include(o => o.OrderItems)
@@ -36,6 +38,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
     public async Task<IEnumerable<Order>> GetAllOrdersWithDetailsAsync()
     {
         return await _dbContext.Orders
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
             .ThenInclude(i => i.Product)
             .Include(o => o.OrderItems)

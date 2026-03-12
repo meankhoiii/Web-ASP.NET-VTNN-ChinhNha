@@ -3,6 +3,7 @@ using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 
 namespace ChinhNha.Web.Controllers;
@@ -13,17 +14,26 @@ public class HomeController : Controller
     private readonly IProductService _productService;
     private readonly IRepository<ProductCategory> _categoryRepo;
     private readonly IBlogService _blogService;
+    private readonly IRepository<ContactMessage> _contactMessageRepo;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
     public HomeController(
         ILogger<HomeController> logger, 
         IProductService productService,
         IRepository<ProductCategory> categoryRepo,
-        IBlogService blogService)
+        IBlogService blogService,
+        IRepository<ContactMessage> contactMessageRepo,
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _logger = logger;
         _productService = productService;
         _categoryRepo = categoryRepo;
         _blogService = blogService;
+        _contactMessageRepo = contactMessageRepo;
+        _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task<IActionResult> Index()
@@ -66,18 +76,45 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public IActionResult Contact(string name, string email, string phone, string message)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Contact(string name, string email, string phone, string message)
     {
-        // TODO: In a real application, save contact form to database or send email
-        // For now, just return success message
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(message))
         {
             TempData["Error"] = "Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Email, Tin nhắn)";
             return RedirectToAction(nameof(Contact));
         }
 
-        // Log the contact form submission
-        _logger.LogInformation($"Contact form submitted: Name={name}, Email={email}, Phone={phone}, Message={message}");
+        var contactMessage = new ContactMessage
+        {
+            FullName = name.Trim(),
+            Email = email.Trim(),
+            Phone = phone?.Trim() ?? string.Empty,
+            Subject = "Liên hệ từ website",
+            Message = message.Trim()
+        };
+
+        await _contactMessageRepo.AddAsync(contactMessage);
+
+        _logger.LogInformation("Contact form submitted: Name={Name}, Email={Email}, Phone={Phone}", name, email, phone);
+
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(
+                adminEmail,
+                $"[ChinhNha] Liên hệ mới từ {name}",
+                $"<h3>Liên hệ mới từ website</h3><p><strong>Họ tên:</strong> {name}</p><p><strong>Email:</strong> {email}</p><p><strong>Số điện thoại:</strong> {phone}</p><p><strong>Nội dung:</strong><br>{message}</p>",
+                $"Liên hệ mới từ {name} | Email: {email} | SĐT: {phone} | Nội dung: {message}"
+            );
+        }
+
+        await _emailService.SendAsync(
+            email.Trim(),
+            "ChinhNha đã nhận được liên hệ của bạn",
+            $"<p>Xin chào <strong>{name}</strong>,</p><p>Chúng tôi đã nhận được thông tin liên hệ của bạn và sẽ phản hồi trong vòng 24 giờ làm việc.</p><p><strong>Nội dung bạn gửi:</strong><br>{message}</p><p>Trân trọng,<br>ChinhNha</p>",
+            $"Xin chào {name}, ChinhNha đã nhận được liên hệ của bạn và sẽ phản hồi trong vòng 24 giờ làm việc. Nội dung: {message}"
+        );
         
         TempData["Success"] = "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong 24 giờ.";
         return RedirectToAction(nameof(Contact));

@@ -1,8 +1,11 @@
 using ChinhNha.Application.DTOs.Orders;
 using ChinhNha.Application.Interfaces;
+using ChinhNha.Domain.Enums;
 using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
@@ -13,12 +16,24 @@ public class CheckoutController : Controller
     private readonly ICartService _cartService;
     private readonly IOrderService _orderService;
     private readonly IVNPayService _vnpayService;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<CheckoutController> _logger;
 
-    public CheckoutController(ICartService cartService, IOrderService orderService, IVNPayService vnpayService)
+    public CheckoutController(
+        ICartService cartService,
+        IOrderService orderService,
+        IVNPayService vnpayService,
+        IEmailService emailService,
+        IConfiguration configuration,
+        ILogger<CheckoutController> logger)
     {
         _cartService = cartService;
         _orderService = orderService;
         _vnpayService = vnpayService;
+        _emailService = emailService;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     private string GetOrCreateSessionId()
@@ -80,7 +95,8 @@ public class CheckoutController : Controller
                 shippingName: model.ReceiverName,
                 shippingPhone: model.ReceiverPhone,
                 shippingAddress: model.ShippingAddress,
-                shippingNote: model.Note
+                shippingNote: model.Note,
+                paymentMethod: model.PaymentMethod
             );
 
             if (model.PaymentMethod == "VNPay")
@@ -100,10 +116,13 @@ public class CheckoutController : Controller
                 return Redirect(paymentUrl);
             }
 
+            await SendOrderCreatedNotificationsAsync(order, model);
+
             return RedirectToAction("Success", new { id = order.Id });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Checkout failed for user {UserId}", userId);
             ModelState.AddModelError(string.Empty, "Có lỗi xảy ra khi đặt hàng: " + ex.Message);
             return View(model);
         }
@@ -130,16 +149,28 @@ public class CheckoutController : Controller
 
         if (int.TryParse(response.OrderId, out int orderId))
         {
+            var paymentStatus = response.Success ? PaymentStatus.Paid : PaymentStatus.Failed;
+            await _orderService.UpdatePaymentResultAsync(
+                orderId,
+                PaymentMethod.VNPay,
+                paymentStatus,
+                response.TransactionId,
+                response.Success
+                    ? $"VNPay thanh toán thành công. Mã phản hồi: {response.VnPayResponseCode}"
+                    : $"VNPay thanh toán thất bại. Mã phản hồi: {response.VnPayResponseCode}"
+            );
+
             var order = await _orderService.GetOrderByIdAsync(orderId);
             if (order == null) return NotFound();
 
             if (response.Success)
             {
-                // TODO: Gọi logic cập nhật trạng thái đơn hàng (Đã thanh toán) ở Application layer
+                await SendPaymentNotificationsAsync(order, response, true);
                 TempData["PaymentMessage"] = $"Thanh toán VNPay thành công! (Mã giao dịch: {response.TransactionId})";
             }
             else
             {
+                await SendPaymentNotificationsAsync(order, response, false);
                 TempData["PaymentMessage"] = $"Thanh toán VNPay thất bại hoặc bị hủy.";
             }
 
@@ -147,5 +178,65 @@ public class CheckoutController : Controller
         }
 
         return RedirectToAction("Index", "Home");
+    }
+
+    private async Task SendOrderCreatedNotificationsAsync(OrderDto order, CheckoutViewModel model)
+    {
+        if (!string.IsNullOrWhiteSpace(order.UserEmail))
+        {
+            await _emailService.SendAsync(
+                order.UserEmail,
+                $"[ChinhNha] Xác nhận đơn hàng #{order.Id}",
+                $"<p>Xin chào <strong>{model.ReceiverName}</strong>,</p><p>Đơn hàng <strong>#{order.Id}</strong> đã được tạo thành công.</p><p><strong>Phương thức thanh toán:</strong> {order.PaymentMethod}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p><p>Chúng tôi sẽ sớm liên hệ để xác nhận đơn hàng.</p>",
+                $"Don hang #{order.Id} da duoc tao. Phuong thuc thanh toan: {order.PaymentMethod}. Tong tien: {order.TotalAmount:N0}đ."
+            );
+        }
+
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(
+                adminEmail,
+                $"[ChinhNha] Đơn hàng mới #{order.Id}",
+                $"<p>Có đơn hàng mới <strong>#{order.Id}</strong>.</p><p><strong>Khách hàng:</strong> {order.UserFullName}</p><p><strong>Người nhận:</strong> {model.ReceiverName}</p><p><strong>Số điện thoại:</strong> {model.ReceiverPhone}</p><p><strong>Thanh toán:</strong> {order.PaymentMethod}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p><p><strong>Địa chỉ:</strong> {model.ShippingAddress}</p>",
+                $"Don hang moi #{order.Id}. Khach hang: {order.UserFullName}. Nguoi nhan: {model.ReceiverName}. So dien thoai: {model.ReceiverPhone}. Thanh toan: {order.PaymentMethod}. Tong tien: {order.TotalAmount:N0}đ."
+            );
+        }
+    }
+
+    private async Task SendPaymentNotificationsAsync(OrderDto order, PaymentResponseDto response, bool isSuccess)
+    {
+        if (!string.IsNullOrWhiteSpace(order.UserEmail))
+        {
+            await _emailService.SendAsync(
+                order.UserEmail,
+                isSuccess
+                    ? $"[ChinhNha] Thanh toán VNPay thành công cho đơn #{order.Id}"
+                    : $"[ChinhNha] Thanh toán VNPay chưa hoàn tất cho đơn #{order.Id}",
+                isSuccess
+                    ? $"<p>Thanh toán cho đơn hàng <strong>#{order.Id}</strong> đã thành công.</p><p><strong>Mã giao dịch:</strong> {response.TransactionId}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p>"
+                    : $"<p>Thanh toán VNPay cho đơn hàng <strong>#{order.Id}</strong> chưa hoàn tất.</p><p><strong>Mã phản hồi:</strong> {response.VnPayResponseCode}</p><p>Bạn có thể thử lại hoặc liên hệ ChinhNha để được hỗ trợ.</p>",
+                isSuccess
+                    ? $"Thanh toan VNPay thanh cong cho don hang #{order.Id}. Ma giao dich: {response.TransactionId}."
+                    : $"Thanh toan VNPay cho don hang #{order.Id} chua hoan tat. Ma phan hoi: {response.VnPayResponseCode}."
+            );
+        }
+
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(
+                adminEmail,
+                isSuccess
+                    ? $"[ChinhNha] VNPay thanh toán thành công cho đơn #{order.Id}"
+                    : $"[ChinhNha] VNPay thanh toán thất bại cho đơn #{order.Id}",
+                isSuccess
+                    ? $"<p>Đơn hàng <strong>#{order.Id}</strong> đã thanh toán VNPay thành công.</p><p><strong>Mã giao dịch:</strong> {response.TransactionId}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p>"
+                    : $"<p>Đơn hàng <strong>#{order.Id}</strong> thanh toán VNPay chưa hoàn tất.</p><p><strong>Mã phản hồi:</strong> {response.VnPayResponseCode}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p>",
+                isSuccess
+                    ? $"Don hang #{order.Id} da thanh toan VNPay thanh cong. Ma giao dich: {response.TransactionId}."
+                    : $"Don hang #{order.Id} thanh toan VNPay chua hoan tat. Ma phan hoi: {response.VnPayResponseCode}."
+            );
+        }
     }
 }

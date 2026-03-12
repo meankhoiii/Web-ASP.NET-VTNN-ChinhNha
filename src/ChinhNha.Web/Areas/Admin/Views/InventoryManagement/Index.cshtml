@@ -6,12 +6,44 @@
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Quản lý Nhập Xuất Kho</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group" role="group">
+            <!-- Import Button -->
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-upload"></i> Nhập từ Excel
+            </button>
+            <!-- Export Button -->
+            <a href="@Url.Action("ExportInventory")" class="btn btn-outline-info">
+                <i class="bi bi-download"></i> Xuất Excel
+            </a>
+            <!-- Download Template -->
+            <a href="@Url.Action("DownloadImportTemplate")" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-earmark-arrow-down"></i> Template
+            </a>
+        </div>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @Html.Raw((TempData["WarningMessage"]?.ToString() ?? string.Empty).Replace("\n", "<br>"))
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -63,4 +95,43 @@
             }
         </tbody>
     </table>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="bi bi-upload"></i> Nhập dữ liệu từ Excel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" asp-action="ImportInventory">
+                <div class="modal-body">
+                    <div class="alert alert-info" role="alert">
+                        <small>
+                            <strong>Định dạng Excel:</strong><br>
+                            Cột 1: Tên sản phẩm<br>
+                            Cột 2: Loại giao dịch (Import/Export/Return/Adjustment/Loss)<br>
+                            Cột 3: Số lượng<br>
+                            Cột 4: Đơn giá (tùy chọn)<br>
+                            Cột 5: Ghi chú (tùy chọn)
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Chọn file Excel:</label>
+                        <input class="form-control" type="file" id="importFile" name="file" accept=".xlsx" required>
+                        <small class="text-muted">Chỉ hỗ trợ file .xlsx</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-upload"></i> Nhập dữ liệu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

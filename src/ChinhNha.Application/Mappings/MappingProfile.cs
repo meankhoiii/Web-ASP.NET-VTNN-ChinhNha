@@ -22,6 +22,7 @@ public class MappingProfile : Profile
 
         CreateMap<Order, OrderDto>()
             .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+            .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
             .ForMember(dest => dest.ShippingName, opt => opt.MapFrom(src => src.ReceiverName))
             .ForMember(dest => dest.ShippingPhone, opt => opt.MapFrom(src => src.ReceiverPhone))
             .ForMember(dest => dest.ShippingNote, opt => opt.MapFrom(src => src.Note))
