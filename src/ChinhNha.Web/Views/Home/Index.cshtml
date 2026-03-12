@@ -230,6 +230,44 @@
         font-weight: 900;
         margin: 8px 0;
     }
+
+    .newsletter-card {
+        padding: 1.5rem;
+    }
+
+    .newsletter-form .form-control,
+    .newsletter-form .btn {
+        min-height: 52px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .alert-box {
+            flex-direction: column;
+            align-items: flex-start !important;
+            text-align: left;
+            gap: 0.75rem;
+        }
+
+        .newsletter-card {
+            padding: 1rem;
+        }
+
+        .newsletter-form {
+            width: 100%;
+        }
+
+        .newsletter-form .btn {
+            width: 100%;
+        }
+
+        .home-rec-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-heading {
+            padding: 12px 14px;
+        }
+    }
 </style>
 
 <div class="row mb-4">
@@ -253,14 +291,14 @@
 
 <div class="mb-5 mt-5">
     <h2 class="section-heading"><i class="bi bi-envelope-paper-fill text-warning me-2"></i> NHAN BAN TIN KHUYEN MAI</h2>
-    <div class="p-4 bg-white border border-2 border-success rounded">
+    <div class="newsletter-card bg-white border border-2 border-success rounded">
         <div class="row align-items-center g-3">
             <div class="col-lg-6">
                 <h4 class="fw-bold text-success mb-2">Dang ky newsletter ChinhNha</h4>
                 <p class="mb-0 text-muted">Nhan tin khuyen mai, thong bao giam gia va meo canh tac moi qua email.</p>
             </div>
             <div class="col-lg-6">
-                <form method="post" action="/Home/SubscribeNewsletter" class="d-flex flex-column flex-sm-row gap-2">
+                <form method="post" action="/Home/SubscribeNewsletter" class="newsletter-form d-flex flex-column flex-sm-row gap-2">
                     @Html.AntiForgeryToken()
                     <input type="email" name="email" class="form-control form-control-lg" placeholder="Nhap email cua ban" required />
                     <button type="submit" class="btn btn-success btn-lg fw-bold">Dang ky</button>

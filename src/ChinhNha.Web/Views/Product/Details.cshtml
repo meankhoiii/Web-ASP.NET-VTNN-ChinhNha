@@ -197,6 +197,58 @@
         font-size: 1.1rem;
         margin: 8px 0;
     }
+
+    .detail-actions-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .share-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .share-actions .btn {
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 767.98px) {
+        .detail-sku {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .detail-price {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+        }
+
+        .detail-actions-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .detail-actions-row > * {
+            width: 100%;
+        }
+
+        .share-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .share-actions .btn {
+            width: 100%;
+        }
+
+        .thumbnail-img {
+            width: 72px;
+            height: 72px;
+        }
+    }
 </style>
 
 <div class="mb-4">
@@ -243,13 +295,13 @@
 
         <div class="p-3 p-md-4 border border-3 border-warning rounded" style="background-color: #fff9e6; overflow: visible;">
             <div class="fs-4 fw-bold mb-3">CHỌN SỐ LƯỢNG MUA:</div>
-            <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
-                <div class="d-flex align-items-center flex-nowrap">
+            <div class="detail-actions-row mb-3">
+                <div class="d-flex align-items-center flex-nowrap justify-content-center justify-content-md-start">
                     <button class="btn btn-qty" type="button" onclick="updateQty(-1)">-</button>
                     <input type="number" id="qty" class="qty-input-large mx-1" value="1" min="1" max="@Model.Product.StockQuantity">
                     <button class="btn btn-qty" type="button" onclick="updateQty(1)">+</button>
                 </div>
-                <span class="fs-5 fw-bold text-success mt-1 mt-md-0">Sẵn hàng: @Model.Product.StockQuantity bao/chai</span>
+                <span class="fs-5 fw-bold text-success mt-1 mt-md-0 text-center text-md-start">Sẵn hàng: @Model.Product.StockQuantity bao/chai</span>
             </div>
 
             <button class="btn-buy-large" onclick="addToCartDetails(@Model.Product.Id)">
@@ -259,7 +311,7 @@
                 <i class="bi bi-heart-fill me-2"></i> THÊM VÀO YÊU THÍCH
             </button>
 
-            <div class="d-flex flex-wrap gap-2 mt-3">
+            <div class="share-actions mt-3">
                 <a class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=@encodedProductUrl">
                     <i class="bi bi-facebook me-1"></i> Chia se Facebook
                 </a>

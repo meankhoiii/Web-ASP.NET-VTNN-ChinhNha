@@ -37,6 +37,73 @@
     .wishlist-action-btn {
         min-width: 120px;
     }
+
+    .wishlist-mobile-card {
+        display: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        .wishlist-wrap {
+            padding: 1rem;
+        }
+
+        .wishlist-header {
+            align-items: stretch;
+        }
+
+        .wishlist-header .d-flex {
+            width: 100%;
+        }
+
+        .wishlist-header .btn {
+            flex: 1 1 0;
+        }
+
+        .wishlist-desktop {
+            display: none;
+        }
+
+        .wishlist-mobile-card {
+            display: block;
+            border: 1px solid #dfe6df;
+            border-radius: 12px;
+            padding: 0.9rem;
+            background: #fff;
+            margin-bottom: 0.85rem;
+        }
+
+        .wishlist-mobile-top {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            margin-bottom: 0.85rem;
+        }
+
+        .wishlist-mobile-card .wishlist-img {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+        }
+
+        .wishlist-mobile-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.92rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .wishlist-mobile-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .wishlist-action-btn {
+            min-width: 0;
+            width: 100%;
+        }
+    }
 </style>
 
 <div class="container my-4 my-md-5">
@@ -54,7 +121,7 @@
 
         <div id="wishlistAlert"></div>
 
-        <div class="table-responsive">
+        <div class="table-responsive wishlist-desktop">
             <table class="table table-hover align-middle wishlist-table">
                 <thead>
                     <tr>
@@ -73,6 +140,8 @@
                 </tbody>
             </table>
         </div>
+
+        <div id="wishlistMobileBody" class="wishlist-mobile-list"></div>
     </div>
 </div>
 
@@ -123,8 +192,10 @@
 
         function renderRows(items) {
             const body = document.getElementById('wishlistBody');
+            const mobileBody = document.getElementById('wishlistMobileBody');
             if (!items || items.length === 0) {
                 body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Wishlist dang trong. <a href="/Product">Kham pha san pham ngay</a>.</td></tr>';
+                mobileBody.innerHTML = '<div class="text-center text-muted py-4">Wishlist dang trong. <a href="/Product">Kham pha san pham ngay</a>.</div>';
                 return;
             }
 
@@ -166,11 +237,53 @@
                     + '</div></td>'
                     + '</tr>';
             }).join('');
+
+            mobileBody.innerHTML = items.map(function (item) {
+                const currentPrice = item.productSalePrice ?? item.productPrice;
+                const priceChange = item.priceChange;
+                let priceChangeHtml = '<span class="text-muted">-</span>';
+                if (priceChange != null) {
+                    if (priceChange < 0) {
+                        priceChangeHtml = '<span class="text-success fw-bold">' + fmtPrice(priceChange) + '</span>';
+                    } else if (priceChange > 0) {
+                        priceChangeHtml = '<span class="text-danger fw-bold">+' + fmtPrice(priceChange) + '</span>';
+                    } else {
+                        priceChangeHtml = '<span class="text-muted">0đ</span>';
+                    }
+                }
+
+                const purchasedBadge = item.purchasedAt
+                    ? '<span class="badge text-bg-success">Da mua</span>'
+                    : '<span class="badge text-bg-warning">Dang theo doi</span>';
+
+                return '<div class="wishlist-mobile-card">'
+                    + '<div class="wishlist-mobile-top">'
+                    + '<img class="wishlist-img" src="' + (item.productImage || '/images/no-image.png') + '" alt="' + (item.productName || '') + '" onerror="this.src=\'/images/no-image.png\'" />'
+                    + '<div class="flex-grow-1">'
+                    + '<div class="fw-semibold mb-1">' + (item.productName || 'San pham') + '</div>'
+                    + '<div class="small text-muted mb-2">Them luc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</div>'
+                    + purchasedBadge
+                    + '</div></div>'
+                    + '<div class="wishlist-mobile-meta">'
+                    + '<div><div class="text-muted small">Gia hien tai</div><div class="fw-bold">' + fmtPrice(currentPrice) + '</div></div>'
+                    + '<div><div class="text-muted small">Bien dong</div><div>' + priceChangeHtml + '</div></div>'
+                    + '<div><div class="text-muted small">Uu tien</div><div class="fw-semibold">' + (item.priority || 3) + '/5</div></div>'
+                    + '<div><div class="text-muted small">Trang thai</div><div>' + purchasedBadge + '</div></div>'
+                    + '</div>'
+                    + '<div class="wishlist-mobile-actions">'
+                    + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
+                    + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Da mua</button>')
+                    + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xoa</button>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
         }
 
         async function loadWishlist() {
             const body = document.getElementById('wishlistBody');
+            const mobileBody = document.getElementById('wishlistMobileBody');
             body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Dang tai du lieu...</td></tr>';
+            mobileBody.innerHTML = '<div class="text-center text-muted py-4">Dang tai du lieu...</div>';
 
             try {
                 const res = await fetch('/api/Wishlist', { credentials: 'include' });

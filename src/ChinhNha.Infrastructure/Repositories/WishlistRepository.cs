@@ -80,11 +80,17 @@ public class WishlistRepository : GenericRepository<Wishlist>, IWishlistReposito
     {
         var all = await ListAllAsync();
         return all
-            .Where(w => w.UserId == userId && 
-                       w.PriceWhenAdded.HasValue && 
+            .Where(w => w.UserId == userId &&
                        w.Product != null &&
-                       w.Product.SalePrice < w.PriceWhenAdded)
-            .OrderByDescending(w => (w.PriceWhenAdded.Value - (w.Product?.SalePrice ?? 0)) / w.PriceWhenAdded.Value * 100)
+                       w.PriceWhenAdded.HasValue &&
+                       w.PriceWhenAdded.Value > 0 &&
+                       (w.Product.SalePrice ?? w.Product.BasePrice) < w.PriceWhenAdded.Value)
+            .OrderByDescending(w =>
+            {
+                var priceWhenAdded = w.PriceWhenAdded.GetValueOrDefault();
+                var currentPrice = w.Product?.SalePrice ?? w.Product?.BasePrice ?? 0;
+                return priceWhenAdded <= 0 ? 0 : (priceWhenAdded - currentPrice) / priceWhenAdded * 100;
+            })
             .ToList();
     }
 
