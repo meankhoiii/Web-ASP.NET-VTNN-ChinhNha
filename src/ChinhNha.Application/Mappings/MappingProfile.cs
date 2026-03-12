@@ -22,6 +22,13 @@ public class MappingProfile : Profile
 
         CreateMap<Order, OrderDto>()
             .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+            .ForMember(dest => dest.ShippingName, opt => opt.MapFrom(src => src.ReceiverName))
+            .ForMember(dest => dest.ShippingPhone, opt => opt.MapFrom(src => src.ReceiverPhone))
+            .ForMember(dest => dest.ShippingNote, opt => opt.MapFrom(src => src.Note))
+            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderItems))
+            .ForMember(dest => dest.PaymentMethod, opt => opt.Ignore())
+            .ForMember(dest => dest.IsPaid, opt => opt.Ignore())
+            .ForMember(dest => dest.TrackingNumber, opt => opt.Ignore())
             .ReverseMap();
         CreateMap<OrderItem, OrderItemDto>()
             .ForMember(dest => dest.VariantId, opt => opt.MapFrom(src => src.ProductVariantId))
@@ -29,7 +36,12 @@ public class MappingProfile : Profile
             .ReverseMap();
 
         // Cart
-        CreateMap<Cart, CartDto>().ReverseMap();
+        CreateMap<Cart, CartDto>()
+            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.CartItems))
+            .ForMember(dest => dest.LastUpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt ?? src.CreatedAt));
+        CreateMap<CartDto, Cart>()
+            .ForMember(dest => dest.CartItems, opt => opt.MapFrom(src => src.Items))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastUpdatedAt));
         CreateMap<CartItem, CartItemDto>()
             .ForMember(dest => dest.VariantId, opt => opt.MapFrom(src => src.ProductVariantId))
             .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.ProductVariant != null ? src.ProductVariant.VariantName : null))

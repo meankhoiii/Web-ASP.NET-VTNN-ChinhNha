@@ -12,4 +12,9 @@ public interface IInventoryForecastService
     /// Returns predicted demand for the next N weeks for a given product.
     /// </summary>
     Task<IEnumerable<InventoryForecastDto>> GetForecastForProductAsync(int productId, int weeksAhead = 4);
+    
+    /// <summary>
+    /// Trains and saves forecast models for products using historical data.
+    /// </summary>
+    Task TrainModelsAsync();
 }

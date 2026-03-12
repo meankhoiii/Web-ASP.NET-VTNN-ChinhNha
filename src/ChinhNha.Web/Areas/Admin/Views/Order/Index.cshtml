@@ -1,18 +1,50 @@
 @using ChinhNha.Domain.Enums
 @model IEnumerable<ChinhNha.Application.DTOs.Orders.OrderDto>
 @{
-    ViewData["Title"] = "Quản lý Đơn hàng";
+    ViewData["Title"] = "Quản lý Đơn hàng Dành Cho Đại Lý";
     Layout = "_AdminLayout";
     OrderStatus? currentStatus = ViewBag.CurrentStatus as OrderStatus?;
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Quản lý Đơn hàng</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
+<style>
+    .order-table th {
+        background-color: #006400 !important;
+        color: white !important;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 15px !important;
+        border: 2px solid #004d00;
+    }
+    .order-table td {
+        font-size: 1.2rem;
+        padding: 15px !important;
+        border: 2px solid #ccc;
+        vertical-align: middle;
+        background-color: #fff;
+    }
+    
+    .phone-number {
+        font-size: 1.4rem;
+        font-weight: 900;
+        color: #CC0000;
+    }
+    
+    .status-badge {
+        font-size: 1.1rem !important;
+        padding: 8px 12px !important;
+        border-radius: 4px !important;
+        font-weight: bold !important;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 border border-3 border-success rounded">
+    <h1 class="h2 fw-bold text-success mb-0"><i class="bi bi-cart-check-fill me-2"></i> DANH SÁCH ĐƠN ĐẶT HÀNG MỚI</h1>
+    <div>
         <form method="get" class="d-flex align-items-center">
-            <label class="me-2 fw-bold text-nowrap">Lọc trạng thái:</label>
-            <select name="status" class="form-select form-select-sm me-2" onchange="this.form.submit()">
-                <option value="">-- Tất cả --</option>
+            <label class="me-3 fw-bold fs-4 text-nowrap">LỌC THEO TRẠNG THÁI KHÁCH:</label>
+            <select name="status" class="form-select form-select-lg border-3 border-success fw-bold p-2" onchange="this.form.submit()" style="width: auto;">
+                <option value="">-- HIỂN THỊ TẤT CẢ DOANH SỐ --</option>
                 @foreach (var val in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
                 {
                     if (currentStatus == val)
@@ -29,73 +61,82 @@
     </div>
 </div>
 
-<div class="table-responsive bg-white rounded shadow-sm">
-    <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+<div class="table-responsive">
+    <table class="table order-table table-bordered mb-0">
+        <thead>
             <tr>
-                <th scope="col" width="80">Mã đơn</th>
-                <th scope="col">Ngày đặt</th>
-                <th scope="col">Khách hàng</th>
-                <th scope="col">Số điện thoại</th>
-                <th scope="col" class="text-end">Tổng tiền</th>
-                <th scope="col" class="text-center">Thanh toán</th>
-                <th scope="col" class="text-center">Trạng thái</th>
-                <th scope="col" class="text-end">Hành động</th>
+                <th scope="col" class="text-center" width="100">Mã Số</th>
+                <th scope="col" width="150">Ngày Khách Đặt</th>
+                <th scope="col">Tên Bà Con Nhận Hàng</th>
+                <th scope="col" width="180">Số Điện Thoại (Gọi chốt)</th>
+                <th scope="col" class="text-end">Lấy Tiền (Tổng)</th>
+                <th scope="col" class="text-center">Tình Trạng Tiền</th>
+                <th scope="col" class="text-center">Tình Trạng Giao</th>
+                <th scope="col" class="text-center">Hành động</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var o in Model)
+            @if (Model.Any())
             {
-                <tr>
-                    <td class="fw-bold">#@o.Id</td>
-                    <td>@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@o.ShippingName</td>
-                    <td>@o.ShippingPhone</td>
-                    <td class="text-end fw-bold text-danger">@o.TotalAmount.ToString("N0")₫</td>
-                    <td class="text-center">
-                        @if (o.PaymentStatus == PaymentStatus.Paid)
-                        {
-                            <span class="badge bg-success">Đã thanh toán</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Chưa TT</span>
-                        }
-                    </td>
-                    <td class="text-center">
-                        @switch (o.Status)
-                        {
-                            case OrderStatus.Pending:
-                                <span class="badge bg-warning text-dark">Chờ xử lý</span>
-                                break;
-                            case OrderStatus.Processing:
-                                <span class="badge bg-primary">Đang xử lý</span>
-                                break;
-                            case OrderStatus.Shipping:
-                                <span class="badge bg-info text-dark">Đang giao</span>
-                                break;
-                            case OrderStatus.Delivered:
-                                <span class="badge bg-success">Đã giao</span>
-                                break;
-                            case OrderStatus.Cancelled:
-                                <span class="badge bg-danger">Đã huỷ</span>
-                                break;
-                            default:
-                                <span class="badge bg-secondary">@o.Status</span>
-                                break;
-                        }
-                    </td>
-                    <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">
-                            Chi tiết
-                        </a>
-                    </td>
-                </tr>
+                foreach (var o in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-center fs-4">#@o.Id</td>
+                        <td class="fw-bold text-muted">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="fw-bold fs-5 text-dark">@o.ShippingName</td>
+                        <td class="text-center">
+                            <span class="phone-number">@o.ShippingPhone</span>
+                        </td>
+                        <td class="text-end fw-bold text-danger fs-3">@o.TotalAmount.ToString("N0")₫</td>
+                        <td class="text-center">
+                            @if (o.IsPaid)
+                            {
+                                <div class="badge bg-success status-badge w-100">ĐÃ THU T.KHOẢN</div>
+                            }
+                            else
+                            {
+                                <div class="badge bg-danger status-badge w-100">CHƯA LẤY TIỀN (THU HỘ)</div>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @switch (o.Status)
+                            {
+                                case OrderStatus.Pending:
+                                    <div class="badge bg-warning text-dark status-badge w-100">MỚI VÔ - CHỜ GỌI</div>
+                                    break;
+                                case OrderStatus.Processing:
+                                    <div class="badge bg-primary status-badge w-100">ĐANG SOẠN HÀNG</div>
+                                    break;
+                                case OrderStatus.Shipping:
+                                    <div class="badge bg-info text-dark status-badge w-100">GIAO CHO NHÀ XE</div>
+                                    break;
+                                case OrderStatus.Delivered:
+                                    <div class="badge bg-success status-badge w-100">ĐÃ GIAO XONG</div>
+                                    break;
+                                case OrderStatus.Cancelled:
+                                    <div class="badge bg-secondary status-badge w-100">KHÁCH HỦY KÈO</div>
+                                    break;
+                                default:
+                                    <div class="badge bg-dark status-badge w-100">@o.Status</div>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-outline-success border-3 fw-bold fs-5">
+                                <i class="bi bi-eye-fill me-1"></i> XEM KỸ & GHI CHÚ
+                            </a>
+                        </td>
+                    </tr>
+                }
             }
-            @if (!Model.Any())
+            else
             {
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy đơn hàng nào.</td>
+                    <td colspan="8" class="text-center py-5">
+                        <div class="alert alert-secondary fs-4 fw-bold mb-0">
+                            Không có đơn hàng nào vào lúc này!
+                        </div>
+                    </td>
                 </tr>
             }
         </tbody>

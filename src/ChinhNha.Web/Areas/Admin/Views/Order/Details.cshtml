@@ -114,7 +114,7 @@
                 <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
                 <p>
                     <strong>Thanh toán:</strong> 
-                    @if (Model.PaymentStatus == PaymentStatus.Paid)
+                    @if (Model.IsPaid)
                     {
                         <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
                     }

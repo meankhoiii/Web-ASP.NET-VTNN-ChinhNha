@@ -26,7 +26,7 @@ public class ProductFormViewModel
     [Display(Name = "Thông tin kỹ thuật")]
     public string? TechnicalInfo { get; set; }
     
-    [Required(ErrorMessage = "Chọn danh mục")]
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn danh mục")]
     [Display(Name = "Danh mục")]
     public int CategoryId { get; set; }
     

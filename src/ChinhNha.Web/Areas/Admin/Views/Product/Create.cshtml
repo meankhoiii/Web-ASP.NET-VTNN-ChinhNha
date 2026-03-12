@@ -1,145 +1,185 @@
 @model ChinhNha.Web.Areas.Admin.Models.ProductFormViewModel
 @{
-    ViewData["Title"] = "Thêm mới Sản phẩm";
+    ViewData["Title"] = "Ghi Sổ Sản Phẩm Mới Mùa Vụ";
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Thêm mới Sản phẩm</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Quay lại
+<style>
+    .form-label {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #006400;
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 3px solid #ccc !important;
+        font-size: 1.2rem !important;
+        padding: 12px 15px !important;
+        border-radius: 6px !important;
+        background-color: #fff;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #006400 !important;
+        box-shadow: 0 0 0 4px rgba(0, 100, 0, 0.1) !important;
+    }
+
+    .form-section {
+        background-color: #fefaef;
+        border: 3px solid #006400;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .form-section-title {
+        background-color: #006400;
+        color: white;
+        padding: 12px 20px;
+        font-size: 1.6rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-top: -25px;
+        margin-left: -25px;
+        margin-right: -25px;
+        margin-bottom: 25px;
+        border-radius: 4px 4px 0 0;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 fw-bold"><i class="bi bi-plus-square-fill text-success me-2"></i> ĐĂNG MẶT HÀNG MỚI LÊN WEB</h1>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-dark border-3 py-2 fs-5 fw-bold">
+            <i class="bi bi-arrow-left-circle-fill me-1"></i> KHÔNG ĐĂNG NỮA & TRỞ RA
         </a>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-4">
-        <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-5 fw-bold mb-4"></div>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="mb-3">
-                        <label asp-for="Name" class="form-label fw-bold"></label>
-                        <input asp-for="Name" class="form-control" placeholder="Tên phân bón..." />
-                        <span asp-validation-for="Name" class="text-danger small"></span>
-                    </div>
+    <div class="row">
+        <!-- Cột thông tin chữ -->
+        <div class="col-lg-7">
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-pencil-square me-2"></i> THÔNG TIN TRÊN BAO BÌ</div>
+                
+                <div class="mb-4">
+                    <label asp-for="Name" class="form-label">Tên bao phân / Chai thuốc in trên nhãn:</label>
+                    <input asp-for="Name" class="form-control" placeholder="Ví dụ: Phân bón NPK 20-20-15 Đầu Trâu..." />
+                    <span asp-validation-for="Name" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="SKU" class="form-label fw-bold"></label>
-                            <input asp-for="SKU" class="form-control" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="CategoryId" class="form-label fw-bold"></label>
-                            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
-                                <option value="">-- Chọn danh mục --</option>
-                            </select>
-                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
-                        </div>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label asp-for="SKU" class="form-label">Mã vạch / Mã hàng (nếu có):</label>
+                        <input asp-for="SKU" class="form-control" placeholder="Nhập mã cho dễ nhớ (VD: NPK01)" />
                     </div>
-
-                    <div class="mb-3">
-                        <label asp-for="ShortDescription" class="form-label fw-bold"></label>
-                        <textarea asp-for="ShortDescription" class="form-control" rows="2"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-bold"></label>
-                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="UsageInstructions" class="form-label fw-bold"></label>
-                        <textarea asp-for="UsageInstructions" class="form-control" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="ImageUrl" class="form-label fw-bold"></label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
-                        <div class="form-text">Dán trực tiếp URL hình ảnh cho đơn giản.</div>
+                    <div class="col-md-6">
+                        <label asp-for="CategoryId" class="form-label">Nhóm hàng (Danh mục):</label>
+                        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select fw-bold">
+                            <option value="">-- Mở ra chọn nhóm hàng --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="card bg-light border-0 mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold border-bottom pb-2">Giá & Tồn kho</h5>
-                            
-                            <div class="mb-3">
-                                <label asp-for="BasePrice" class="form-label"></label>
-                                <div class="input-group">
-                                    <input asp-for="BasePrice" class="form-control" type="number" step="1" />
-                                    <span class="input-group-text">₫</span>
-                                </div>
-                                <span asp-validation-for="BasePrice" class="text-danger small"></span>
-                            </div>
+                <div class="mb-4">
+                    <label asp-for="ShortDescription" class="form-label">Đoạn giới thiệu ngắn gọn (ghi để báo khách lẹ):</label>
+                    <textarea asp-for="ShortDescription" class="form-control" rows="2" placeholder="Ghi công dụng chính (VD: Chống rụng trái non rât hay...)"></textarea>
+                </div>
 
-                            <div class="mb-3">
-                                <label asp-for="SalePrice" class="form-label"></label>
-                                <div class="input-group">
-                                    <input asp-for="SalePrice" class="form-control" type="number" step="1" />
-                                    <span class="input-group-text">₫</span>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label asp-for="StockQuantity" class="form-label"></label>
-                                    <input asp-for="StockQuantity" class="form-control" type="number" />
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label asp-for="MinStockLevel" class="form-label"></label>
-                                    <input asp-for="MinStockLevel" class="form-control" type="number" />
-                                </div>
-                            </div>
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label">Ghi đầy đủ chi tiết công dụng (thành phần, thời điểm xịt bón):</label>
+                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                </div>
 
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label asp-for="Unit" class="form-label"></label>
-                                    <input asp-for="Unit" class="form-control" />
-                                    <span asp-validation-for="Unit" class="text-danger small"></span>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label asp-for="Weight" class="form-label"></label>
-                                    <input asp-for="Weight" class="form-control" type="number" step="0.01" />
-                                </div>
-                            </div>
-                        </div>
+                <div class="mb-4">
+                    <label asp-for="UsageInstructions" class="form-label">Bài hướng dẫn pha liều lượng (1 lít pha bao nhiêu bình?):</label>
+                    <textarea asp-for="UsageInstructions" class="form-control" rows="4"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="ImageUrl" class="form-label">Link Hình Ảnh Đại Diện (Copy link hình dán vô đây):</label>
+                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Tiền, Tồn kho -->
+        <div class="col-lg-5">
+            <div class="form-section bg-light border-danger">
+                <div class="form-section-title bg-danger"><i class="bi bi-currency-dollar me-2"></i> ĐỊNH GIÁ & THEO DÕI SỐ LƯỢNG KHO</div>
+                
+                <div class="mb-4">
+                    <label asp-for="BasePrice" class="form-label text-danger">Ghi Giá Bán Mặc Định (Tiền VNĐ):</label>
+                    <div class="input-group input-group-lg">
+                        <input asp-for="BasePrice" class="form-control text-danger fw-bold fs-3" type="number" step="1" />
+                        <span class="input-group-text bg-danger text-white fw-bold">VNĐ</span>
                     </div>
+                    <span asp-validation-for="BasePrice" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
 
-                    <div class="card bg-light border-0">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold border-bottom pb-2">Tuỳ chọn</h5>
-                            
-                            <div class="form-check form-switch mb-2">
-                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                                <label asp-for="IsActive" class="form-check-label"></label>
-                            </div>
+                <div class="mb-4">
+                    <label asp-for="SalePrice" class="form-label text-warning">Giá Bán Khuyến Mãi (Nếu đang giảm):</label>
+                    <div class="input-group input-group-lg">
+                        <input asp-for="SalePrice" class="form-control fs-4" type="number" step="1" />
+                        <span class="input-group-text bg-warning text-dark fw-bold">VNĐ</span>
+                    </div>
+                </div>
+                
+                <div class="row border-top border-dark border-dashed pt-4 mb-4">
+                    <div class="col-6 mb-3">
+                        <label asp-for="StockQuantity" class="form-label text-dark">Trong Kho Hiện Có Bấy Nhiêu:</label>
+                        <input asp-for="StockQuantity" class="form-control text-center fw-bold fs-4" type="number" />
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label asp-for="MinStockLevel" class="form-label text-dark">Mức Cảnh Báo (Cạn Kho):</label>
+                        <input asp-for="MinStockLevel" class="form-control text-center fw-bold fs-4" type="number" placeholder="Ví dụ: 10 bao" />
+                    </div>
+                </div>
 
-                            <div class="form-check form-switch mb-2">
-                                <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
-                                <label asp-for="IsFeatured" class="form-check-label"></label>
-                            </div>
-                            
-                            <div class="mb-3 mt-3">
-                                <label asp-for="SupplierId" class="form-label"></label>
-                                <select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select">
-                                    <option value="">-- Trống --</option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success w-100 mt-2">
-                                <i class="bi bi-save me-1"></i> Lưu Sản Phẩm
-                            </button>
-                        </div>
+                <div class="row border-top border-dark border-dashed pt-4">
+                    <div class="col-6 mb-3">
+                        <label asp-for="Unit" class="form-label">Đơn Vị Tính:</label>
+                        <input asp-for="Unit" class="form-control fw-bold" placeholder="Ghi: Bao, Chai, Gói..." />
+                        <span asp-validation-for="Unit" class="text-danger small mt-1 d-block"></span>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label asp-for="Weight" class="form-label">Trọng Lượng(Kg/Lít):</label>
+                        <input asp-for="Weight" class="form-control fw-bold" type="number" step="0.01" />
                     </div>
                 </div>
             </div>
-        </form>
+
+            <div class="form-section bg-white border-primary">
+                <div class="form-section-title bg-primary"><i class="bi bi-gear-fill me-2"></i> TUỲ CHỈNH KHÁC</div>
+                
+                <div class="form-check form-switch mb-4 p-0">
+                    <input asp-for="IsActive" class="form-check-input ms-0 me-3 mt-1" type="checkbox" style="width: 40px; height: 20px; cursor:pointer;" />
+                    <label asp-for="IsActive" class="form-label text-dark" style="cursor:pointer; vertical-align: top;">Đánh Dấu Mở Bán Cho Khách Thấy</label>
+                </div>
+
+                <div class="form-check form-switch mb-4 p-0">
+                    <input asp-for="IsFeatured" class="form-check-input ms-0 me-3 mt-1" type="checkbox" style="width: 40px; height: 20px; cursor:pointer;" />
+                    <label asp-for="IsFeatured" class="form-label text-dark" style="cursor:pointer; vertical-align: top;">Tô Đậm Ưu Tiên Mùa Này (Sp Nổi Bật)</label>
+                </div>
+                
+                <div class="mb-4 border-top border-dark border-dashed pt-4">
+                    <label asp-for="SupplierId" class="form-label">Nhà Cung Cấp / Công Ty Giao Hàng:</label>
+                    <select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select fw-bold fs-5 p-3">
+                        <option value="">-- KHÔNG ĐIỀN CŨNG ĐƯỢC --</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100 fs-2 fw-bold py-3 mt-3 border-4">
+                    <i class="bi bi-save-fill me-2"></i> BẤM KẾT THÚC & LƯU SP
+                </button>
+            </div>
+        </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

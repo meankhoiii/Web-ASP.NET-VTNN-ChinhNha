@@ -6,7 +6,29 @@
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Dự báo Kế hoạch Nhập kho (AI - ML.NET)</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <form asp-action="TrainAi" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật và huấn luyện lại mô hình AI ngay bây giờ? Quá trình này có thể tốn vài phút tùy thuộc vào lượng dữ liệu.');">
+            <button type="submit" class="btn btn-sm btn-outline-primary shadow-sm fw-bold">
+                <i class="bi bi-arrow-clockwise me-1"></i> Cập nhật Dữ liệu AI
+            </button>
+        </form>
+    </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body bg-light p-4 rounded">

@@ -21,7 +21,7 @@ public class BlogFormViewModel
     [Display(Name = "Hình ảnh đại diện (URL)")]
     public string? ImageUrl { get; set; }
 
-    [Required(ErrorMessage = "Chọn danh mục")]
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn danh mục")]
     [Display(Name = "Danh mục")]
     public int CategoryId { get; set; }
 

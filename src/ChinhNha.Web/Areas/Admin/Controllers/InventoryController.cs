@@ -30,11 +30,25 @@ public class InventoryController : Controller
 
         if (productId.HasValue)
         {
-            // Get forecasts for the selected product
             model.Forecasts = await _forecastService.GetForecastForProductAsync(productId.Value, 4); 
-            // Gets next 4 periods (weeks/months depending on training data)
         }
 
         return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> TrainAi()
+    {
+        try
+        {
+            await _forecastService.TrainModelsAsync();
+            TempData["SuccessMessage"] = "Đã cập nhật (huấn luyện) lại mô hình AI dự báo thành công với dữ liệu mới nhất.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Lỗi khi cập nhật mô hình: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 }

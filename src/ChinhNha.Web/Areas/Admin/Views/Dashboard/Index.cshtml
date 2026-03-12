@@ -1,68 +1,110 @@
-@model dynamic
+@using System.Globalization
+@using System.Text.Json
+@model ChinhNha.Web.Areas.Admin.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Bảng điều khiển";
     Layout = "_AdminLayout";
 }
 
+<style>
+    .forecast-mini-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .forecast-mini-header {
+        line-height: 1.35;
+    }
+
+    .forecast-mini-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0d6efd;
+    }
+
+    .forecast-mini-product {
+        font-size: 0.82rem;
+        color: #6c757d;
+    }
+
+    .forecast-mini-canvas-wrap {
+        position: relative;
+        height: 170px;
+        max-height: 170px;
+    }
+
+    .forecast-mini-canvas-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+    }
+
+    .forecast-mini-trend {
+        margin-top: 0.5rem;
+        font-size: 0.82rem;
+        color: #198754;
+        font-weight: 600;
+    }
+</style>
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Bảng điều khiển</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Xuất báo cáo</button>
-        </div>
+    <div>
+        <h1 class="h2 mb-1">Bảng điều khiển</h1>
+        <small class="text-muted">Cập nhật lúc @Model.GeneratedAt.ToString("dd/MM/yyyy HH:mm")</small>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-3 mb-4">
+    <div class="col-md-3 mb-3">
         <div class="card bg-primary text-white h-100">
-            <div class="card-body py-4">
+            <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Đơn hàng mới</h6>
-                        <h2 class="mb-0">15</h2>
+                        <h6 class="text-uppercase mb-1">Đơn mới 7 ngày</h6>
+                        <h2 class="mb-0">@Model.NewOrdersCount</h2>
                     </div>
                     <i class="bi bi-cart fs-1 text-white-50"></i>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-4">
+
+    <div class="col-md-3 mb-3">
         <div class="card bg-success text-white h-100">
-            <div class="card-body py-4">
+            <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Doanh thu</h6>
-                        <h2 class="mb-0">45M ₫</h2>
+                        <h2 class="mb-0">@Model.DeliveredRevenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</h2>
                     </div>
                     <i class="bi bi-currency-dollar fs-1 text-white-50"></i>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-4">
+
+    <div class="col-md-3 mb-3">
         <div class="card bg-warning text-white h-100">
-            <div class="card-body py-4">
+            <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Cảnh báo kho</h6>
-                        <h2 class="mb-0">3</h2>
+                        <h6 class="text-uppercase mb-1">Cảnh báo tồn kho</h6>
+                        <h2 class="mb-0">@Model.LowStockCount</h2>
                     </div>
                     <i class="bi bi-exclamation-triangle fs-1 text-white-50"></i>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-4">
+
+    <div class="col-md-3 mb-3">
         <div class="card bg-info text-white h-100">
-            <div class="card-body py-4">
+            <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1">Sản phẩm</h6>
-                        <h2 class="mb-0">120</h2>
+                        <h2 class="mb-0">@Model.TotalProducts</h2>
                     </div>
                     <i class="bi bi-box fs-1 text-white-50"></i>
                 </div>
@@ -72,8 +114,238 @@
 </div>
 
 <div class="row">
-    <div class="col-12 text-center py-5">
-        <h4 class="text-muted">Tính năng đang được phát triển tiếp...</h4>
-        <p>Vui lòng chuyển qua menu <strong>Kho hàng & Dự báo (AI)</strong> để xem tính năng ML.NET.</p>
+    <div class="col-12 mb-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow text-success me-2"></i>Dự báo AI mini-chart</h5>
+                <a href="/Admin/Inventory" class="btn btn-sm btn-outline-success">Xem dự báo chi tiết</a>
+            </div>
+            <div class="card-body">
+                @if (Model.ForecastMiniCharts.Any())
+                {
+                    <div class="row g-3">
+                        @for (var i = 0; i < Model.ForecastMiniCharts.Count; i++)
+                        {
+                            var chart = Model.ForecastMiniCharts[i];
+                            <div class="col-md-4">
+                                <div class="forecast-mini-card border rounded-3 p-3 bg-light-subtle">
+                                    <div class="forecast-mini-header mb-2">
+                                        <div class="forecast-mini-title">@chart.ChartTitle</div>
+                                        <div class="forecast-mini-product text-truncate" title="@chart.ProductName">@chart.ProductName</div>
+                                    </div>
+                                    <div class="forecast-mini-canvas-wrap">
+                                        <canvas id="forecastMiniChart_@i"></canvas>
+                                    </div>
+                                    <div class="forecast-mini-trend">Xu hướng: @chart.TrendLabel</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0">
+                        Chưa có dữ liệu dự báo cho nhóm sản phẩm hiện tại. Vui lòng train model trong trang Dự báo AI.
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-exclamation-diamond-fill text-warning me-2"></i>Cảnh báo tồn kho thấp</h6>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.LowStockProducts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>San pham</th>
+                                    <th class="text-center">Ton</th>
+                                    <th class="text-center">Min</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.LowStockProducts)
+                                {
+                                    <tr>
+                                        <td class="small">@p.ProductName</td>
+                                        <td class="text-center fw-bold text-danger">@p.StockQuantity</td>
+                                        <td class="text-center">@p.MinStockLevel</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-muted">Không có sản phẩm nào đang thiếu kho.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Đơn hàng mới nhất</h6>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RecentOrders.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ma don</th>
+                                    <th>Khach</th>
+                                    <th class="text-end">Tong tien</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>#@o.OrderId</td>
+                                        <td>
+                                            <div class="small fw-semibold">@o.CustomerName</div>
+                                            <div class="small text-muted">@o.OrderDate.ToString("dd/MM HH:mm")</div>
+                                        </td>
+                                        <td class="text-end fw-bold">@o.TotalAmount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-muted">Chưa có đơn hàng.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Top sản phẩm bán chạy</h6>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.TopSellingProducts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>San pham</th>
+                                    <th class="text-center">SL</th>
+                                    <th class="text-end">Doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.TopSellingProducts)
+                                {
+                                    <tr>
+                                        <td class="small">@p.ProductName</td>
+                                        <td class="text-center fw-bold">@p.SoldQuantity</td>
+                                        <td class="text-end">@p.Revenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-muted">Chưa có dữ liệu doanh số.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @for (var i = 0; i < Model.ForecastMiniCharts.Count; i++)
+            {
+                var chart = Model.ForecastMiniCharts[i];
+                <text>
+                (function() {
+                    const labels = @Html.Raw(JsonSerializer.Serialize(chart.Labels));
+                    const values = @Html.Raw(JsonSerializer.Serialize(chart.Values));
+                    const datasetLabel = @Html.Raw(JsonSerializer.Serialize(chart.DatasetLabel));
+                    const yAxisLabel = @Html.Raw(JsonSerializer.Serialize(chart.YAxisLabel));
+                    const unitLabel = @Html.Raw(JsonSerializer.Serialize(chart.UnitLabel));
+                    const ctx = document.getElementById('forecastMiniChart_@i');
+                    if (!ctx) {
+                        return;
+                    }
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: datasetLabel,
+                                data: values,
+                                borderColor: '#0d6efd',
+                                backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                                pointBackgroundColor: '#0d6efd',
+                                fill: true,
+                                borderWidth: 2,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { boxWidth: 10 }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = Number(context.parsed.y || 0).toLocaleString('vi-VN');
+                                            return datasetLabel + ': ' + value + ' ' + unitLabel;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { maxTicksLimit: 6 }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: yAxisLabel
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 4,
+                                        callback: function(value) {
+                                            return Number(value).toLocaleString('vi-VN');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })();
+                </text>
+            }
+        });
+    </script>
+}

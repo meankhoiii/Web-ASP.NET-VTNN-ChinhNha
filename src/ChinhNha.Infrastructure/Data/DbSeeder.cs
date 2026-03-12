@@ -36,7 +36,19 @@ public static class DbSeeder
             }
         }
 
-        // 3. Tạo Category Mẫu (Nếu chưa có)
+        // 3. Tạo Supplier Mẫu (Nếu chưa có)
+        if (!await context.Suppliers.AnyAsync())
+        {
+            var suppliers = new List<Supplier>
+            {
+                new() { Name = "Công ty CP Phân bón Việt Nam", Phone = "0901234567", Email = "lh@cpvn.com.vn", Address = "TP. Hồ Chí Minh", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new() { Name = "Công ty TNHH Agri Miền Nam", Phone = "0907654321", Email = "sales@agrimn.vn", Address = "Cần Thơ", IsActive = true, CreatedAt = DateTime.UtcNow },
+            };
+            await context.Suppliers.AddRangeAsync(suppliers);
+            await context.SaveChangesAsync();
+        }
+
+        // 4. Tạo Category Mẫu (Nếu chưa có)
         if (!await context.ProductCategories.AnyAsync())
         {
             var categories = new List<ProductCategory>
@@ -49,7 +61,20 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 4. Tạo Products Mẫu (Nếu chưa có)
+        // 5. Tạo Blog Category Mẫu (Nếu chưa có)
+        if (!await context.BlogCategories.AnyAsync())
+        {
+            var blogCats = new List<BlogCategory>
+            {
+                new() { Name = "Kiến thức Nông nghiệp", Slug = "kien-thuc-nong-nghiep", Description = "Chia sẻ kiến thức trồng trọt, chăm sóc cây", DisplayOrder = 1 },
+                new() { Name = "Tin tức thị trường", Slug = "tin-tuc-thi-truong", Description = "Cập nhật giá phân bón, thông tin thị trường", DisplayOrder = 2 },
+                new() { Name = "Kinh nghiệm sử dụng phân bón", Slug = "kinh-nghiem-su-dung-phan-bon", Description = "Hướng dẫn sử dụng phân bón hiệu quả", DisplayOrder = 3 },
+            };
+            await context.BlogCategories.AddRangeAsync(blogCats);
+            await context.SaveChangesAsync();
+        }
+
+        // 6. Tạo Products Mẫu (Nếu chưa có)
         if (!await context.Products.AnyAsync())
         {
             var category = await context.ProductCategories.FirstAsync();
