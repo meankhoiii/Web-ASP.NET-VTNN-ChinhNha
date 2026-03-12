@@ -253,6 +253,9 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Inventory" ? "active" : "")" href="/Admin/Inventory">
             <i class="bi bi-robot" style="color:#6f42c1;"></i> Dự báo AI
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AiSettings" ? "active" : "")" href="/Admin/AiSettings">
+            <i class="bi bi-cpu text-secondary"></i> Cài đặt mô hình AI
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Nội dung</span>

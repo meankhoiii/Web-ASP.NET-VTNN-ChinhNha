@@ -1,24 +1,19 @@
 using ChinhNha.Application.Interfaces;
-using ChinhNha.Domain.Entities;
 using ChinhNha.Web.Models.Account;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChinhNha.Web.Controllers;
 
 public class AccountController : Controller
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly SignInManager<AppUser> _signInManager;
+    private readonly IAuthService _authService;
     private readonly ICartService _cartService;
 
     public AccountController(
-        UserManager<AppUser> userManager,
-        SignInManager<AppUser> signInManager,
+        IAuthService authService,
         ICartService cartService)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
+        _authService = authService;
         _cartService = cartService;
     }
 
@@ -52,41 +47,35 @@ public class AccountController : Controller
 
         if (ModelState.IsValid)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
+            var result = await _authService.LoginAsync(model.Email, model.Password, model.RememberMe);
+            if (result.Succeeded && !string.IsNullOrEmpty(result.UserId))
             {
-                var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-                if (result.Succeeded)
+                // ====================================================
+                // Merge giỏ hàng Guest (Session) -> User (Database)
+                // ====================================================
+                var sessionId = HttpContext.Session.GetString("SessionId");
+                if (!string.IsNullOrEmpty(sessionId))
                 {
-                    // ====================================================
-                    // Merge giỏ hàng Guest (Session) → User (Database)
-                    // ====================================================
-                    var sessionId = HttpContext.Session.GetString("SessionId");
-                    if (!string.IsNullOrEmpty(sessionId) && user.Id != null)
+                    try
                     {
-                        try
-                        {
-                            await _cartService.MergeGuestCartToUserCartAsync(sessionId, user.Id);
-                        }
-                        catch
-                        {
-                            // Lỗi merge cart không phải lỗi nghiêm trọng → bỏ qua
-                        }
+                        await _cartService.MergeGuestCartToUserCartAsync(sessionId, result.UserId);
                     }
-
-                    if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-                        return Redirect(model.ReturnUrl);
-
-                    var roles = await _userManager.GetRolesAsync(user);
-                    if (roles.Contains("Admin"))
-                        return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
-
-                    return RedirectToAction("Index", "Home");
+                    catch
+                    {
+                        // Lỗi merge cart không phải lỗi nghiêm trọng -> bỏ qua
+                    }
                 }
+
+                if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                    return Redirect(model.ReturnUrl);
+
+                if (result.Roles.Contains("Admin"))
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+
+                return RedirectToAction("Index", "Home");
             }
 
-            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Email hoặc mật khẩu không chính xác.");
         }
 
         return View(model);
@@ -110,30 +99,16 @@ public class AccountController : Controller
 
         if (ModelState.IsValid)
         {
-            var user = new AppUser
+            var result = await _authService.RegisterAsync(model.FullName, model.Email, model.Password, "Customer");
+
+            if (result.Succeeded && !string.IsNullOrEmpty(result.UserId))
             {
-                UserName = model.Email,
-                Email = model.Email,
-                FullName = model.FullName,
-                EmailConfirmed = true // Bỏ qua xác thực email vì đây là nông nghiệp B2B
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                // Mặc định gán quyền Customer
-                await _userManager.AddToRoleAsync(user, "Customer");
-
-                // Đăng nhập ngay sau khi đăng ký
-                await _signInManager.SignInAsync(user, isPersistent: false);
-
                 // Merge giỏ hàng nếu có
                 var sessionId = HttpContext.Session.GetString("SessionId");
                 if (!string.IsNullOrEmpty(sessionId))
                 {
-                    try { await _cartService.MergeGuestCartToUserCartAsync(sessionId, user.Id); }
-                    catch { /* bỏ qua */ }
+                    try { await _cartService.MergeGuestCartToUserCartAsync(sessionId, result.UserId); }
+                    catch { }
                 }
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -142,8 +117,7 @@ public class AccountController : Controller
                 return RedirectToAction("Index", "Home");
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Đăng ký thất bại.");
         }
 
         return View(model);
@@ -156,7 +130,7 @@ public class AccountController : Controller
         // Xóa session giỏ hàng guest sau khi logout
         HttpContext.Session.Remove("SessionId");
 
-        await _signInManager.SignOutAsync();
+        await _authService.SignOutAsync();
         return RedirectToAction(nameof(HomeController.Index), "Home");
     }
 }

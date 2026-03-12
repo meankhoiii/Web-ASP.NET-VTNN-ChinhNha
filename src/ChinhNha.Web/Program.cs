@@ -1,11 +1,11 @@
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Application.Mappings;
 using ChinhNha.Application.Services;
-using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,28 +21,28 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString, b => b.MigrationsAssembly("ChinhNha.Infrastructure")));
 
-// Setup Identity
-builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+// Setup custom cookie auth
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+        options.Cookie.HttpOnly = true;
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.Configure<IdentityOptions>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 6;
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
-
-// ---- Identity Cookie Options ----
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath        = "/Account/Login";
-    options.LogoutPath       = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/Login";
-    options.Cookie.HttpOnly  = true;
-    options.ExpireTimeSpan   = TimeSpan.FromDays(30);
-    options.SlidingExpiration = true;
 });
 
 // ---- Repositories ----
@@ -60,6 +60,11 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay.VNPayService>();
+builder.Services.AddScoped<IAuthService, CookieAuthService>();
+builder.Services.AddScoped<IAiModelSelectionService, AiModelSelectionService>();
+builder.Services.AddScoped<IPasswordHasher<ChinhNha.Domain.Entities.AppUser>, PasswordHasher<ChinhNha.Domain.Entities.AppUser>>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 
 // ---- AI / ML.NET Service ----
 builder.Services.AddSingleton<IInventoryForecastService, DemandForecastService>();
@@ -131,11 +136,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        var userManager = services.GetRequiredService<UserManager<AppUser>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var passwordHasher = services.GetRequiredService<IPasswordHasher<ChinhNha.Domain.Entities.AppUser>>();
         
         await context.Database.MigrateAsync(); // Ensure DB is completely migrated
-        await DbSeeder.SeedAsync(context, userManager, roleManager);
+        await DbSeeder.SeedAsync(context, passwordHasher);
     }
     catch (Exception ex)
     {

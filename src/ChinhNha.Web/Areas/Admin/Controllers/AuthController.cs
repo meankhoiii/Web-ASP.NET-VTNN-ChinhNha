@@ -1,6 +1,5 @@
-using ChinhNha.Domain.Entities;
+using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Areas.Admin.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChinhNha.Web.Areas.Admin.Controllers;
@@ -8,13 +7,11 @@ namespace ChinhNha.Web.Areas.Admin.Controllers;
 [Area("Admin")]
 public class AuthController : Controller
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly SignInManager<AppUser> _signInManager;
+    private readonly IAuthService _authService;
 
-    public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+    public AuthController(IAuthService authService)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
+        _authService = authService;
     }
 
     [HttpGet]
@@ -33,24 +30,19 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user != null)
+        var result = await _authService.LoginAsync(model.Email, model.Password, model.RememberMe);
+        if (result.Succeeded)
         {
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
-            if (result.Succeeded)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("Admin"))
-                    return RedirectToAction("Index", "Dashboard");
+            if (result.Roles.Contains("Admin"))
+                return RedirectToAction("Index", "Dashboard");
 
-                // Đăng nhập thành công nhưng không phải Admin → đăng xuất ngay
-                await _signInManager.SignOutAsync();
-                ModelState.AddModelError(string.Empty, "Tài khoản này không có quyền truy cập trang quản trị.");
-                return View(model);
-            }
+            // Đăng nhập thành công nhưng không phải Admin -> đăng xuất ngay
+            await _authService.SignOutAsync();
+            ModelState.AddModelError(string.Empty, "Tài khoản này không có quyền truy cập trang quản trị.");
+            return View(model);
         }
 
-        ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
+        ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Email hoặc mật khẩu không chính xác.");
         return View(model);
     }
 
@@ -58,7 +50,7 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await _signInManager.SignOutAsync();
+        await _authService.SignOutAsync();
         return RedirectToAction("Login");
     }
 }

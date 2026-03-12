@@ -1,0 +1,94 @@
+@model ChinhNha.Web.Areas.Admin.Models.AiSettingsViewModel
+@{
+    ViewData["Title"] = "Cấu hình AI";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Cấu hình AI Chatbot</h2>
+        <p class="text-muted mb-0">Tự động chọn Sailor2 phù hợp theo phần cứng, hoặc khóa thủ công.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3 form-check form-switch">
+                        <input asp-for="AutoSelectEnabled" class="form-check-input" />
+                        <label asp-for="AutoSelectEnabled" class="form-check-label">Tự động chọn model tốt nhất</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ManualModel" class="form-label">Model thủ công (khi tắt tự động)</label>
+                        <select asp-for="ManualModel" class="form-select">
+                            <option value="">-- Chọn model --</option>
+                            @foreach (var item in Model.SupportedModels)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="OllamaEndpoint" class="form-label">Ollama Endpoint</label>
+                        <input asp-for="OllamaEndpoint" class="form-control" placeholder="http://localhost:11434" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save me-1"></i>Lưu cấu hình
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Phần cứng phát hiện</h5>
+                <ul class="list-unstyled mb-0">
+                    <li><strong>RAM:</strong> @Model.DetectedRamGb GB</li>
+                    <li><strong>CPU cores:</strong> @Model.CpuCores</li>
+                    <li><strong>NVIDIA GPU:</strong> @(Model.HasNvidiaGpu ? "Có" : "Không")</li>
+                    <li><strong>Ollama:</strong> @(Model.OllamaReachable ? "Đang chạy" : "Không truy cập được")</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Kết quả chọn model</h5>
+                <p class="mb-1"><strong>Gợi ý:</strong> @Model.RecommendedModel</p>
+                <p class="mb-0"><strong>Đang áp dụng:</strong> @Model.EffectiveModel</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Model Sailor2 đã cài</h5>
+                @if (Model.InstalledModels.Any())
+                {
+                    <ul class="mb-0">
+                        @foreach (var itemName in Model.InstalledModels)
+                        {
+                            <li>@itemName</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Chưa phát hiện model Sailor2 trong Ollama.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,34 +6,47 @@ namespace ChinhNha.Infrastructure.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(AppDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+    public static async Task SeedAsync(AppDbContext context, IPasswordHasher<AppUser> passwordHasher)
     {
         // 1. Tạo Roles
-        if (!await roleManager.RoleExistsAsync("Admin"))
+        if (!await context.Roles.AnyAsync(r => r.Name == "Admin"))
         {
-            await roleManager.CreateAsync(new IdentityRole("Admin"));
+            context.Roles.Add(new Role { Name = "Admin" });
         }
-        if (!await roleManager.RoleExistsAsync("Customer"))
+
+        if (!await context.Roles.AnyAsync(r => r.Name == "Customer"))
         {
-            await roleManager.CreateAsync(new IdentityRole("Customer"));
+            context.Roles.Add(new Role { Name = "Customer" });
         }
+
+        await context.SaveChangesAsync();
 
         // 2. Tạo Admin User
-        if (await userManager.FindByEmailAsync("admin@chinhnha.id.vn") == null)
+        var adminUser = await context.Users
+            .Include(u => u.UserRoles)
+            .FirstOrDefaultAsync(u => u.Email == "admin@chinhnha.id.vn");
+
+        if (adminUser == null)
         {
-            var adminUser = new AppUser
+            adminUser = new AppUser
             {
-                UserName = "admin@chinhnha.id.vn",
                 Email = "admin@chinhnha.id.vn",
                 FullName = "Administrator",
-                EmailConfirmed = true
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
-            var result = await userManager.CreateAsync(adminUser, "Admin@123");
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
+            adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "Admin@123");
+            context.Users.Add(adminUser);
+            await context.SaveChangesAsync();
+        }
+
+        var adminRole = await context.Roles.FirstAsync(r => r.Name == "Admin");
+        var hasAdminRole = await context.UserRoles.AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
+        if (!hasAdminRole)
+        {
+            context.UserRoles.Add(new AppUserRole { UserId = adminUser.Id, RoleId = adminRole.Id });
+            await context.SaveChangesAsync();
         }
 
         // 3. Tạo Supplier Mẫu (Nếu chưa có)
