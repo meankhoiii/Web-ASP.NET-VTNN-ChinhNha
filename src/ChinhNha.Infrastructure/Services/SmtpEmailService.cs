@@ -19,10 +19,10 @@ public class SmtpEmailService : IEmailService
 
     public async Task<bool> SendAsync(string toEmail, string subject, string htmlBody, string? plainTextBody = null)
     {
-        var enabled = _configuration.GetValue<bool>("Email:Enabled");
-        var host = _configuration["Email:Smtp:Host"];
-        var fromAddress = _configuration["Email:From:Address"];
-        var fromName = _configuration["Email:From:Name"] ?? "ChinhNha";
+        var enabled = GetBoolSetting("Email:Enabled", "CHINHNHA_EMAIL_ENABLED", false);
+        var host = GetSetting("Email:Smtp:Host", "CHINHNHA_SMTP_HOST");
+        var fromAddress = GetSetting("Email:From:Address", "CHINHNHA_EMAIL_FROM_ADDRESS");
+        var fromName = GetSetting("Email:From:Name", "CHINHNHA_EMAIL_FROM_NAME") ?? "ChinhNha";
 
         if (!enabled)
         {
@@ -54,18 +54,21 @@ public class SmtpEmailService : IEmailService
 
             using var client = new SmtpClient(host)
             {
-                Port = _configuration.GetValue<int?>("Email:Smtp:Port") ?? 587,
-                EnableSsl = _configuration.GetValue<bool?>("Email:Smtp:EnableSsl") ?? true,
+                Port = GetIntSetting("Email:Smtp:Port", "CHINHNHA_SMTP_PORT", 587),
+                EnableSsl = GetBoolSetting("Email:Smtp:EnableSsl", "CHINHNHA_SMTP_ENABLE_SSL", true),
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false
             };
 
-            var username = _configuration["Email:Smtp:Username"];
-            var password = _configuration["Email:Smtp:Password"];
-            if (!string.IsNullOrWhiteSpace(username))
+            var username = GetSetting("Email:Smtp:Username", "CHINHNHA_SMTP_USERNAME");
+            var password = GetSetting("Email:Smtp:Password", "CHINHNHA_SMTP_PASSWORD");
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                client.Credentials = new NetworkCredential(username, password);
+                _logger.LogWarning("Email is enabled but SMTP credentials are missing.");
+                return false;
             }
+
+            client.Credentials = new NetworkCredential(username, password);
 
             await client.SendMailAsync(message);
             return true;
@@ -75,5 +78,28 @@ public class SmtpEmailService : IEmailService
             _logger.LogError(ex, "Failed to send email to {Recipient}", toEmail);
             return false;
         }
+    }
+
+    private string? GetSetting(string key, string envKey)
+    {
+        var envValue = Environment.GetEnvironmentVariable(envKey);
+        if (!string.IsNullOrWhiteSpace(envValue))
+        {
+            return envValue;
+        }
+
+        return _configuration[key];
+    }
+
+    private int GetIntSetting(string key, string envKey, int defaultValue)
+    {
+        var value = GetSetting(key, envKey);
+        return int.TryParse(value, out var parsed) ? parsed : defaultValue;
+    }
+
+    private bool GetBoolSetting(string key, string envKey, bool defaultValue)
+    {
+        var value = GetSetting(key, envKey);
+        return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 }
