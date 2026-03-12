@@ -188,6 +188,47 @@
     }
     .blog-title:hover { color: #2E7D32; text-decoration: underline; }
     .blog-excerpt { font-size: 1rem; color: #555; }
+
+    .home-rec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+    }
+
+    .home-rec-card {
+        background: #fff;
+        border: 2px solid #dcedc8;
+        border-radius: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .home-rec-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #f9f9f9;
+        margin-bottom: 10px;
+    }
+
+    .home-rec-name {
+        color: #1b5e20;
+        font-weight: 800;
+        text-decoration: none;
+        min-height: 44px;
+        line-height: 1.35;
+    }
+
+    .home-rec-price {
+        color: #b71c1c;
+        font-size: 1.1rem;
+        font-weight: 900;
+        margin: 8px 0;
+    }
 </style>
 
 <div class="row mb-4">
@@ -263,6 +304,15 @@
         <a href="/Product" class="btn btn-outline-success fs-4 px-5 py-3 fw-bold border-3">
             XEM TẤT CẢ SẢN PHẨM KHÁC <i class="bi bi-arrow-right-circle-fill ms-2"></i>
         </a>
+    </div>
+</div>
+
+<div class="mb-5 mt-5" id="goi-y-cho-ban">
+    <h2 class="section-heading"><i class="bi bi-magic text-warning me-2"></i> GOI Y DANH CHO BAN</h2>
+    <div class="p-3 bg-white border border-2 border-success rounded">
+        <div id="homeRecLoading" class="text-muted">Dang tai danh sach goi y...</div>
+        <div id="homeRecGrid" class="home-rec-grid" style="display:none;"></div>
+        <div id="homeRecEmpty" class="text-muted" style="display:none;">Dang nhap de xem goi y ca nhan hoa cho tai khoan cua ban.</div>
     </div>
 </div>
 
@@ -383,6 +433,64 @@
 @section Scripts {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        function formatHomeRecPrice(value) {
+            return new Intl.NumberFormat('vi-VN').format(value || 0) + 'đ';
+        }
+
+        function buildHomeRecCard(item) {
+            const image = item.recommendedProductImage || '/images/no-image.png';
+            const name = item.recommendedProductName || 'San pham';
+            const price = item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0;
+            const link = '/Product?searchQuery=' + encodeURIComponent(name);
+
+            return '<div class="home-rec-card">'
+                + '<img src="' + image + '" alt="' + name + '" onerror="this.src=\'/images/no-image.png\'" />'
+                + '<a class="home-rec-name" href="' + link + '">' + name + '</a>'
+                + '<div class="small text-muted">' + (item.recommendationReason || 'De xuat cho ban') + '</div>'
+                + '<div class="home-rec-price">' + formatHomeRecPrice(price) + '</div>'
+                + '<div class="d-flex gap-2 mt-auto">'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addToCart(' + item.recommendedProductId + ', 1)">Them gio</button>'
+                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + item.recommendedProductId + ')">Yeu thich</button>'
+                + '</div>'
+                + '</div>';
+        }
+
+        async function loadHomeRecommendations() {
+            const loading = document.getElementById('homeRecLoading');
+            const grid = document.getElementById('homeRecGrid');
+            const empty = document.getElementById('homeRecEmpty');
+
+            try {
+                const res = await fetch('/api/Recommendation/for-user?limit=8', { credentials: 'include' });
+                if (res.status === 401) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                if (!res.ok) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                const data = await res.json();
+                const items = data && data.recommendations ? data.recommendations : [];
+
+                loading.style.display = 'none';
+                if (!items.length) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                grid.innerHTML = items.map(buildHomeRecCard).join('');
+                grid.style.display = 'grid';
+            } catch {
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+            }
+        }
+
         var map = L.map('map').setView([10.762622, 106.660172], 10); // Default location
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
@@ -402,6 +510,7 @@
         // Tự động load ngay khi vô trang
         document.addEventListener("DOMContentLoaded", function () {
             getLocationWeather();
+            loadHomeRecommendations();
         });
 
         function showPositionWeather(position) {

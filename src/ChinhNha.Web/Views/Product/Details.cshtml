@@ -151,6 +151,47 @@
         color: var(--text-main);
         margin-top: 5px;
     }
+
+    .rec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+    }
+
+    .rec-card {
+        border: 2px solid #c8e6c9;
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .rec-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #fafafa;
+        margin-bottom: 10px;
+    }
+
+    .rec-name {
+        font-weight: 800;
+        color: #1b5e20;
+        line-height: 1.35;
+        min-height: 44px;
+        text-decoration: none;
+    }
+
+    .rec-price {
+        color: #b71c1c;
+        font-weight: 900;
+        font-size: 1.1rem;
+        margin: 8px 0;
+    }
 </style>
 
 <div class="mb-4">
@@ -219,6 +260,20 @@
 <!-- Nội dung kéo dài dạng cuộn (Scroll) thay vì Tab ẩn dẽ gây bối rối cho người lớn tuổi -->
 <div class="row">
     <div class="col-12">
+        <h2 class="section-header"><i class="bi bi-stars me-2"></i> SẢN PHẨM TƯƠNG TỰ</h2>
+        <div class="text-content-large p-3 border border-2 border-success rounded bg-white mb-4">
+            <div id="similarProductsLoading" class="text-muted">Dang tai goi y tuong tu...</div>
+            <div id="similarProductsList" class="rec-grid" style="display:none;"></div>
+            <div id="similarProductsEmpty" class="text-muted" style="display:none;">Chua co goi y tuong tu cho san pham nay.</div>
+        </div>
+
+        <h2 class="section-header"><i class="bi bi-link-45deg me-2"></i> THƯỜNG MUA KÈM</h2>
+        <div class="text-content-large p-3 border border-2 border-success rounded bg-white mb-4">
+            <div id="fbtLoading" class="text-muted">Dang tai danh sach mua kem...</div>
+            <div id="fbtList" class="rec-grid" style="display:none;"></div>
+            <div id="fbtEmpty" class="text-muted" style="display:none;">Chua co du lieu mua kem.</div>
+        </div>
+
         <h2 class="section-header"><i class="bi bi-card-heading me-2"></i> THÔNG TIN CHI TIẾT SẢN PHẨM</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
             <p>Sản phẩm này được sản xuất trên dây chuyền công nghệ hiện đại, đảm bảo chất lượng và an toàn. Phù hợp cho nhiều loại cây trồng khác nhau, giúp cây phát triển mạnh, ra rễ nhanh, đánh bật đọt non, tăng năng suất mủ/quả vượt trội.</p>
@@ -262,6 +317,8 @@
 
 @section Scripts {
     <script>
+        const productId = @Model.Product.Id;
+
         function updateQty(change) {
             let input = document.getElementById('qty');
             let val = parseInt(input.value) + change;
@@ -294,5 +351,93 @@
                 }
             }
         }
+
+        function formatPriceVn(value) {
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+
+        function buildRecCardHtml(item, type) {
+            const image = item.imageUrl || item.recommendedProductImage || '/images/no-image.png';
+            const name = item.name || item.recommendedProductName || 'San pham';
+            const price = (item.salePrice ?? item.basePrice ?? item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0);
+            const slug = item.slug || null;
+            const detailUrl = slug ? '/san-pham/' + slug : '/Product?searchQuery=' + encodeURIComponent(name);
+
+            return '<div class="rec-card">'
+                + '<img src="' + image + '" alt="' + name + '" onerror="this.src=\'/images/no-image.png\'" />'
+                + '<a class="rec-name" href="' + detailUrl + '">' + name + '</a>'
+                + '<div class="rec-price">' + formatPriceVn(price) + '</div>'
+                + '<div class="d-flex flex-wrap gap-2 mt-auto">'
+                + '<a class="btn btn-outline-success btn-sm" href="' + detailUrl + '">Xem</a>'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addToCart(' + (item.id || item.recommendedProductId) + ', 1)">Them gio</button>'
+                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + (item.id || item.recommendedProductId) + ')">Yeu thich</button>'
+                + '</div>'
+                + '</div>';
+        }
+
+        async function loadSimilarProducts() {
+            try {
+                const res = await fetch('/api/Recommendation/similar/' + productId + '?limit=8');
+                const loading = document.getElementById('similarProductsLoading');
+                const list = document.getElementById('similarProductsList');
+                const empty = document.getElementById('similarProductsEmpty');
+
+                if (!res.ok) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                const data = await res.json();
+                const items = (data && data.similarProducts) ? data.similarProducts : [];
+
+                loading.style.display = 'none';
+                if (!items.length) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                list.innerHTML = items.map(x => buildRecCardHtml(x, 'similar')).join('');
+                list.style.display = 'grid';
+            } catch {
+                document.getElementById('similarProductsLoading').style.display = 'none';
+                document.getElementById('similarProductsEmpty').style.display = 'block';
+            }
+        }
+
+        async function loadFrequentlyBoughtTogether() {
+            try {
+                const res = await fetch('/api/Recommendation/frequently-bought-together/' + productId + '?limit=6');
+                const loading = document.getElementById('fbtLoading');
+                const list = document.getElementById('fbtList');
+                const empty = document.getElementById('fbtEmpty');
+
+                if (!res.ok) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                const data = await res.json();
+                const items = Array.isArray(data) ? data : [];
+
+                loading.style.display = 'none';
+                if (!items.length) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                list.innerHTML = items.map(x => buildRecCardHtml(x, 'fbt')).join('');
+                list.style.display = 'grid';
+            } catch {
+                document.getElementById('fbtLoading').style.display = 'none';
+                document.getElementById('fbtEmpty').style.display = 'block';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSimilarProducts();
+            loadFrequentlyBoughtTogether();
+        });
     </script>
 }
