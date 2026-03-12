@@ -235,6 +235,12 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" href="/Admin/Dashboard">
             <i class="bi bi-speedometer2 text-success"></i> Bảng điều khiển
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RecommendationAnalytics" ? "active" : "")" href="/Admin/RecommendationAnalytics">
+            <i class="bi bi-graph-up-arrow text-primary"></i> Recommendation analytics
+        </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Audit" ? "active" : "")" href="/Admin/Audit">
+            <i class="bi bi-shield-check text-dark"></i> Audit logs
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Kinh doanh</span>

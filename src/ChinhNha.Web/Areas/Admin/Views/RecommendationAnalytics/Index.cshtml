@@ -1,0 +1,206 @@
+@using System.Text.Json
+@model ChinhNha.Web.Areas.Admin.Models.RecommendationAnalyticsViewModel
+@{
+    ViewData["Title"] = "Recommendation Analytics";
+    Layout = "_AdminLayout";
+
+    var reasonLabelsJson = JsonSerializer.Serialize(Model.ReasonDistribution.Keys);
+    var reasonValuesJson = JsonSerializer.Serialize(Model.ReasonDistribution.Values);
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Recommendation Analytics</h1>
+        <small class="text-muted">Cap nhat luc @Model.GeneratedAt.ToString("dd/MM/yyyy HH:mm")</small>
+    </div>
+    <form method="get" class="d-flex align-items-center gap-2">
+        <label class="form-label mb-0">Khung ngay</label>
+        <input type="number" class="form-control" name="days" value="@Model.Days" min="1" max="365" style="width:100px;" />
+        <button type="submit" class="btn btn-primary btn-sm">Tai lai</button>
+    </form>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted text-uppercase small">CTR</div>
+                <div class="display-6 fw-bold text-primary">@Model.ClickThroughRate.ToString("F2")%</div>
+                <small class="text-muted">Ti le click tren recommendation duoc hien thi</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted text-uppercase small">Conversion</div>
+                <div class="display-6 fw-bold text-success">@Model.ConversionRate.ToString("F2")%</div>
+                <small class="text-muted">Ti le mua hang tu recommendation</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted text-uppercase small">Average Score</div>
+                <div class="display-6 fw-bold text-warning">@Model.AverageScore</div>
+                <small class="text-muted">Diem trung binh recommendation</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Preview theo user</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end mb-3">
+            <div class="col-md-6">
+                <label class="form-label">User ID</label>
+                <input type="text" class="form-control" name="previewUserId" value="@Model.PreviewUserId" placeholder="Nhap user id de xem recommendation" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">So luong</label>
+                <input type="number" class="form-control" name="previewLimit" value="@Model.PreviewLimit" min="1" max="20" />
+            </div>
+            <div class="col-md-2">
+                <input type="hidden" name="days" value="@Model.Days" />
+                <button type="submit" class="btn btn-outline-primary w-100">Xem preview</button>
+            </div>
+        </form>
+
+        @if (string.IsNullOrWhiteSpace(Model.PreviewUserId))
+        {
+            <div class="alert alert-info mb-0">Nhap <code>previewUserId</code> de xem danh sach recommendation chi tiet cho mot user.</div>
+        }
+        else
+        {
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <h6 class="fw-bold">Personalized Recommendations</h6>
+                    @if (Model.PersonalizedRecommendations.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>San pham</th>
+                                        <th>Reason</th>
+                                        <th class="text-end">Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.PersonalizedRecommendations)
+                                    {
+                                        <tr>
+                                            <td>@item.RecommendedProductName</td>
+                                            <td><span class="badge text-bg-light">@item.RecommendationReason</span></td>
+                                            <td class="text-end fw-semibold">@item.RecommendationScore</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">Khong co du lieu personalized.</div>
+                    }
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="fw-bold">Trending Recommendations</h6>
+                    @if (Model.TrendingRecommendations.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>San pham</th>
+                                        <th>Reason</th>
+                                        <th class="text-end">Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.TrendingRecommendations)
+                                    {
+                                        <tr>
+                                            <td>@item.RecommendedProductName</td>
+                                            <td><span class="badge text-bg-light">@item.RecommendationReason</span></td>
+                                            <td class="text-end fw-semibold">@item.RecommendationScore</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">Khong co du lieu trending.</div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Reason Distribution</h5>
+        <small class="text-muted">Tong hop tu danh sach preview</small>
+    </div>
+    <div class="card-body">
+        @if (Model.ReasonDistribution.Any())
+        {
+            <div style="height: 320px;">
+                <canvas id="reasonChart"></canvas>
+            </div>
+        }
+        else
+        {
+            <div class="text-muted">Chua co du lieu distribution. Vui long nhap user id de phan tich.</div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const labels = @Html.Raw(reasonLabelsJson);
+            const values = @Html.Raw(reasonValuesJson);
+            if (!labels || labels.length === 0) {
+                return;
+            }
+
+            const ctx = document.getElementById('reasonChart');
+            if (!ctx) {
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#198754', '#0d6efd', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+}
