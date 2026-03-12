@@ -9,12 +9,14 @@ namespace ChinhNha.Application.Services;
 public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
+    private readonly IRepository<CartItem> _cartItemRepository;
     private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
 
-    public CartService(ICartRepository cartRepository, IProductRepository productRepository, IMapper mapper)
+    public CartService(ICartRepository cartRepository, IRepository<CartItem> cartItemRepository, IProductRepository productRepository, IMapper mapper)
     {
         _cartRepository = cartRepository;
+        _cartItemRepository = cartItemRepository;
         _productRepository = productRepository;
         _mapper = mapper;
     }
@@ -122,15 +124,51 @@ public class CartService : ICartService
         return _mapper.Map<CartDto>(userCart);
     }
 
-    public Task<bool> RemoveItemFromCartAsync(int cartItemId)
+    public async Task<bool> RemoveItemFromCartAsync(int cartItemId)
     {
-        // TODO: implement via CartItem direct access
-        return Task.FromResult(true);
+        var cartItem = await _cartItemRepository.GetByIdAsync(cartItemId);
+        if (cartItem == null)
+        {
+            return false;
+        }
+
+        var cart = await _cartRepository.GetByIdAsync(cartItem.CartId);
+        if (cart != null)
+        {
+            cart.UpdatedAt = DateTime.UtcNow;
+            await _cartRepository.UpdateAsync(cart);
+        }
+
+        await _cartItemRepository.DeleteAsync(cartItem);
+        return true;
     }
 
-    public Task<CartDto> UpdateCartItemQuantityAsync(int cartItemId, int quantity)
+    public async Task<CartDto> UpdateCartItemQuantityAsync(int cartItemId, int quantity)
     {
-        // TODO: implement via CartItem direct access
-        return Task.FromResult(new CartDto());
+        var cartItem = await _cartItemRepository.GetByIdAsync(cartItemId)
+            ?? throw new ArgumentException("Cart item not found", nameof(cartItemId));
+
+        if (quantity <= 0)
+        {
+            var cartId = cartItem.CartId;
+            await _cartItemRepository.DeleteAsync(cartItem);
+
+            var updatedCartAfterDelete = await _cartRepository.GetCartWithItemsByIdAsync(cartId)
+                ?? throw new InvalidOperationException("Cart not found.");
+
+            updatedCartAfterDelete.UpdatedAt = DateTime.UtcNow;
+            await _cartRepository.UpdateAsync(updatedCartAfterDelete);
+            return _mapper.Map<CartDto>(updatedCartAfterDelete);
+        }
+
+        cartItem.Quantity = quantity;
+        await _cartItemRepository.UpdateAsync(cartItem);
+
+        var updatedCart = await _cartRepository.GetCartWithItemsByIdAsync(cartItem.CartId)
+            ?? throw new InvalidOperationException("Cart not found.");
+
+        updatedCart.UpdatedAt = DateTime.UtcNow;
+        await _cartRepository.UpdateAsync(updatedCart);
+        return _mapper.Map<CartDto>(updatedCart);
     }
 }

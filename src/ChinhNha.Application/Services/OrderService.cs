@@ -58,9 +58,12 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CreateOrderFromCartAsync(int cartId, string userId, string shippingName, string shippingPhone, string shippingAddress, string? shippingNote, string paymentMethod)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(userId, string.Empty);
+        var cart = await _cartRepository.GetCartWithItemsByIdAsync(cartId);
         if (cart == null || !cart.CartItems.Any())
             throw new InvalidOperationException("Giỏ hàng trống.");
+
+        if (!string.IsNullOrWhiteSpace(userId) && !string.Equals(cart.UserId, userId, StringComparison.Ordinal))
+            throw new InvalidOperationException("Giỏ hàng không thuộc về người dùng hiện tại.");
 
         var parsedPaymentMethod = ParsePaymentMethod(paymentMethod);
 

@@ -11,6 +11,16 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
     {
     }
 
+    public async Task<Cart?> GetCartWithItemsByIdAsync(int cartId)
+    {
+        return await _dbContext.Carts
+            .Include(c => c.CartItems)
+            .ThenInclude(i => i.Product)
+            .Include(c => c.CartItems)
+            .ThenInclude(i => i.ProductVariant)
+            .FirstOrDefaultAsync(c => c.Id == cartId);
+    }
+
     public async Task<Cart?> GetCartWithItemsAsync(string? userId, string sessionId)
     {
         IQueryable<Cart> query = _dbContext.Carts
