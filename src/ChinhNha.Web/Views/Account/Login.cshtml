@@ -1,4 +1,5 @@
 @model ChinhNha.Web.Models.Account.LoginViewModel
+
 @{
     ViewData["Title"] = "Đăng nhập";
     Layout = null;
@@ -8,180 +9,256 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>@ViewData["Title"] - Chính Nha Phân Bón</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <style>
         * { font-family: 'Inter', sans-serif; }
         
         body {
-            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 40%, #388E3C 70%, #66BB6A 100%);
+            /* Sử dụng background giống trang chủ - màu vàng/xanh nhạt của đất/lá */
+            background-color: #E8F5E9;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1rem;
+            padding: 1rem;
         }
         
         .auth-card {
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 24px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
-            padding: 3rem 2.5rem;
+            background: #ffffff;
+            border: 4px solid #2E7D32;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
             width: 100%;
-            max-width: 440px;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @@keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to   { opacity: 1; transform: translateY(0); }
+            max-width: 500px;
         }
 
         .logo-wrap { text-align: center; margin-bottom: 2rem; }
         .logo-icon {
-            width: 72px; height: 72px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #2E7D32, #66BB6A);
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: 2rem; margin-bottom: 1rem;
-            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.3);
+            font-size: 3rem;
+            color: #2E7D32;
+            margin-bottom: 0.5rem;
         }
         
-        .auth-title  { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 0.25rem; }
-        .auth-subtitle { color: #6c757d; font-size: 0.95rem; }
+        .auth-title {
+            font-size: clamp(1.8rem, 5vw, 2.2rem);
+            font-weight: 900;
+            color: #111;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .auth-subtitle {
+            color: #555;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: 600;
+        }
 
-        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.4rem; font-size: 0.9rem; }
+        .form-label {
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 0.5rem;
+            font-size: clamp(1.2rem, 3vw, 1.4rem);
+        }
         
         .input-group-icon {
             position: relative;
         }
-        .input-group-icon i {
+        .input-group-icon > i {
             position: absolute;
-            left: 14px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
+            color: #2E7D32;
             z-index: 10;
-            font-size: 1.1rem;
+            font-size: 1.5rem;
         }
         .input-group-icon .form-control {
-            padding-left: 42px;
-            height: 50px;
-            border-radius: 12px;
-            border: 2px solid #e5e7eb;
-            font-size: 0.95rem;
-            transition: all 0.3s;
+            padding-left: 50px;
+            height: 60px;
+            border-radius: 8px;
+            border: 3px solid #C8E6C9;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: 600;
+            background-color: #fefaef;
         }
         .input-group-icon .form-control:focus {
-            border-color: #2E7D32;
-            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+            border-color: #E65100;
+            box-shadow: 0 0 0 4px rgba(230, 81, 0, 0.2);
+            outline: none;
+        }
+
+        .toggle-pw-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            color: #555;
+            background: none;
+            border: none;
+            padding: 5px;
+            font-size: 1.5rem;
         }
 
         .btn-auth {
-            background: linear-gradient(135deg, #2E7D32, #388E3C);
-            border: none;
+            background-color: #E65100;
+            border: 3px solid #BF360C;
             color: white;
-            font-weight: 700;
-            height: 52px;
-            border-radius: 12px;
-            font-size: 1rem;
-            letter-spacing: 0.5px;
-            transition: all 0.3s;
+            font-weight: 900;
+            height: 65px;
+            border-radius: 8px;
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #BF360C;
+            transition: all 0.1s;
+        }
+        .btn-auth:active {
+            box-shadow: 0 0 0 #BF360C;
+            transform: translateY(4px);
         }
         .btn-auth:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(46, 125, 50, 0.35);
+            background-color: #BF360C;
             color: white;
         }
 
-        .divider { text-align: center; position: relative; margin: 1.5rem 0; }
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 0;
-            width: 100%; height: 1px;
-            background: #e5e7eb;
+        .link-green {
+            color: #111;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: underline;
+        }
+        .link-green:hover { color: #E65100; }
+
+        .form-check-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .form-check-input {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            border: 2px solid #2E7D32;
+        }
+        .form-check-input:checked {
+            background-color: #2E7D32;
+            border-color: #2E7D32;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 2rem 0 1.5rem 0;
+            border-bottom: 2px dashed #C8E6C9;
+            line-height: 0.1em;
         }
         .divider span {
-            background: white; padding: 0 12px;
-            position: relative; color: #9ca3af; font-size: 0.85rem;
+            background: #fff;
+            padding: 0 15px;
+            color: #555;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
 
-        .link-green { color: #2E7D32; font-weight: 600; text-decoration: none; }
-        .link-green:hover { text-decoration: underline; color: #1B5E20; }
+        .btn-register {
+            background-color: #fff;
+            color: #2E7D32;
+            border: 3px solid #2E7D32;
+            font-weight: 900;
+            height: 60px;
+            border-radius: 8px;
+            font-size: clamp(1.2rem, 3.5vw, 1.4rem);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .btn-register:hover {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
 
-        .form-check-label { font-size: 0.9rem; color: #4b5563; }
-        .form-check-input:checked { background-color: #2E7D32; border-color: #2E7D32; }
-
-        .back-link { text-align: center; margin-bottom: 1.5rem; }
-        .back-link a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; }
-        .back-link a:hover { color: white; }
+        .back-link {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .back-link a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 2px solid #2E7D32;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
     <div>
         <div class="back-link">
-            <a href="/"><i class="bi bi-arrow-left me-1"></i>Quay về trang chủ</a>
+            <a href="/"><i class="bi bi-arrow-left-circle-fill me-2"></i>QUAY VỀ TRANG CHỦ</a>
         </div>
         
         <div class="auth-card">
             <div class="logo-wrap">
-                <div class="logo-icon">🌿</div>
-                <h1 class="auth-title">Chào mừng trở lại</h1>
-                <p class="auth-subtitle">Đăng nhập vào tài khoản của bạn</p>
+                <i class="bi bi-person-circle logo-icon"></i>
+                <h1 class="auth-title">ĐĂNG NHẬP</h1>
+                <p class="auth-subtitle">Để xem lịch sử mua phân bón & tích điểm</p>
             </div>
 
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2" role="alert"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger p-3 fw-bold fs-5" role="alert"></div>
 
             <form asp-action="Login" method="post">
                 <input type="hidden" asp-for="ReturnUrl" />
                 
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label"></label>
+                <div class="mb-4">
+                    <label asp-for="Email" class="form-label">Tài khoản Email hoặc SĐT</label>
                     <div class="input-group-icon">
-                        <i class="bi bi-envelope"></i>
-                        <input asp-for="Email" class="form-control" placeholder="your@email.com" autocomplete="email" />
+                        <i class="bi bi-envelope-fill"></i>
+                        <input asp-for="Email" class="form-control" autocomplete="email" placeholder="Nhập Email của bà con..." />
                     </div>
-                    <span asp-validation-for="Email" class="text-danger small"></span>
+                    <span asp-validation-for="Email" class="text-danger fw-bold fs-6 mt-1 d-block"></span>
                 </div>
 
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <label asp-for="Password" class="form-label"></label>
-                        <a href="#" class="link-green small">Quên mật khẩu?</a>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <label asp-for="Password" class="form-label mb-0">Mật khẩu</label>
+                        <a href="#" class="link-green"><i class="bi bi-question-circle me-1"></i>Quên mật khẩu?</a>
                     </div>
                     <div class="input-group-icon">
-                        <i class="bi bi-lock" id="passIcon"></i>
-                        <input asp-for="Password" id="passwordInput" class="form-control pe-5" placeholder="••••••••" autocomplete="current-password" style="padding-right: 44px !important;" />
-                        <button type="button" onclick="togglePass()" class="btn p-0 border-0" 
-                                style="position:absolute; right:14px; top:50%; transform:translateY(-50%); z-index:10; color:#9ca3af;">
-                            <i class="bi bi-eye" id="eyeIcon"></i>
+                        <i class="bi bi-lock-fill"></i>
+                        <input asp-for="Password" id="passwordInput" class="form-control" placeholder="Nhập mật khẩu..." autocomplete="current-password" style="padding-right: 50px !important;" />
+                        <button type="button" onclick="togglePass()" class="toggle-pw-btn">
+                            <i class="bi bi-eye-slash-fill" id="eyeIcon"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger small"></span>
+                    <span asp-validation-for="Password" class="text-danger fw-bold fs-6 mt-1 d-block"></span>
                 </div>
 
-                <div class="form-check mb-4">
-                    <input asp-for="RememberMe" class="form-check-input" id="rememberMe" />
-                    <label asp-for="RememberMe" class="form-check-label" for="rememberMe"></label>
+                <div class="d-flex align-items-center mb-4">
+                    <input asp-for="RememberMe" class="form-check-input mt-0" id="rememberMe" />
+                    <label asp-for="RememberMe" class="form-check-label" for="rememberMe">Lưu đăng nhập cho lần sau</label>
                 </div>
 
-                <button type="submit" class="btn btn-auth w-100 mb-4">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                <button type="submit" class="btn btn-auth w-100 mb-2">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>ĐĂNG NHẬP NGAY
                 </button>
 
-                <div class="divider"><span>chưa có tài khoản?</span></div>
+                <div class="divider"><span>CHƯA CÓ TÀI KHOẢN?</span></div>
 
-                <div class="text-center mt-3">
-                    <a asp-action="Register" class="btn btn-outline-success w-100 py-3" style="border-radius: 12px; font-weight: 600;">
-                        <i class="bi bi-person-plus me-2"></i>Tạo tài khoản mới
-                    </a>
-                </div>
+                <a asp-action="Register" class="btn btn-register w-100">
+                    <i class="bi bi-person-plus-fill me-2 fs-3"></i> TẠO TÀI KHOẢN MỚI
+                </a>
             </form>
         </div>
     </div>
@@ -195,10 +272,10 @@
             const eye = document.getElementById('eyeIcon');
             if (inp.type === 'password') {
                 inp.type = 'text';
-                eye.className = 'bi bi-eye-slash';
+                eye.className = 'bi bi-eye-fill text-success';
             } else {
                 inp.type = 'password';
-                eye.className = 'bi bi-eye';
+                eye.className = 'bi bi-eye-slash-fill';
             }
         }
     </script>

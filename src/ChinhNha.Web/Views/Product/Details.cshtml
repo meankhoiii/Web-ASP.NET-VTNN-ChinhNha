@@ -6,193 +6,242 @@
 }
 
 <style>
-    :root {
-        --primary-agri: #2E7D32;
-        --secondary-agri: #81C784;
-    }
     .product-detail-img {
-        width: 100%; border-radius: 16px; background-color: #f8f9fa; object-fit: contain; aspect-ratio: 1;
+        width: 100%;
+        border: 4px solid #006400;
+        border-radius: 8px;
+        background-color: #fff;
+        object-fit: contain;
+        aspect-ratio: 1;
+        margin-bottom: 15px;
     }
-    .btn-agri {
-        background: var(--primary-agri); color: white; border-radius: 10px; font-weight: 500; transition: all 0.2s; border: none;
+    
+    .thumbnail-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
     }
-    .btn-agri:hover { background: #1B5E20; color: white; transform: scale(1.02); }
-    .product-card { transition: all 0.3s ease; }
-    .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
-    .product-card:hover img { transform: scale(1.05); }
-    .nav-tabs .nav-link { transition: all 0.2s ease; }
-    .nav-tabs .nav-link:hover:not(.active) { border-bottom: 2px solid var(--secondary-agri); color: var(--primary-agri) !important; }
+    .thumbnail-img.active {
+        border: 4px solid #006400;
+    }
+
+    .detail-title {
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        font-weight: 900;
+        color: var(--text-main);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        line-height: 1.3;
+    }
+
+    .detail-sku {
+        font-size: 1.3rem;
+        color: #555;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .detail-price {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        color: var(--price-red);
+        font-weight: 900;
+        margin-bottom: 20px;
+        background-color: #fce4e4;
+        padding: 10px 20px;
+        display: inline-block;
+        border-radius: 8px;
+        border: 2px solid var(--price-red);
+    }
+
+    .info-block {
+        background-color: var(--bg-main);
+        border: 2px solid var(--green-main);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: clamp(1rem, 3vw, 1.2rem);
+        line-height: 1.6;
+        color: var(--text-main);
+    }
+    .info-block strong { color: var(--green-main); }
+
+    .qty-input-large {
+        width: 80px;
+        font-size: clamp(1.2rem, 4vw, 1.6rem);
+        text-align: center;
+        font-weight: bold;
+        border: 2px solid var(--green-main);
+        padding: 8px 5px;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .btn-qty {
+        font-size: clamp(1.2rem, 4vw, 1.6rem);
+        font-weight: bold;
+        padding: 8px 15px;
+        border: 2px solid var(--green-main);
+        background: #e6e6e6;
+        color: #000;
+        flex-shrink: 0;
+    }
+
+    .btn-buy-large {
+        background-color: var(--orange-cta);
+        color: #fff;
+        font-size: clamp(1.2rem, 3vw, 1.6rem);
+        font-weight: 900;
+        padding: 15px 20px;
+        border: 2px solid #BF360C;
+        border-radius: 8px;
+        text-transform: uppercase;
+        width: 100%;
+        margin-top: 15px;
+    }
+    .btn-buy-large:hover { background-color: #BF360C; color: #fff; }
+
+    .section-header {
+        background: linear-gradient(135deg, var(--green-main), var(--green-dark));
+        color: white;
+        padding: 12px 18px;
+        font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+        font-weight: bold;
+        border-radius: 6px;
+        text-transform: uppercase;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        border-left: 6px solid var(--orange-cta);
+    }
+
+    .text-content-large {
+        font-size: clamp(1.05rem, 3vw, 1.25rem);
+        line-height: 1.7;
+        color: var(--text-main);
+    }
+
+    /* Reviews */
+    .review-box {
+        border-bottom: 2px dashed #ccc;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+    .reviewer-name {
+        font-size: clamp(1.1rem, 3vw, 1.3rem);
+        font-weight: bold;
+        color: var(--green-main);
+    }
+    .review-text {
+        font-size: clamp(1rem, 3vw, 1.2rem);
+        color: var(--text-main);
+        margin-top: 5px;
+    }
 </style>
 
-<div class="container-fluid px-0 mb-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/" class="text-success text-decoration-none">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="/Product" class="text-success text-decoration-none">Sản phẩm</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Product.Name</li>
-        </ol>
-    </nav>
+<div class="mb-4">
+    <a href="/Product" class="btn btn-outline-dark fs-4 fw-bold"><i class="bi bi-arrow-left-circle-fill me-2"></i> QUAY LẠI CỬA HÀNG</a>
+</div>
 
-    <div class="row mb-5">
-        <div class="col-md-6 mb-4 mb-md-0">
-            @if (Model.Product.Images != null && Model.Product.Images.Any(i => i.IsPrimary))
-            {
-                <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" alt="@Model.Product.Name" class="product-detail-img shadow-sm mb-3" />
-                <div class="d-flex gap-2 thumbnail-gallery">
-                    <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" class="rounded border border-success border-2 cursor-pointer" style="width: 80px; height: 80px; object-fit: cover; opacity: 1;" />
-                    <!-- Mockup additional images -->
-                    <div class="rounded border cursor-pointer d-flex align-items-center justify-content-center bg-light" style="width: 80px; height: 80px; opacity: 0.6;">
-                        <i class="bi bi-image text-muted fs-4"></i>
-                    </div>
-                    <div class="rounded border cursor-pointer d-flex align-items-center justify-content-center bg-light" style="width: 80px; height: 80px; opacity: 0.6;">
-                        <i class="bi bi-image text-muted fs-4"></i>
-                    </div>
+<div class="row">
+    <!-- Hình Ảnh -->
+    <div class="col-lg-5 mb-4">
+        @if (Model.Product.Images != null && Model.Product.Images.Any(i => i.IsPrimary))
+        {
+            <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" alt="@Model.Product.Name" class="product-detail-img" />
+            <div class="d-flex gap-2">
+                <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" class="thumbnail-img active" />
+                <div class="thumbnail-img d-flex align-items-center justify-content-center bg-light">
+                    <i class="bi bi-image text-muted fs-3"></i>
                 </div>
-            }
-            else
-            {
-                <div class="product-detail-img d-flex align-items-center justify-content-center shadow-sm mb-3" style="background: linear-gradient(135deg, #d7ccc8, #a1887f); font-size: 5rem; color: #fff;"><i class="bi bi-flower1"></i></div>
-                <div class="d-flex gap-2 thumbnail-gallery">
-                    <div class="rounded border border-success border-2 cursor-pointer d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: linear-gradient(135deg, #d7ccc8, #a1887f); color: #fff; opacity: 1;">
-                        <i class="bi bi-flower1 fs-3"></i>
-                    </div>
-                    <div class="rounded border cursor-pointer d-flex align-items-center justify-content-center bg-light" style="width: 80px; height: 80px; opacity: 0.6;">
-                        <i class="bi bi-image text-muted fs-4"></i>
-                    </div>
-                    <div class="rounded border cursor-pointer d-flex align-items-center justify-content-center bg-light" style="width: 80px; height: 80px; opacity: 0.6;">
-                        <i class="bi bi-image text-muted fs-4"></i>
-                    </div>
+                <div class="thumbnail-img d-flex align-items-center justify-content-center bg-light">
+                    <i class="bi bi-image text-muted fs-3"></i>
                 </div>
-            }
-        </div>
+            </div>
+        }
+        else
+        {
+            <div class="product-detail-img d-flex align-items-center justify-content-center" style="background-color: #e9ecef;">
+                <i class="bi bi-card-image text-secondary" style="font-size: 6rem;"></i>
+            </div>
+        }
+    </div>
+    
+    <!-- Thông Tin Chốt Mua -->
+    <div class="col-lg-7">
+        <h1 class="detail-title">@Model.Product.Name</h1>
+        <div class="detail-sku">Mã hàng: SP-@Model.Product.SKU</div>
         
-        <div class="col-md-6">
-            <h1 class="fw-bold mb-2">@Model.Product.Name</h1>
-            <p class="text-muted mb-4">Mã sản phẩm: @Model.Product.SKU</p>
-            
-            <div class="text-warning mb-2 d-flex align-items-center gap-1">
-                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                <span class="text-muted ms-1 text-decoration-underline" style="cursor: pointer; font-size: 0.9rem;">(12 Đánh giá)</span>
-                <span class="text-muted mx-2">|</span>
-                <span class="text-success small"><i class="bi bi-check-circle-fill"></i> Đã bán 1.2k</span>
-            </div>
+        <div class="detail-price">@Model.Product.BasePrice.ToString("N0") VNĐ</div>
+        
+        <div class="info-block">
+            <p><strong><i class="bi bi-check-circle-fill me-2"></i> 100% Phân bón chính hãng, chuẩn xuất xứ.</strong></p>
+            <p><strong><i class="bi bi-telephone-fill me-2"></i> Tư vấn cách pha, cách rải: 0909.123.456 (Gặp kỹ sư Nông nghiệp)</strong></p>
+            <hr>
+            <p class="mb-0"><strong>Tóm tắt công dụng:</strong> @Model.Product.Description</p>
+        </div>
 
-            <h2 class="text-success fw-bold mb-4">@Model.Product.BasePrice.ToString("N0")₫</h2>
-            
-            <div class="mb-4 text-muted">
-                <p>@Model.Product.Description</p>
-                <div class="d-flex gap-3 mt-3">
-                    <div class="d-flex align-items-center gap-2"><i class="bi bi-shield-check text-success fs-5"></i> <span>Chính hãng 100%</span></div>
-                    <div class="d-flex align-items-center gap-2"><i class="bi bi-arrow-return-left text-success fs-5"></i> <span>Đổi trả 7 ngày</span></div>
+        <div class="p-3 p-md-4 border border-3 border-warning rounded" style="background-color: #fff9e6; overflow: visible;">
+            <div class="fs-4 fw-bold mb-3">CHỌN SỐ LƯỢNG MUA:</div>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                <div class="d-flex align-items-center flex-nowrap">
+                    <button class="btn btn-qty" type="button" onclick="updateQty(-1)">-</button>
+                    <input type="number" id="qty" class="qty-input-large mx-1" value="1" min="1" max="@Model.Product.StockQuantity">
+                    <button class="btn btn-qty" type="button" onclick="updateQty(1)">+</button>
                 </div>
+                <span class="fs-5 fw-bold text-success mt-1 mt-md-0">Sẵn hàng: @Model.Product.StockQuantity bao/chai</span>
             </div>
 
-            <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="input-group" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(-1)">-</button>
-                    <input type="number" id="qty" class="form-control text-center" value="1" min="1" max="@Model.Product.StockQuantity">
-                    <button class="btn btn-outline-secondary" type="button" onclick="updateQty(1)">+</button>
-                </div>
-                <span class="text-muted">Còn @Model.Product.StockQuantity sản phẩm</span>
-            </div>
-
-            <button class="btn btn-agri btn-lg px-5" onclick="addToCartDetails(@Model.Product.Id)">Thêm vào giỏ hàng</button>
+            <button class="btn-buy-large" onclick="addToCartDetails(@Model.Product.Id)">
+                <i class="bi bi-cart-plus-fill me-2"></i> BỎ VÀO GIỎ / MUA NGAY
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Tabs Info -->
-    <div class="row mt-5 mb-5">
-        <div class="col-12">
-            <ul class="nav nav-tabs mb-4 border-success border-opacity-25" id="productTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active text-dark fw-bold border-0 border-bottom border-success border-3 bg-transparent" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">Mô tả sản phẩm</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-muted fw-bold border-0 bg-transparent" id="ing-tab" data-bs-toggle="tab" data-bs-target="#ing" type="button" role="tab" aria-controls="ing" aria-selected="false">Thành phần</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-muted fw-bold border-0 bg-transparent" id="usage-tab" data-bs-toggle="tab" data-bs-target="#usage" type="button" role="tab" aria-controls="usage" aria-selected="false">Hướng dẫn sử dụng</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-muted fw-bold border-0 bg-transparent" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false">Đánh giá (12)</button>
-                </li>
+<!-- Nội dung kéo dài dạng cuộn (Scroll) thay vì Tab ẩn dẽ gây bối rối cho người lớn tuổi -->
+<div class="row">
+    <div class="col-12">
+        <h2 class="section-header"><i class="bi bi-card-heading me-2"></i> THÔNG TIN CHI TIẾT SẢN PHẨM</h2>
+        <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
+            <p>Sản phẩm này được sản xuất trên dây chuyền công nghệ hiện đại, đảm bảo chất lượng và an toàn. Phù hợp cho nhiều loại cây trồng khác nhau, giúp cây phát triển mạnh, ra rễ nhanh, đánh bật đọt non, tăng năng suất mủ/quả vượt trội.</p>
+        </div>
+
+        <h2 class="section-header"><i class="bi bi-droplet-half me-2"></i> THÀNH PHẦN HÓA HỌC / HỮU CƠ</h2>
+        <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Đạm (N): 15% (Giúp bung đọt, xanh lá)</li>
+                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Lân (P2O5): 15% (Phát triển rễ, mập thân)</li>
+                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Kali (K2O): 15% (Nuôi trái, chắc hạt)</li>
+                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Bổ sung vi lượng: TE (Bo, Kẽm, Magie...) giúp hạn chế rụng trái.</li>
             </ul>
-            <div class="tab-content" id="productTabsContent">
-                <div class="tab-pane fade show active lh-lg text-muted" id="desc" role="tabpanel" aria-labelledby="desc-tab">
-                    <p>Sản phẩm này được sản xuất trên dây chuyền công nghệ hiện đại, đảm bảo chất lượng và thân thiện với môi trường. Phù hợp cho nhiều loại cây trồng khác nhau, giúp cây phát triển mạnh, ra rễ nhanh, tăng năng suất vượt trội.</p>
-                </div>
-                <div class="tab-pane fade text-muted" id="ing" role="tabpanel" aria-labelledby="ing-tab">
-                    <ul class="list-group list-group-flush w-50">
-                        <li class="list-group-item bg-transparent px-0 border-light"><i class="bi bi-check2 text-success me-2"></i> Nitơ (N): 15%</li>
-                        <li class="list-group-item bg-transparent px-0 border-light"><i class="bi bi-check2 text-success me-2"></i> Lân (P2O5): 15%</li>
-                        <li class="list-group-item bg-transparent px-0 border-light"><i class="bi bi-check2 text-success me-2"></i> Kali (K2O): 15%</li>
-                        <li class="list-group-item bg-transparent px-0 border-light"><i class="bi bi-check2 text-success me-2"></i> Bổ sung vi lượng: TE, Bo, Kẽm</li>
-                    </ul>
-                </div>
-                <div class="tab-pane fade text-muted" id="usage" role="tabpanel" aria-labelledby="usage-tab">
-                    <p><strong><i class="bi bi-tree text-success me-1"></i> Cây ăn trái:</strong> Bón 0.5 - 1kg/cây/lần. Bón 3 lần/năm (sau thu hoạch, trước ra hoa, nuôi trái).</p>
-                    <p><strong><i class="bi bi-flower2 text-success me-1"></i> Lúa/Rau màu:</strong> Bón 10-15kg/1000m2. Bón lót và bón thúc.</p>
-                </div>
-                <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
-                    <!-- Reviews mockup -->
-                    <div class="d-flex align-items-start mb-4 pb-4 border-bottom border-light">
-                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; font-weight: bold; font-size: 1.2rem;">HĐ</div>
-                        <div>
-                            <div class="d-flex align-items-center mb-1">
-                                <h6 class="fw-bold mb-0 me-2 text-dark">Hoàng Đình Dũng</h6>
-                                <div class="text-warning" style="font-size: 0.8rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                            </div>
-                            <small class="text-muted d-block mb-3"><i class="bi bi-patch-check-fill text-success"></i> Đã mua ở Đại lý Chinh Nha - 20/10/2025</small>
-                            <p class="mb-0 text-dark">Phân bón rất chất lượng. Lúa đẻ nhánh mạnh, lá xanh bền. Chắc chắn sẽ tiếp tục ủng hộ mua sắm tại đây.</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-start mb-4">
-                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; font-weight: bold; font-size: 1.2rem;">TL</div>
-                        <div>
-                            <div class="d-flex align-items-center mb-1">
-                                <h6 class="fw-bold mb-0 me-2 text-dark">Trần Lê Thu</h6>
-                                <div class="text-warning" style="font-size: 0.8rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
-                            </div>
-                            <small class="text-muted d-block mb-3"><i class="bi bi-patch-check-fill text-success"></i> Đã mua ở Đại lý Chinh Nha - 15/09/2025</small>
-                            <p class="mb-0 text-dark">Giao hàng cực kỳ nhanh, đóng gói cẩn thận. Rau màu cải thiện rõ rệt sau 1 tuần dùng thử.</p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+
+        <h2 class="section-header"><i class="bi bi-book-half me-2"></i> HƯỚNG DẪN CÁCH SỬ DỤNG</h2>
+        <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
+            <p><strong>1. Đối với cây ăn trái (Sầu riêng, Mít, Cam...):</strong></p>
+            <p>Bón 0.5 - 1kg/cây/lần. Bón 3 lần/năm (sau thu hoạch, trước ra hoa, nuôi trái). Nên cuốc rãnh quanh tán rồi lấp đất.</p>
+            <br>
+            <p><strong>2. Đối với Lúa / Rau màu:</strong></p>
+            <p>Bón 10-15kg/1000m2. Bón lót trước khi gieo và bón thúc khi cây vươn lóng.</p>
+        </div>
+
+        <h2 class="section-header"><i class="bi bi-chat-quote-fill me-2"></i> NHẬN XÉT CỦA BÀ CON ĐÃ MUA</h2>
+        <div class="text-content-large p-4 border border-2 border-success rounded bg-white">
+            <div class="review-box">
+                <div class="reviewer-name">Anh Hoàng (Nông dân trồng lúa) <span class="text-warning ms-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span></div>
+                <div class="text-success fw-bold fs-5"><i class="bi bi-check-circle-fill"></i> Đã mua và bón thử nghiệm</div>
+                <div class="review-text">"Phân hạt đều, dễ rải. Lúa nhà tôi bón xong 3 ngày là thấy nở bụi mạnh, lá xanh bền tới lúc trổ. Đại lý Chính Nha giao hàng cũng mau lẹ."</div>
+            </div>
+            
+            <div class="review-box">
+                <div class="reviewer-name">Chị Thu (Trồng tiêu) <span class="text-warning ms-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span></div>
+                <div class="text-success fw-bold fs-5"><i class="bi bi-check-circle-fill"></i> Đã mua 20 bao</div>
+                <div class="review-text">"Giá tốt hơn ngoài chợ đại lý huyện. Đỡ tốn công chở vì có xe giao tới tận rẫy."</div>
             </div>
         </div>
     </div>
-
-    @if (Model.RelatedProducts != null && Model.RelatedProducts.Any())
-    {
-        <h3 class="fw-bold mb-4 position-relative d-inline-block">
-            Sản phẩm liên quan
-            <span style="position: absolute; bottom: -8px; left: 0; width: 50%; height: 3px; background: var(--primary-agri); border-radius: 2px;"></span>
-        </h3>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-            @foreach (var p in Model.RelatedProducts)
-            {
-                <div class="col">
-                    <div class="card product-card" style="border: none; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.04);">
-                        <div class="product-img-wrapper" style="position: relative; padding-top: 100%; background-color: #f8f9fa; overflow: hidden;">
-                            @if (p.Images != null && p.Images.Any(i => i.IsPrimary))
-                            {
-                                <img src="@p.Images.First(i => i.IsPrimary).ImageUrl" alt="@p.Name" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" loading="lazy" />
-                            }
-                            else
-                            {
-                                <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #d7ccc8, #a1887f); display:flex; align-items:center; justify-content:center; font-size: 2rem; color: #fff;"><i class="bi bi-flower1"></i></div>
-                            }
-                        </div>
-                        <div class="p-3">
-                            <div class="text-warning small mb-1" style="font-size: 0.75rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                            <a href="/san-pham/@p.Slug" class="text-dark fw-bold text-decoration-none text-truncate d-block table-hover" style="transition: color 0.2s;" onmouseover="this.style.color='#2E7D32'" onmouseout="this.style.color='#212529'">@p.Name</a>
-                            <div class="text-success fw-bold mt-2">@p.BasePrice.ToString("N0")₫</div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
 </div>
 
 @section Scripts {
@@ -205,12 +254,12 @@
             }
         }
 
-        // Override addToCart locally for the detail view since it has custom quantity
         function addToCartDetails(productId) {
             let qty = parseInt(document.getElementById('qty').value);
-            // Calling the global addToCart defined in _Layout (cart.js)
             if (typeof addToCart === "function") {
                 addToCart(productId, qty);
+                // Có thể thêm hàm hiển thị thông báo alert thật to "Đã bỏ vào giỏ báo thành công!" 
+                alert("Đã thêm thành công " + qty + " sản phẩm vào giỏ hàng!");
             }
         }
     </script>

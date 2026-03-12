@@ -1,22 +1,198 @@
-html {
-  font-size: 14px;
+/* =====================================================
+   CHINH NHA - DESIGN SYSTEM v2.0
+   Tối ưu cho: Nông dân Việt Nam, Mobile-First
+   
+   Bảng màu chuẩn:
+   --green-main   #2E7D32  (Xanh lá cây chính - nút, viền)
+   --orange-cta   #E65100  (Cam lửa - nút gọi điện, nút nổi bật)
+   --bg-main      #F1F8E9  (Xanh nhạt kem - nền trang)
+   --bg-card      #FFFDE7  (Vàng kem - nền card/section)
+   --text-main    #1A1A1A  (Đen chữ)
+   --price-red    #B71C1C  (Đỏ giá tiền)
+   --star-yellow  #F9A825  (Vàng - chỉ dùng cho icon/star, KHÔNG làm nền chữ)
+===================================================== */
+
+:root {
+  --green-main: #2E7D32;
+  --green-dark: #1B5E20;
+  --green-light: #C8E6C9;
+  --orange-cta: #E65100;
+  --orange-light: #FBE9E7;
+  --bg-main: #F1F8E9;
+  --bg-card: #FFFDE7;
+  --text-main: #1A1A1A;
+  --text-muted: #555;
+  --price-red: #B71C1C;
+  --star-yellow: #F9A825;
+  --border-color: #A5D6A7;
 }
 
-@media (min-width: 768px) {
+/* =====================
+   BASE - Mobile-First
+   ===================== */
+html {
+  font-size: 15px;
+  /* Mobile base */
+}
+
+@media (min-width: 576px) {
   html {
     font-size: 16px;
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+@media (min-width: 768px) {
+  html {
+    font-size: 17px;
+  }
 }
 
 body {
-  margin-bottom: 60px;
+  font-family: 'Roboto', Arial, Tahoma, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+/* =====================
+   BUTTONS - Accessible
+   Touch target >= 48px
+   ===================== */
+.btn {
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  padding: 12px 20px !important;
+  min-height: 48px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Override Bootstrap primary to brand green */
+.btn-primary {
+  background-color: var(--green-main) !important;
+  border-color: var(--green-dark) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--green-dark) !important;
+  color: #fff !important;
+}
+
+/* CTA button - Cam lửa (Gọi điện, Tư vấn) */
+.btn-cta,
+.btn-warning.btn-cta {
+  background-color: var(--orange-cta) !important;
+  color: #fff !important;
+  /* Chữ TRẮNG trên cam → tương phản tốt */
+  border: 2px solid #BF360C !important;
+}
+
+.btn-cta:hover {
+  background-color: #BF360C !important;
+  color: #fff !important;
+}
+
+/* Legacy warning button → vẫn hỗ trợ nhưng đổi màu chữ sang trắng */
+.btn-warning {
+  background-color: var(--star-yellow) !important;
+  color: var(--text-main) !important;
+  /* Màu đen trên vàng - tương phản đạt */
+  border: 2px solid #F57F17 !important;
+}
+
+.btn-danger {
+  background-color: var(--price-red) !important;
+  border-color: #7F0000 !important;
+}
+
+.btn-outline-success {
+  color: var(--green-main) !important;
+  border-color: var(--green-main) !important;
+}
+
+.btn-outline-success:hover {
+  background-color: var(--green-main) !important;
+  color: #fff !important;
+}
+
+/* =====================
+   FORMS - iOS safe
+   font-size >= 16px để tránh iPhone auto-zoom
+   ===================== */
+.form-control,
+.form-select {
+  border: 2px solid #81C784 !important;
+  font-size: 16px !important;
+  /* iOS zoom fix - KHÔNG được nhỏ hơn 16px */
+  padding: 12px 14px !important;
+  border-radius: 6px !important;
+  background-color: #fff;
+  color: var(--text-main) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--green-main) !important;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2) !important;
+}
+
+/* =====================
+   LINKS
+   ===================== */
+a {
+  color: var(--green-main);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+/* =====================
+   UTILITIES
+   ===================== */
+.text-price {
+  color: var(--price-red) !important;
+}
+
+.bg-brand {
+  background-color: var(--green-main) !important;
+}
+
+.border-brand {
+  border-color: var(--green-main) !important;
+}
+
+/* Section heading reusable */
+.section-heading-global {
+  background-color: var(--green-main);
+  color: #fff;
+  padding: 12px 20px;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  font-weight: 900;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border-left: 8px solid var(--orange-cta);
+}
+
+/* Mobile helper */
+@media (max-width: 575px) {
+  .btn {
+    font-size: 0.95rem !important;
+    padding: 12px 16px !important;
+  }
+
+  h1 {
+    font-size: 1.8rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
 }

@@ -4,7 +4,7 @@ function addToCart(productId, quantity = 1) {
             // Hiển thị toast hoặc thay đổi icon (tạm thời alert)
             
             // Cập nhật số lượng trên icon giỏ hàng header
-            $('.cart-badge').text(response.totalItems);
+            $('.cart-count').text(response.totalItems);
             
             // Hiển thị toast thông báo
             showToast("Thành công", "Đã thêm sản phẩm vào giỏ hàng!");

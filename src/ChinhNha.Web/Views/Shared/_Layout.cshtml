@@ -1,14 +1,13 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Chính Nha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>@ViewData["Title"] - VTNN Chính Nha</title>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -16,70 +15,182 @@
     <link rel="stylesheet" href="~/ChinhNha.Web.styles.css" asp-append-version="true" />
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #FAFAFA; color: #333; }
-        .navbar-brand { font-weight: 800; color: #2E7D32 !important; font-size: 1.5rem; letter-spacing: -0.5px; }
-        .nav-link { font-weight: 500; color: #555; transition: color 0.3s; }
-        .nav-link:hover, .nav-link.active { color: #2E7D32 !important; }
+        /* ===== HEADER & NAV ===== */
+        .header-top {
+            background: #1B5E20;
+            color: #fff;
+            font-size: 0.95rem;
+            padding: 8px 0;
+            font-weight: 600;
+        }
+        .hotline-highlight {
+            color: #F9A825;
+            font-size: 1.1rem;
+            font-weight: 900;
+        }
         
-        .header-top { background: #1B5E20; color: white; font-size: 0.85rem; padding: 5px 0; }
-        .cart-badge { position: absolute; top: 0; right: -5px; transform: translate(50%, -50%); background-color: #FFB300; color: #000; border-radius: 50%; padding: 0.2rem 0.5rem; font-size: 0.7rem; font-weight: bold; }
+        .main-navbar {
+            background-color: #fff;
+            border-bottom: 4px solid #2E7D32;
+        }
         
-        .footer-agri { background: #fff; padding: 4rem 0 2rem; margin-top: 4rem; border-top: 1px solid #eaeaea; }
+        .navbar-brand-text {
+            font-weight: 900;
+            color: #2E7D32 !important;
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            text-transform: uppercase;
+            text-decoration: none !important;
+        }
+        
+        .main-nav-link {
+            font-weight: 700;
+            color: #333;
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            padding: 10px 14px !important;
+            border-radius: 6px;
+            text-decoration: none;
+            display: block;
+        }
+        .main-nav-link:hover,
+        .main-nav-link.active {
+            color: #2E7D32 !important;
+            background-color: #E8F5E9;
+        }
+        
+        /* Giỏ hàng */
+        .cart-box {
+            background: #E8F5E9;
+            border: 2px solid #A5D6A7;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #1B5E20;
+            text-decoration: none !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 48px;
+            white-space: nowrap;
+        }
+        .cart-box:hover { border-color: #2E7D32; color: #1B5E20; }
+        .cart-count {
+            background: #B71C1C;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        
+        /* Mobile Nav collapse items */
+        @@media (max-width: 991px) {
+            .main-nav-link {
+                padding: 14px 16px !important;
+                font-size: 1.05rem;
+                border-bottom: 1px solid #E0E0E0;
+                border-radius: 0;
+            }
+            .navbar-nav { padding: 8px 0; }
+        }
+
+        /* Fix hamburger icon color on white bg */
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2846, 125, 50, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer-agri {
+            background: #eeeeee;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-top: 5px solid #2E7D32;
+            color: #111;
+        }
+        
+        /* ===== FLOATING CALL BUTTON (mobile only) ===== */
+        .floating-call {
+            display: none;
+        }
+        @@media (max-width: 767px) {
+            .floating-call {
+                display: flex;
+                position: fixed;
+                bottom: 20px;
+                right: 16px;
+                z-index: 999;
+                background-color: #E65100;
+                color: #fff;
+                border-radius: 50px;
+                padding: 14px 20px;
+                align-items: center;
+                gap: 8px;
+                font-weight: 900;
+                font-size: 1rem;
+                text-decoration: none;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header-top d-none d-md-block">
-        <div class="container d-flex justify-content-between">
-            <span><i class="bi bi-geo-alt-fill me-1"></i> 123 Đường Nông Nghiệp, TP. HCM</span>
-            <span><i class="bi bi-telephone-fill me-1"></i> Hotline: 1900 1234</span>
+        <div class="container d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-geo-alt-fill me-1"></i> Đại lý Vật Tư NN Chính Nha</span>
+            <span><i class="bi bi-telephone-fill me-1"></i> TƯ VẤN & MUA HÀNG: <span class="hotline-highlight">0909.123.456</span></span>
         </div>
     </div>
 
-    <header class="bg-white shadow-sm sticky-top">
-        <nav class="navbar navbar-expand-lg py-3">
+    <header class="main-navbar sticky-top shadow-sm">
+        <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-tree-fill me-2 fs-2"></i> CHÍNH NHA
+                <a class="navbar-brand-text d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-door-fill me-2 text-success" style="font-size:1.6rem;"></i> CHÍNH NHA
                 </a>
                 
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
+                    <a href="/Cart" class="cart-box py-1 px-2">
+                        <i class="bi bi-cart4 fs-4"></i>
+                        <span class="cart-count">0</span>
+                    </a>
+                    <button class="navbar-toggler border-2 border-success" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" style="padding: 10px;">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
-                        <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                        <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" asp-area="" asp-controller="Product" asp-action="Index">Sản phẩm</a></li>
-                        <li class="nav-item"><a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Blog" ? "active" : "")" href="/tin-tuc">Tin tức</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Liên hệ</a></li>
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 mt-2 mt-lg-0">
+                        <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i> Trang chủ</a></li>
+                        <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" asp-area="" asp-controller="Product" asp-action="Index"><i class="bi bi-shop me-1"></i> Cửa hàng phân bón</a></li>
+                        <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Blog" ? "active" : "")" href="/tin-tuc"><i class="bi bi-newspaper me-1"></i> Kỹ thuật mùa màng</a></li>
+                        <li class="nav-item d-md-none">
+                            <a href="tel:0909123456" class="main-nav-link text-danger"><i class="bi bi-telephone-fill me-2"></i> GỌI 0909.123.456 ĐẶT HÀNG</a>
+                        </li>
                     </ul>
                     
-                    <div class="d-flex align-items-center gap-3">
-                        <a href="/Cart" class="text-dark position-relative text-decoration-none">
-                            <i class="bi bi-cart3 fs-4"></i>
-                            <span class="cart-badge">0</span>
+                    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 mt-2 mt-lg-0">
+                        <a href="/Cart" class="cart-box d-none d-lg-flex">
+                            <i class="bi bi-cart4 fs-4"></i>
+                            <span>GIỎ HÀNG</span>
+                            <span class="cart-count">0</span>
                         </a>
                         
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <div class="dropdown">
-                                <button class="btn btn-outline-success rounded-pill px-3 fw-medium dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="bi bi-person-circle me-1"></i> @User.Identity.Name?.Split('@').First()
+                                <button class="btn btn-outline-success border-2 py-2" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-fill me-1"></i> @User.Identity.Name?.Split('@').First()
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <ul class="dropdown-menu dropdown-menu-end border-2 shadow">
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <li><a class="dropdown-item" href="/Admin/Dashboard"><i class="bi bi-speedometer2 me-2 text-success"></i>Quản trị</a></li>
+                                        <li><a class="dropdown-item fs-5 py-2" href="/Admin/Dashboard"><i class="bi bi-shield-lock me-1"></i> Trang Quản Lý</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     }
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>Đơn hàng của tôi</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Tài khoản</a></li>
+                                    <li><a class="dropdown-item fs-5 py-2" href="#"><i class="bi bi-clock-history me-1"></i> Lịch sử mua hàng</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-action="Logout" asp-controller="Account" method="post" class="m-0">
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="bi bi-box-arrow-left me-2"></i>Đăng xuất
-                                            </button>
+                                            <button type="submit" class="dropdown-item fs-5 py-2 text-danger fw-bold">Đăng xuất</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -87,7 +198,7 @@
                         }
                         else
                         {
-                            <a href="/Account/Login" class="btn btn-outline-success rounded-pill px-4 fw-medium">Đăng nhập</a>
+                            <a href="/Account/Login" class="btn btn-primary border-2 py-2"><i class="bi bi-box-arrow-in-right me-1"></i> Đại lý Đăng Nhập</a>
                         }
                     </div>
                 </div>
@@ -95,7 +206,12 @@
         </nav>
     </header>
 
-    <div class="container mt-4">
+    <!-- Nút gọi nổi trên Mobile -->
+    <a href="tel:0909123456" class="floating-call">
+        <i class="bi bi-telephone-fill" style="font-size: 1.4rem;"></i> GỌI ĐẶT HÀNG
+    </a>
+
+    <div class="container mt-3 mt-md-4">
         <main role="main" class="pb-5">
             @RenderBody()
         </main>
@@ -103,28 +219,26 @@
 
     <footer class="footer-agri">
         <div class="container">
-            <div class="row gy-4 mb-4">
-                <div class="col-lg-4">
-                    <h4 class="fw-bold text-success mb-3"><i class="bi bi-tree-fill"></i> CHÍNH NHA</h4>
-                    <p class="text-muted">Cung cấp các loại phân bón và vật tư nông nghiệp chính hãng. Giải pháp tối ưu cho mùa màng bội thu.</p>
-                </div>
-                <div class="col-lg-2 offset-lg-2">
-                    <h6 class="fw-bold mb-3">Liên kết</h6>
-                    <ul class="list-unstyled text-muted">
-                        <li class="mb-2"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
-                        <li class="mb-2"><a href="/Product" class="text-decoration-none text-muted">Sản phẩm</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4">
-                    <h6 class="fw-bold mb-3">Đăng ký nhận tin</h6>
-                    <div class="input-group">
-                        <input type="email" class="form-control bg-light" placeholder="Email của bạn..." style="border-radius: 10px 0 0 10px; border: none;">
-                        <button class="btn btn-success" style="border-radius: 0 10px 10px 0;">Đăng ký</button>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <h3 class="fw-bold mb-3" style="color: #2E7D32;">ĐẠI LÝ PHÂN BÓN CHÍNH NHA</h3>
+                    <p class="fs-5">Cung cấp các loại phân bón và vật tư nông nghiệp chính hãng. Uy tín 10 năm đồng hành cùng bà con nông dân.</p>
+                    <div class="fs-5 mt-3">
+                        <p><strong>Địa chỉ:</strong> 123 Đường Nông Nghiệp, TP. HCM</p>
+                        <p><strong>Điện thoại:</strong> <a href="tel:0909123456" class="text-danger fw-bold" style="font-size:1.3rem; text-decoration:underline;">0909.123.456</a></p>
+                        <p><strong>Zalo Tư Vấn:</strong> 0909.123.456</p>
                     </div>
                 </div>
-            </div>
-            <div class="text-center text-muted border-top border-light pt-3 small">
-                &copy; 2026 - VTNN Chính Nha. Mọi quyền được bảo lưu.
+                <div class="col-md-6">
+                    <div class="p-4 bg-white border rounded shadow-sm">
+                        <h4 class="fw-bold mb-3 text-center">Bà con cần tư vấn loại cây/phân bón?</h4>
+                        <p class="text-center text-muted fs-5">Để lại số điện thoại, chúng tôi sẽ gọi lại ngay!</p>
+                        <div class="input-group mt-3">
+                            <input type="tel" class="form-control" placeholder="Nhập số điện thoại..." style="min-height:56px; font-size:1.2rem;">
+                            <button class="btn fw-bold px-3 text-white" style="background-color: #E65100; border-color: #BF360C; font-size:1rem; white-space:normal; min-height:56px;">GỌI LẠI<br>NGAY</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>

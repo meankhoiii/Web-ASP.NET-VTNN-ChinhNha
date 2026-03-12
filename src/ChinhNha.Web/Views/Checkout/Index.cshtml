@@ -2,125 +2,208 @@
 @model CheckoutViewModel
 
 @{
-    ViewData["Title"] = "Thanh toán";
+    ViewData["Title"] = "Điền thông tin nhận phân bón";
 }
 
 <style>
-    .checkout-form-card { background-color: #fff; border-radius: 15px; padding: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .order-summary-card { background-color: #f8f9fa; border-radius: 15px; padding: 2rem; position: sticky; top: 100px; }
-    .cart-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background-color: #e9ecef; }
-    .btn-checkout { background-color: #2E7D32; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; width: 100%; transition: all 0.3s; }
-    .btn-checkout:hover { background-color: #1B5E20; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2); }
+    .form-label {
+        font-size: clamp(1.1rem, 3vw, 1.4rem);
+        font-weight: bold;
+        color: var(--green-main);
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border: 3px solid var(--green-main) !important;
+        font-size: clamp(1rem, 3vw, 1.3rem) !important; /* iOS already fixed globally but keep logic */
+        padding: 12px !important;
+        border-radius: 8px !important;
+        background-color: var(--bg-card);
+    }
+    .form-control:focus {
+        border-color: var(--orange-cta) !important;
+        box-shadow: 0 0 0 4px rgba(230, 81, 0, 0.2) !important;
+    }
+
+    .checkout-section {
+        background-color: #fff;
+        border: 3px solid var(--green-main);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        background: linear-gradient(135deg, var(--green-main), var(--green-dark));
+        color: white;
+        padding: 12px 15px;
+        font-size: clamp(1.3rem, 4vw, 1.8rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        margin-bottom: 20px;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        text-align: center;
+    }
+
+    .btn-checkout {
+        background-color: var(--orange-cta);
+        color: #fff;
+        border: 4px solid #BF360C;
+        font-size: clamp(1.3rem, 4vw, 1.8rem);
+        font-weight: 900;
+        padding: 15px;
+        border-radius: 12px;
+        width: 100%;
+        text-transform: uppercase;
+        display: block;
+        text-align: center;
+        box-shadow: 0 5px 0 #BF360C;
+        transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn-checkout:active {
+        box-shadow: 0 0 0 #BF360C;
+        transform: translateY(5px);
+    }
+
+    .payment-option {
+        border: 3px solid #ccc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f9f9f9;
+        cursor: pointer;
+    }
+    .payment-option.active {
+        border-color: var(--green-main);
+        background-color: var(--bg-main);
+    }
+    .payment-radio {
+        width: 25px;
+        height: 25px;
+        accent-color: var(--green-main);
+    }
+    .payment-label {
+        font-size: clamp(1.1rem, 3vw, 1.5rem);
+        font-weight: bold;
+        color: var(--text-main);
+        margin-left: 15px;
+        cursor: pointer;
+    }
+
+    .order-totals {
+        font-size: clamp(1.1rem, 3vw, 1.5rem);
+        font-weight: bold;
+    }
+    .order-totals .total-amount {
+        font-size: clamp(1.6rem, 4vw, 2.2rem);
+        color: var(--price-red);
+        font-weight: 900;
+    }
 </style>
 
-<div class="container mb-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Cart" class="text-success text-decoration-none">Giỏ hàng</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
-        </ol>
-    </nav>
+<div class="row">
+    <div class="col-12 mb-4">
+        <a href="/Cart" class="btn btn-outline-dark fs-4 fw-bold"><i class="bi bi-arrow-left-circle-fill me-2"></i> TRỞ VỀ GIỎ HÀNG</a>
+    </div>
+</div>
 
-    <h2 class="fw-bold mb-4">Thông tin đặt hàng</h2>
+<form asp-action="Index" method="post" id="checkoutForm">
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="checkout-section">
+                <h2 class="section-title"><i class="bi bi-truck me-2"></i> THÔNG TIN NHẬN HÀNG</h2>
+                
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-5 fw-bold mb-3"></div>
 
-    <form asp-action="Index" method="post" id="checkoutForm">
-        <div class="row">
-            <!-- Form Input -->
-            <div class="col-lg-7 mb-4">
-                <div class="checkout-form-card">
-                    <h4 class="fw-bold mb-4">Địa chỉ giao hàng</h4>
-                    
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-4">
+                    <label asp-for="ReceiverName" class="form-label">Tên người nhận (Họ & Tên):</label>
+                    <input asp-for="ReceiverName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                    <span asp-validation-for="ReceiverName" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ReceiverName" class="form-label fw-medium"></label>
-                        <input asp-for="ReceiverName" class="form-control" placeholder="Tên người nhận" />
-                        <span asp-validation-for="ReceiverName" class="text-danger small"></span>
-                    </div>
+                <div class="mb-4">
+                    <label asp-for="ReceiverPhone" class="form-label">Điện thoại liên lạc:</label>
+                    <input asp-for="ReceiverPhone" class="form-control" placeholder="Bắt buộc để nhà xe gọi giao hàng" />
+                    <span asp-validation-for="ReceiverPhone" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ReceiverPhone" class="form-label fw-medium"></label>
-                        <input asp-for="ReceiverPhone" class="form-control" placeholder="Số điện thoại liên hệ" />
-                        <span asp-validation-for="ReceiverPhone" class="text-danger small"></span>
-                    </div>
+                <div class="mb-4">
+                    <label asp-for="ShippingAddress" class="form-label">Địa chỉ rẫy / Nhà chi tiết:</label>
+                    <textarea asp-for="ShippingAddress" class="form-control" rows="3" placeholder="Ghi rõ xã, huyện, tỉnh để tính cước xe rẻ nhất..."></textarea>
+                    <span asp-validation-for="ShippingAddress" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ShippingAddress" class="form-label fw-medium"></label>
-                        <textarea asp-for="ShippingAddress" class="form-control" rows="3" placeholder="Địa chỉ chi tiết (Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)"></textarea>
-                        <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label asp-for="Note" class="form-label fw-medium"></label>
-                        <textarea asp-for="Note" class="form-control" rows="2" placeholder="Ghi chú thêm (VD: Giao giờ hành chính)"></textarea>
-                    </div>
-
-                    <h4 class="fw-bold mb-3 mt-5">Phương thức thanh toán</h4>
-                    
-                    <div class="form-check mb-3 p-3 border rounded">
-                        <input class="form-check-input ms-1" type="radio" asp-for="PaymentMethod" value="COD" id="codPayment" checked>
-                        <label class="form-check-label fw-medium ms-2" for="codPayment">
-                            Thanh toán khi nhận hàng (COD)
-                        </label>
-                    </div>
-                    
-                    <div class="form-check mb-3 p-3 border rounded pb-1">
-                        <input class="form-check-input ms-1" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpayPayment">
-                        <label class="form-check-label fw-medium ms-2" for="vnpayPayment">
-                            Thanh toán qua ví VNPay (ATM/Hỗ trợ thẻ tín dụng)
-                        </label>
-                        <p class="text-muted small mt-2 ms-4">Bạn sẽ được chuyển hướng đến hệ thống thanh toán VNPay.</p>
-                    </div>
+                <div class="mb-4">
+                    <label asp-for="Note" class="form-label">Ghi chú cho Đại lý (nếu có):</label>
+                    <textarea asp-for="Note" class="form-control" rows="2" placeholder="Ví dụ: Giao sáng thứ 7..."></textarea>
                 </div>
             </div>
 
-            <!-- Order Summary -->
-            <div class="col-lg-5">
-                <div class="order-summary-card shadow-sm">
-                    <h4 class="fw-bold mb-4">Đơn hàng của bạn</h4>
-                    
-                    <div class="mb-4" style="max-height: 300px; overflow-y: auto;">
-                        @foreach (var item in Model.Cart.Items)
-                        {
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="@item.ProductImageUrl" alt="@item.ProductName" class="cart-item-img me-3" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%3E%3Crect%20fill%3D%22%23e9ecef%22%20width%3D%2260%22%20height%3D%2260%22%2F%3E%3C%2Fsvg%3E'" />
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0 fw-bold">@item.ProductName</h6>
-                                    <div class="text-muted small d-flex justify-content-between mt-1">
-                                        <span>Số lượng: @item.Quantity</span>
-                                        <span class="fw-bold text-dark">@((item.UnitPrice * item.Quantity).ToString("N0"))₫</span>
-                                    </div>
-                                </div>
+            <div class="checkout-section">
+                <h2 class="section-title"><i class="bi bi-cash-coin me-2"></i> CÁCH THỨC THANH TOÁN</h2>
+                
+                <label class="payment-option d-flex align-items-center active" for="codPayment">
+                    <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="COD" id="codPayment" checked onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
+                    <span class="payment-label">TRẢ TIỀN KHI NHẬN HÀNG (TIỀN MẶT)</span>
+                </label>
+                
+                <label class="payment-option d-flex align-items-center" for="vnpayPayment">
+                    <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpayPayment" onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
+                    <div>
+                        <span class="payment-label">CHUYỂN KHOẢN TRƯỚC (QUA THẺ ATM / VNPAY)</span>
+                        <div class="fs-5 text-muted mt-2 fw-bold" style="margin-left: 40px;">Hệ thống sẽ chuyển qua trang ngân hàng để nhập thẻ.</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="checkout-section bg-light border-danger border-4">
+                <h2 class="section-title bg-danger"><i class="bi bi-clipboard-check-fill me-2"></i> PHIẾU ĐẶT HÀNG CỦA BẠN</h2>
+                
+                <div class="mb-4 bg-white p-3 border border-2 rounded" style="max-height: 400px; overflow-y: auto;">
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <div class="d-flex align-items-start mb-3 border-bottom pb-2">
+                            <img src="@item.ProductImageUrl" class="cart-item-img me-3 border" style="width: 80px; height: 80px; object-fit: contain;" onerror="this.src='/images/no-image.png'" />
+                            <div class="flex-grow-1">
+                                <h4 class="mb-1 fw-bold text-dark">@item.ProductName</h4>
+                                <div class="fs-4 text-danger fw-bold">@item.UnitPrice.ToString("N0")đ x @item.Quantity</div>
+                                <div class="fs-5 text-muted fw-bold">Thành tiền: @((item.UnitPrice * item.Quantity).ToString("N0"))đ</div>
                             </div>
-                        }
+                        </div>
+                    }
+                </div>
+                
+                <div class="order-totals">
+                    <div class="d-flex justify-content-between mb-3 text-dark">
+                        <span>Tiền Phân Bón:</span>
+                        <span>@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")đ</span>
                     </div>
                     
-                    <hr />
-                    
-                    <div class="d-flex justify-content-between mb-3 text-muted">
-                        <span>Tạm tính</span>
-                        <span class="fw-medium">@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")₫</span>
+                    <div class="d-flex justify-content-between mb-3 text-dark border-bottom border-dark border-2 pb-3">
+                        <span>Cước phí chở hàng:</span>
+                        <span class="text-danger text-decoration-underline">Đại lý sẽ gọi báo giá cước</span>
                     </div>
                     
-                    <div class="d-flex justify-content-between mb-4 text-muted">
-                        <span>Phí giao hàng</span>
-                        <span class="fw-medium">Liên hệ</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-4 border-top pt-3">
-                        <span class="fw-bold fs-5">Cần thanh toán</span>
-                        <span class="fw-bold fs-4 text-success">@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")₫</span>
+                    <div class="d-flex justify-content-between mb-4 mt-3">
+                        <span class="fs-2 text-danger">TỔNG CỘNG:</span>
+                        <span class="total-amount">@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")đ</span>
                     </div>
 
-                    <button type="submit" class="btn btn-checkout">ĐẶT HÀNG NGAY</button>
-                    <div class="text-center mt-3 text-muted small">
-                        Bằng cách đặt hàng, bạn đã đồng ý với Điều khoản sử dụng của chúng tôi.
+                    <button type="submit" class="btn-checkout"><i class="bi bi-send-check-fill me-2"></i> XÁC NHẬN GỬI ĐƠN</button>
+                    <div class="text-center mt-3 fs-5 fw-bold text-muted">
+                        Sau khi gửi đơn, Đại lý sẽ gọi điện thoại xác nhận trong vòng 15 phút.
                     </div>
                 </div>
             </div>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
