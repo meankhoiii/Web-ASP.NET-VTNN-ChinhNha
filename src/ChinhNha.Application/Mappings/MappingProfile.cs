@@ -48,6 +48,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.ProductVariant != null ? src.ProductVariant.VariantName : null))
             .ReverseMap();
 
+        // Customer
+        CreateMap<AppUser, ChinhNha.Application.DTOs.Customers.CustomerProfileDto>()
+            .ReverseMap();
+
         // Inventory
         CreateMap<InventoryTransaction, InventoryTransactionDto>()
             .ForMember(dest => dest.VariantId, opt => opt.MapFrom(src => src.ProductVariantId))

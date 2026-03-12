@@ -1,0 +1,266 @@
+@using ChinhNha.Application.DTOs.Orders
+@model OrderDto
+
+@{
+    ViewData["Title"] = "Chi Tiết Đơn Hàng";
+}
+
+<style>
+    .order-detail-container {
+        background-color: #E8F5E9;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-detail-card {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-header {
+        border-bottom: 2px solid #E8F5E9;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #1B5E20;
+        margin-bottom: 1rem;
+    }
+
+    .order-status-badge {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.95rem;
+    }
+
+    .status-pending { background: #FFF3CD; color: #856404; }
+    .status-paid { background: #D4EDDA; color: #155724; }
+    .status-delivered { background: #D1ECF1; color: #0C5460; }
+    .status-cancelled { background: #F8D7DA; color: #721C24; }
+
+    .info-group {
+        background: #F9F9F9;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+    }
+
+    .info-label {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .item-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .item-table thead {
+        background-color: #E8F5E9;
+        border-bottom: 2px solid #2E7D32;
+    }
+
+    .item-table th, .item-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #E0E0E0;
+    }
+
+    .item-table th {
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .summary-box {
+        background: #F1F8E9;
+        border-left: 4px solid #2E7D32;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="order-detail-container">
+        <div class="order-detail-card">
+            <div class="order-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="fw-bold mb-2">Đơn Hàng #@Model.Id</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-calendar"></i> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="order-status-badge status-@Model.Status.ToString().ToLower()">
+                            @Model.Status
+                        </span>
+                        @if (Model.IsPaid)
+                        {
+                            <div class="mt-2">
+                                <span class="badge bg-success p-2">
+                                    <i class="bi bi-check-circle"></i> Đã Thanh Toán
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="section-title">
+                        <i class="bi bi-person-check"></i> Thông Tin Người Nhận
+                    </h5>
+                    <div class="info-group">
+                        <div class="info-row">
+                            <span class="info-label">Tên:</span>
+                            <span class="info-value">@Model.ShippingName</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Số Điện Thoại:</span>
+                            <span class="info-value">@Model.ShippingPhone</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Địa Chỉ:</span>
+                            <span class="info-value">@Model.ShippingAddress</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.ShippingNote))
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Ghi Chú:</span>
+                                <span class="info-value">@Model.ShippingNote</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="section-title">
+                        <i class="bi bi-credit-card"></i> Thông Tin Thanh Toán
+                    </h5>
+                    <div class="info-group">
+                        <div class="info-row">
+                            <span class="info-label">Phương Thức:</span>
+                            <span class="info-value">@Model.PaymentMethod</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Trạng Thái:</span>
+                            <span class="info-value">
+                                @if (Model.IsPaid)
+                                {
+                                    <span class="badge bg-success">Đã Thanh Toán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Chờ Thanh Toán</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="section-title mt-4">
+                <i class="bi bi-box"></i> Chi Tiết Sản Phẩm
+            </h5>
+
+            <table class="item-table">
+                <thead>
+                    <tr>
+                        <th>Sản Phẩm</th>
+                        <th class="text-center">Số Lượng</th>
+                        <th class="text-end">Đơn Giá</th>
+                        <th class="text-end">Thành Tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.ProductName</strong>
+                                @if (!string.IsNullOrWhiteSpace(item.VariantName))
+                                {
+                                    <br />
+                                    <small class="text-muted">@item.VariantName</small>
+                                }
+                            </td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.UnitPrice.ToString("N0")₫</td>
+                            <td class="text-end fw-bold">@item.TotalPrice.ToString("N0")₫</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Tổng Tiền Hàng:</span>
+                    <span>@Model.SubTotal.ToString("N0")₫</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí Vận Chuyển:</span>
+                    <span>+@Model.ShippingFee.ToString("N0")₫</span>
+                </div>
+                @if (Model.Discount > 0)
+                {
+                    <div class="summary-row">
+                        <span>Giảm Giá:</span>
+                        <span class="text-success">-@Model.Discount.ToString("N0")₫</span>
+                    </div>
+                }
+                <hr />
+                <div class="summary-row">
+                    <span class="fw-bold">Tổng Cộng:</span>
+                    <span class="total-amount">@Model.TotalAmount.ToString("N0")₫</span>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="/Customer/Orders" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay Lại Danh Sách
+                </a>
+                @if (Model.Status != ChinhNha.Domain.Enums.OrderStatus.Delivered && Model.Status != ChinhNha.Domain.Enums.OrderStatus.Cancelled)
+                {
+                    <button class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="bi bi-x-circle"></i> Hủy Đơn
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>

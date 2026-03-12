@@ -1,0 +1,162 @@
+@using ChinhNha.Web.Models
+@model CustomerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    .customer-container {
+        background-color: #E8F5E9;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-card {
+        background: white;
+        border: 2px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #E8F5E9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .profile-stat {
+        text-align: center;
+        padding: 1rem;
+        background: #F1F8E9;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #1B5E20;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .order-card {
+        background: white;
+        border: 1px dashed #ccc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .order-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 0.85rem;
+    }
+
+    .status-pending { background: #FFF3CD; color: #856404; }
+    .status-paid { background: #D4EDDA; color: #155724; }
+    .status-delivered { background: #D1ECF1; color: #0C5460; }
+    .status-cancelled { background: #F8D7DA; color: #721C24; }
+</style>
+
+<div class="container my-5">
+    <div class="customer-container">
+        <h1 class="fw-bold mb-4">Tài Khoản Khách Hàng</h1>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="profile-card text-center">
+                    <div class="profile-avatar">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <h5>@Model.Profile.FullName</h5>
+                    <p class="text-muted">@Model.Profile.Email</p>
+                    <a href="/Customer/Profile" class="btn btn-sm btn-outline-success w-100">
+                        <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="profile-stat">
+                            <div class="stat-value">@Model.Profile.TotalOrders</div>
+                            <div class="stat-label">Tổng Đơn Hàng</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="profile-stat">
+                            <div class="stat-value">@Model.Profile.TotalSpent.ToString("N0")₫</div>
+                            <div class="stat-label">Tổng Chi Tiêu</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="profile-stat">
+                            <div class="stat-value">@Model.Profile.CreatedAt.ToString("dd/MM/yyyy")</div>
+                            <div class="stat-label">Ngày Tham Gia</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="customer-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold">Đơn Hàng Gần Đây</h3>
+            <a href="/Customer/Orders" class="btn btn-sm btn-success">
+                Xem Tất Cả <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        @if (Model.RecentOrders.Any())
+        {
+            @foreach (var order in Model.RecentOrders)
+            {
+                <div class="order-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Đơn #@order.Id</h6>
+                            <p class="text-muted mb-2">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="mb-0"><strong>@order.Items.Count</strong> sản phẩm</p>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="order-status status-@order.Status.ToString().ToLower()">
+                                @order.Status
+                            </span>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <p class="fw-bold fs-5 mb-2">@order.TotalAmount.ToString("N0")₫</p>
+                            <a href="/Customer/OrderDetail/@order.Id" class="btn btn-sm btn-outline-primary">
+                                Chi Tiết <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle-fill"></i> Bạn chưa có đơn hàng nào. <a href="/Product">Mua sắm ngay</a>
+            </div>
+        }
+    </div>
+</div>

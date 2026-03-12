@@ -1,6 +1,7 @@
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Application.Mappings;
 using ChinhNha.Application.Services;
+using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
@@ -73,6 +74,9 @@ builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 
+// ---- Domain Services ----
+builder.Services.AddScoped<IAppUserService, AppUserService>();
+
 // ---- Application Services ----
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
@@ -80,6 +84,7 @@ builder.Services.AddScoped<IInventoryImportExportService, InventoryImportExportS
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IVNPayService, ChinhNha.Infrastructure.Services.VNPay.VNPayService>();
 builder.Services.AddScoped<IAuthService, CookieAuthService>();
