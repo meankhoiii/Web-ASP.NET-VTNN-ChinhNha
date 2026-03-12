@@ -129,9 +129,9 @@
                             var chart = Model.ForecastMiniCharts[i];
                             <div class="col-md-4">
                                 <div class="forecast-mini-card border rounded-3 p-3 bg-light-subtle">
-                                    <div class="forecast-mini-header mb-2">
-                                        <div class="forecast-mini-title">@chart.ChartTitle</div>
-                                        <div class="forecast-mini-product text-truncate" title="@chart.ProductName">@chart.ProductName</div>
+                                    <div class="forecast-mini-header mb-3">
+                                        <div class="forecast-mini-title">📊 @chart.ChartTitle</div>
+                                        <div class="forecast-mini-product text-truncate" title="@chart.ProductName">📦 @chart.ProductName</div>
                                     </div>
                                     <div class="forecast-mini-canvas-wrap">
                                         <canvas id="forecastMiniChart_@i"></canvas>
@@ -166,9 +166,9 @@
                         <table class="table table-sm table-hover mb-0 align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>San pham</th>
-                                    <th class="text-center">Ton</th>
-                                    <th class="text-center">Min</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Tồn kho</th>
+                                    <th class="text-center">Tối thiểu</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -204,9 +204,9 @@
                         <table class="table table-sm table-hover mb-0 align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Ma don</th>
-                                    <th>Khach</th>
-                                    <th class="text-end">Tong tien</th>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th class="text-end">Tổng tiền</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -245,8 +245,8 @@
                         <table class="table table-sm table-hover mb-0 align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>San pham</th>
-                                    <th class="text-center">SL</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
                                     <th class="text-end">Doanh thu</th>
                                 </tr>
                             </thead>
@@ -273,6 +273,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             @for (var i = 0; i < Model.ForecastMiniCharts.Count; i++)
@@ -300,42 +301,102 @@
                                 borderColor: '#0d6efd',
                                 backgroundColor: 'rgba(13, 110, 253, 0.15)',
                                 pointBackgroundColor: '#0d6efd',
+                                pointRadius: 3,
+                                pointHoverRadius: 5,
                                 fill: true,
                                 borderWidth: 2,
-                                tension: 0.3
+                                borderJoinStyle: 'miter',
+                                tension: 0.4
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
                             plugins: {
                                 legend: {
                                     display: true,
                                     position: 'top',
-                                    labels: { boxWidth: 10 }
+                                    align: 'center',
+                                    labels: {
+                                        boxWidth: 12,
+                                        padding: 10,
+                                        font: { size: 12, weight: '500' },
+                                        usePointStyle: true
+                                    }
                                 },
                                 tooltip: {
+                                    enabled: true,
+                                    mode: 'index',
+                                    intersect: false,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    padding: 12,
+                                    titleFont: { size: 13, weight: 'bold' },
+                                    bodyFont: { size: 12 },
+                                    borderColor: '#0d6efd',
+                                    borderWidth: 1,
+                                    displayColors: true,
                                     callbacks: {
+                                        title: function(context) {
+                                            return 'Ngày ' + context[0].label;
+                                        },
                                         label: function(context) {
                                             const value = Number(context.parsed.y || 0).toLocaleString('vi-VN');
                                             return datasetLabel + ': ' + value + ' ' + unitLabel;
+                                        },
+                                        afterLabel: function(context) {
+                                            const index = context.dataIndex;
+                                            if (index > 0) {
+                                                const prevValue = values[index - 1];
+                                                const currValue = values[index];
+                                                const change = currValue - prevValue;
+                                                const changePercent = ((change / prevValue) * 100).toFixed(1);
+                                                return '(Thay đổi: ' + (change >= 0 ? '+' : '') + changePercent + '%)';
+                                            }
                                         }
                                     }
                                 }
                             },
                             scales: {
                                 x: {
-                                    ticks: { maxTicksLimit: 6 }
-                                },
-                                y: {
-                                    beginAtZero: true,
+                                    display: true,
                                     title: {
-                                        display: true,
-                                        text: yAxisLabel
+                                        display: false
+                                    },
+                                    grid: {
+                                        display: false
                                     },
                                     ticks: {
-                                        maxTicksLimit: 4,
+                                        maxTicksLimit: 6,
+                                        font: { size: 11 }
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    beginAtZero: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: yAxisLabel + ' (' + unitLabel + ')',
+                                        font: { size: 11, weight: '600' },
+                                        color: '#495057'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)',
+                                        drawTicks: false
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 5,
+                                        font: { size: 11 },
                                         callback: function(value) {
+                                            if (value >= 1000000) {
+                                                return (value / 1000000).toFixed(1) + 'M';
+                                            } else if (value >= 1000) {
+                                                return (value / 1000).toFixed(0) + 'K';
+                                            }
                                             return Number(value).toLocaleString('vi-VN');
                                         }
                                     }
