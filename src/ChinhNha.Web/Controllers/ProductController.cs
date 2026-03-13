@@ -1,5 +1,7 @@
 using ChinhNha.Application.DTOs.Products;
 using ChinhNha.Application.Interfaces;
+using ChinhNha.Domain.Entities;
+using ChinhNha.Domain.Interfaces;
 using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,23 +11,36 @@ public class ProductController : Controller
 {
     private readonly IProductService _productService;
     private readonly IProductReviewService _productReviewService;
+    private readonly IRepository<ProductCategory> _productCategoryRepo;
     private const int PageSize = 12;
 
-    public ProductController(IProductService productService, IProductReviewService productReviewService)
+    public ProductController(
+        IProductService productService,
+        IProductReviewService productReviewService,
+        IRepository<ProductCategory> productCategoryRepo)
     {
         _productService = productService;
         _productReviewService = productReviewService;
+        _productCategoryRepo = productCategoryRepo;
     }
 
     public async Task<IActionResult> Index(int? categoryId, string? searchQuery, int pageNumber = 1)
     {
         ViewData["MetaDescription"] = "Cua hang phan bon Chinh Nha voi bo loc tim kiem, danh muc, gia va thong tin san pham nong nghiep chi tiet.";
 
+        var categories = (await _productCategoryRepo.ListAllAsync())
+            .Where(category => category.IsActive)
+            .OrderBy(category => category.DisplayOrder)
+            .ThenBy(category => category.Name)
+            .ToList();
+
         IEnumerable<ProductDto> products;
+        string? selectedCategorySlug = null;
         
         if (categoryId.HasValue)
         {
             products = await _productService.GetProductsByCategoryAsync(categoryId.Value);
+            selectedCategorySlug = categories.FirstOrDefault(category => category.Id == categoryId.Value)?.Slug;
         }
         else
         {
@@ -47,11 +62,12 @@ public class ProductController : Controller
         var model = new ProductListViewModel
         {
             Products = pagedItems,
+            Categories = categories,
             TotalCount = totalCount,
             CurrentPage = pageNumber,
             TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize),
             SearchQuery = searchQuery,
-            CategorySlug = categoryId?.ToString() // Since model wants a slug, for now pass ID as a string or change model
+            CategorySlug = selectedCategorySlug
         };
 
         return View(model);
@@ -87,6 +103,11 @@ public class ProductController : Controller
     public async Task<IActionResult> ByCategory(string slug, string? searchQuery, int pageNumber = 1)
     {
         var products = await _productService.GetProductsByCategorySlugAsync(slug);
+        var categories = (await _productCategoryRepo.ListAllAsync())
+            .Where(category => category.IsActive)
+            .OrderBy(category => category.DisplayOrder)
+            .ThenBy(category => category.Name)
+            .ToList();
 
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {
@@ -103,6 +124,7 @@ public class ProductController : Controller
         var model = new ProductListViewModel
         {
             Products = pagedItems,
+            Categories = categories,
             TotalCount = totalCount,
             CurrentPage = pageNumber,
             TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize),

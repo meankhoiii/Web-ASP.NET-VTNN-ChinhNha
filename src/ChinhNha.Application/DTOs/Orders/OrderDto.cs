@@ -5,9 +5,10 @@ namespace ChinhNha.Application.DTOs.Orders;
 public class OrderDto
 {
     public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
+    public string? UserId { get; set; }
     public string UserFullName { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
+    public string? ReceiverEmail { get; set; }
     
     public DateTime OrderDate { get; set; }
     public OrderStatus Status { get; set; }

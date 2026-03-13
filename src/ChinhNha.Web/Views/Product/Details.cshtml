@@ -7,6 +7,16 @@
     ViewData["OgImage"] = Model.Product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl;
     var productUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{Model.Product.Slug}";
     var encodedProductUrl = Uri.EscapeDataString(productUrl);
+    var activeVariants = Model.Product.Variants?
+        .Where(v => v.IsActive)
+        .OrderBy(v => v.DisplayOrder)
+        .ThenBy(v => v.Id)
+        .ToList() ?? new List<ChinhNha.Application.DTOs.Products.ProductVariantDto>();
+    var defaultVariant = activeVariants.FirstOrDefault();
+    var initialPrice = defaultVariant?.SalePrice ?? defaultVariant?.Price ?? Model.Product.SalePrice ?? Model.Product.BasePrice;
+    var initialStock = defaultVariant?.StockQuantity ?? Model.Product.StockQuantity;
+    var initialSku = defaultVariant?.SKU ?? Model.Product.SKU;
+    var initialUnit = defaultVariant != null ? defaultVariant.VariantName : Model.Product.Unit;
 }
 
 <style>
@@ -58,6 +68,37 @@
         display: inline-block;
         border-radius: 8px;
         border: 2px solid var(--price-red);
+    }
+
+    .variant-picker {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .variant-option {
+        border: 2px solid #c8e6c9;
+        border-radius: 10px;
+        background: #fff;
+        padding: 0.85rem 0.9rem;
+        text-align: left;
+        font-weight: 700;
+        color: #1b1b1b;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .variant-option small {
+        display: block;
+        margin-top: 0.3rem;
+        color: #666;
+        font-weight: 600;
+    }
+
+    .variant-option.active {
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        background: #f5fff5;
     }
 
     .info-block {
@@ -273,26 +314,49 @@
     <!-- Thông Tin Chốt Mua -->
     <div class="col-lg-7">
         <h1 class="detail-title">@Model.Product.Name</h1>
-        <div class="detail-sku">Mã hàng: SP-@Model.Product.SKU</div>
+        <div class="detail-sku">Mã hàng: <span id="productSku">SP-@initialSku</span></div>
         
-        <div class="detail-price">@Model.Product.BasePrice.ToString("N0") VNĐ</div>
+        <div class="detail-price"><span id="productPrice">@initialPrice.ToString("N0")</span> VNĐ</div>
         
         <div class="info-block">
             <p><strong><i class="bi bi-tags-fill me-2"></i> Danh mục:</strong> @(Model.Product.CategoryName ?? "Đang cập nhật")</p>
             <p><strong><i class="bi bi-building me-2"></i> Nhà cung cấp:</strong> @(Model.Product.SupplierName ?? "Đang cập nhật")</p>
-            <p><strong><i class="bi bi-box-seam me-2"></i> Đơn vị:</strong> @(!string.IsNullOrWhiteSpace(Model.Product.Unit) ? Model.Product.Unit : "Đang cập nhật")</p>
+            <p><strong><i class="bi bi-box-seam me-2"></i> Quy cách:</strong> <span id="productUnit">@(!string.IsNullOrWhiteSpace(initialUnit) ? initialUnit : "Đang cập nhật")</span></p>
             <p class="mb-0"><strong><i class="bi bi-clipboard-data me-2"></i> Tóm tắt:</strong> @(Model.Product.ShortDescription ?? Model.Product.Description ?? "Đang cập nhật")</p>
         </div>
 
         <div class="p-3 p-md-4 border border-3 border-warning rounded" style="background-color: #fff9e6; overflow: visible;">
+            @if (activeVariants.Any())
+            {
+                <div class="fs-4 fw-bold mb-3">CHỌN BIẾN THỂ:</div>
+                <div class="variant-picker">
+                    @foreach (var variant in activeVariants)
+                    {
+                        var isActiveVariant = variant.Id == defaultVariant?.Id;
+                        var variantEffectivePrice = variant.SalePrice ?? variant.Price;
+                        <button type="button"
+                                class="variant-option @(isActiveVariant ? "active" : string.Empty)"
+                                data-variant-id="@variant.Id"
+                                data-price="@variantEffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                data-stock="@variant.StockQuantity"
+                                data-sku="@variant.SKU"
+                                data-name="@variant.VariantName"
+                                onclick="selectVariant(this)">
+                            @variant.VariantName
+                            <small>@variantEffectivePrice.ToString("N0") VNĐ</small>
+                        </button>
+                    }
+                </div>
+            }
+
             <div class="fs-4 fw-bold mb-3">CHỌN SỐ LƯỢNG MUA:</div>
             <div class="detail-actions-row mb-3">
                 <div class="d-flex align-items-center flex-nowrap justify-content-center justify-content-md-start">
                     <button class="btn btn-qty" type="button" onclick="updateQty(-1)">-</button>
-                    <input type="number" id="qty" class="qty-input-large mx-1" value="1" min="1" max="@Model.Product.StockQuantity">
+                    <input type="number" id="qty" class="qty-input-large mx-1" value="1" min="1" max="@initialStock">
                     <button class="btn btn-qty" type="button" onclick="updateQty(1)">+</button>
                 </div>
-                <span class="fs-5 fw-bold text-success mt-1 mt-md-0 text-center text-md-start">Sẵn hàng: @Model.Product.StockQuantity bao/chai</span>
+                <span class="fs-5 fw-bold text-success mt-1 mt-md-0 text-center text-md-start">Sẵn hàng: <span id="productStock">@initialStock</span></span>
             </div>
 
             <button class="btn-buy-large" onclick="addToCartDetails(@Model.Product.Id)">
@@ -420,6 +484,11 @@
 @section Scripts {
     <script>
         const productId = @Model.Product.Id;
+        let selectedVariantId = @(defaultVariant?.Id ?? 0);
+        const productBasePrice = @((Model.Product.SalePrice ?? Model.Product.BasePrice).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        const productBaseStock = @Model.Product.StockQuantity;
+        const productBaseSku = '@(Model.Product.SKU ?? string.Empty)';
+        const productBaseUnit = '@(Model.Product.Unit ?? string.Empty)';
 
         function setMainImage(imageUrl, thumbEl) {
             const mainImage = document.getElementById('mainProductImage');
@@ -442,10 +511,45 @@
             }
         }
 
+        function parseVariantPrice(rawValue) {
+            if (!rawValue) {
+                return Number(productBasePrice) || 0;
+            }
+
+            const normalized = rawValue.replace(/\s/g, '').replace(',', '.');
+            const parsed = Number(normalized);
+            return Number.isNaN(parsed) ? (Number(productBasePrice) || 0) : parsed;
+        }
+
+        function selectVariant(button) {
+            document.querySelectorAll('.variant-option').forEach(function (item) {
+                item.classList.remove('active');
+            });
+
+            button.classList.add('active');
+            selectedVariantId = parseInt(button.dataset.variantId || '0');
+
+            const price = parseVariantPrice(button.dataset.price);
+            const stock = parseInt(button.dataset.stock || productBaseStock, 10);
+            const sku = button.dataset.sku || productBaseSku;
+            const name = button.dataset.name || productBaseUnit;
+
+            document.getElementById('productPrice').textContent = new Intl.NumberFormat('vi-VN').format(price);
+            document.getElementById('productStock').textContent = stock;
+            document.getElementById('productSku').textContent = 'SP-' + sku;
+            document.getElementById('productUnit').textContent = name;
+
+            const qtyInput = document.getElementById('qty');
+            qtyInput.max = stock;
+            if (parseInt(qtyInput.value, 10) > stock) {
+                qtyInput.value = stock > 0 ? stock : 1;
+            }
+        }
+
         function addToCartDetails(productId) {
             let qty = parseInt(document.getElementById('qty').value);
             if (typeof addToCart === "function") {
-                addToCart(productId, qty);
+                addToCart(productId, qty, selectedVariantId || null);
                 if (typeof showToast === "function") {
                     showToast("Thành công", "Đã thêm " + qty + " sản phẩm vào giỏ hàng.");
                 }

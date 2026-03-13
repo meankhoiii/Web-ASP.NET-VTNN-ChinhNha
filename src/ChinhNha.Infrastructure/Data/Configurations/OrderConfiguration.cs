@@ -18,6 +18,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.ReceiverName).IsRequired().HasMaxLength(200);
         builder.Property(o => o.ReceiverPhone).IsRequired().HasMaxLength(20);
+        builder.Property(o => o.ReceiverEmail).HasMaxLength(255);
         builder.Property(o => o.ShippingProvince).IsRequired().HasMaxLength(100);
         builder.Property(o => o.ShippingDistrict).IsRequired().HasMaxLength(100);
         builder.Property(o => o.ShippingWard).IsRequired().HasMaxLength(100);
@@ -29,6 +30,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasOne(o => o.User)
                .WithMany(u => u.Orders)
                .HasForeignKey(o => o.UserId)
+             .IsRequired(false)
                .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -3,15 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="@(ViewData["MetaDescription"] ?? "Chinh Nha - cua hang vat tu nong nghiep, phan bon chinh hang va tu van mua vu.")" />
-    <meta property="og:title" content="@(ViewData["Title"] ?? "VTNN Chinh Nha")" />
-    <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "Chinh Nha - cua hang vat tu nong nghiep, phan bon chinh hang va tu van mua vu.")" />
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "VTNN Chính Nha — chuyên cung cấp vật tư nông nghiệp, phân bón chính hãng và tư vấn mùa vụ.")" />
+    <meta property="og:title" content="@(ViewData["Title"] ?? "VTNN Chính Nha")" />
+    <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "VTNN Chính Nha — chuyên cung cấp vật tư nông nghiệp, phân bón chính hãng và tư vấn mùa vụ.")" />
     <meta property="og:type" content="website" />
     @if (ViewData["OgImage"] is string ogImage && !string.IsNullOrWhiteSpace(ogImage))
     {
         <meta property="og:image" content="@ogImage" />
     }
     <title>@ViewData["Title"] - VTNN Chính Nha</title>
+    <link rel="icon" type="image/png" href="/images/logo.png" />
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,19 +134,24 @@
             .floating-call {
                 display: flex;
                 position: fixed;
-                bottom: 20px;
-                right: 16px;
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+                right: 12px;
                 z-index: 999;
-                background-color: #E65100;
-                color: #fff;
+                background: linear-gradient(135deg, #fffef7 0%, #eef8ea 100%);
+                color: #1B5E20;
+                border: 2px solid #7bc67e;
                 border-radius: 50px;
-                padding: 14px 20px;
+                padding: 12px 18px;
                 align-items: center;
                 gap: 8px;
                 font-weight: 900;
-                font-size: 1rem;
+                font-size: 0.95rem;
                 text-decoration: none;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                box-shadow: 0 10px 22px rgba(27, 94, 32, 0.18);
+            }
+
+            .floating-call i {
+                color: #2E7D32;
             }
         }
     </style>
@@ -154,7 +160,7 @@
     <div class="header-top d-none d-md-block">
         <div class="container d-flex justify-content-between align-items-center">
             <span><i class="bi bi-geo-alt-fill me-1"></i> Đại lý Vật Tư NN Chính Nha</span>
-            <span><i class="bi bi-telephone-fill me-1"></i> TƯ VẤN & MUA HÀNG: <span class="hotline-highlight">0909.123.456</span></span>
+            <span><i class="bi bi-telephone-fill me-1"></i> TƯ VẤN & MUA HÀNG: <span class="hotline-highlight">0352.787.350</span></span>
         </div>
     </div>
 
@@ -162,7 +168,7 @@
         <nav class="navbar navbar-expand-lg">
             <div class="container">
                 <a class="navbar-brand-text d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-house-door-fill me-2 text-success" style="font-size:1.6rem;"></i> CHÍNH NHA
+                    <img src="/images/logowithtext.webp" alt="VTNN Chính Nha" style="height:48px; width:auto;" />
                 </a>
                 
                 <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
@@ -178,10 +184,10 @@
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav mx-auto mb-2 mb-lg-0 mt-2 mt-lg-0">
                         <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i> Trang chủ</a></li>
-                        <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" asp-area="" asp-controller="Product" asp-action="Index"><i class="bi bi-shop me-1"></i> Cửa hàng phân bón</a></li>
+                        <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" asp-area="" asp-controller="Product" asp-action="Index"><i class="bi bi-shop me-1"></i> Cửa hàng VTNN</a></li>
                         <li class="nav-item"><a class="main-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Blog" ? "active" : "")" href="/tin-tuc"><i class="bi bi-newspaper me-1"></i> Kỹ thuật mùa màng</a></li>
                         <li class="nav-item d-md-none">
-                            <a href="tel:0909123456" class="main-nav-link text-danger"><i class="bi bi-telephone-fill me-2"></i> GỌI 0909.123.456 ĐẶT HÀNG</a>
+                            <a href="tel:0352787350" class="main-nav-link text-danger"><i class="bi bi-telephone-fill me-2"></i> GỌI 0352.787.350 ĐẶT HÀNG</a>
                         </li>
                     </ul>
                     
@@ -216,7 +222,7 @@
                         }
                         else
                         {
-                            <a href="/Account/Login" class="btn btn-primary border-2 header-action-btn"><i class="bi bi-box-arrow-in-right me-1"></i> Đại lý Đăng Nhập</a>
+                            <a href="/Account/Login" class="btn btn-primary border-2 header-action-btn"><i class="bi bi-box-arrow-in-right me-1"></i> Đăng Nhập</a>
                         }
                     </div>
                 </div>
@@ -225,7 +231,7 @@
     </header>
 
     <!-- Nút gọi nổi trên Mobile -->
-    <a href="tel:0909123456" class="floating-call">
+    <a href="tel:0352787350" class="floating-call">
         <i class="bi bi-telephone-fill" style="font-size: 1.4rem;"></i> GỌI ĐẶT HÀNG
     </a>
 
@@ -239,22 +245,24 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6 mb-4">
-                    <h3 class="fw-bold mb-3" style="color: #2E7D32;">ĐẠI LÝ PHÂN BÓN CHÍNH NHA</h3>
+                    <h3 class="fw-bold mb-3" style="color: #2E7D32;">VẬT TƯ NÔNG NGHIỆP CHÍNH NHA</h3>
                     <p class="fs-5">Cung cấp các loại phân bón và vật tư nông nghiệp chính hãng. Uy tín 10 năm đồng hành cùng bà con nông dân.</p>
                     <div class="fs-5 mt-3">
                         <p><strong>Địa chỉ:</strong> 123 Đường Nông Nghiệp, TP. HCM</p>
-                        <p><strong>Điện thoại:</strong> <a href="tel:0909123456" class="text-danger fw-bold" style="font-size:1.3rem; text-decoration:underline;">0909.123.456</a></p>
-                        <p><strong>Zalo Tư Vấn:</strong> 0909.123.456</p>
+                        <p><strong>Điện thoại:</strong> <a href="tel:0352787350" class="text-danger fw-bold" style="font-size:1.3rem; text-decoration:underline;">0352.787.350</a></p>
+                        <p><strong>Zalo Tư Vấn:</strong> 0352.787.350</p>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-4 bg-white border rounded shadow-sm">
-                        <h4 class="fw-bold mb-3 text-center">Bà con cần tư vấn loại cây/phân bón?</h4>
+                        <h4 class="fw-bold mb-3 text-center">Bà con cần tư vấn loại cây/VTNN?</h4>
                         <p class="text-center text-muted fs-5">Để lại số điện thoại, chúng tôi sẽ gọi lại ngay!</p>
+                        @Html.AntiForgeryToken()
                         <div class="input-group mt-3">
-                            <input type="tel" class="form-control" placeholder="Nhập số điện thoại..." style="min-height:56px; font-size:1.2rem;">
-                            <button class="btn fw-bold px-3 text-white" style="background-color: #E65100; border-color: #BF360C; font-size:1rem; white-space:normal; min-height:56px;">GỌI LẠI<br>NGAY</button>
+                            <input type="tel" id="footerCallbackPhone" class="form-control" placeholder="Nhập số điện thoại..." style="min-height:56px; font-size:1.2rem;" maxlength="15">
+                            <button id="footerCallbackBtn" onclick="submitCallbackRequest()" class="btn fw-bold px-3 text-white" style="background-color: #E65100; border-color: #BF360C; font-size:1rem; white-space:normal; min-height:56px;">GỌI LẠI<br>NGAY</button>
                         </div>
+                        <div id="footerCallbackMsg" class="mt-2 text-center fw-bold fs-5" style="display:none;"></div>
                     </div>
                 </div>
             </div>
@@ -264,6 +272,10 @@
     <!-- ===== CHATBOT WIDGET (Floating) ===== -->
     <div id="chatbot-widget">
         <!-- Toggle button -->
+        <div id="chatbot-hint" class="chatbot-hint" style="display:none;">
+            <i class="bi bi-robot"></i>
+            <span id="chatbot-hint-text">Hỏi tôi về sản phẩm phù hợp</span>
+        </div>
         <button id="chatbot-toggle" aria-label="Mở chatbot tư vấn AI"
                 title="Tư vấn AI - Chính Nha">
             <i class="bi bi-robot fs-4"></i>
@@ -286,9 +298,14 @@
             </div>
 
             <div class="chatbot-messages p-3" id="chatbot-messages">
-                <div class="cb-bubble cb-assistant">
-                    👋 Xin chào! Tôi có thể giúp bạn tra cứu sản phẩm, kiểm tra đơn hàng hoặc tư vấn phân bón phù hợp với cây trồng. Hỏi tôi nhé!
-                </div>
+                <div class="cb-bubble cb-assistant">👋 Xin chào! Tôi có thể giúp bạn tra cứu sản phẩm, kiểm tra đơn hàng hoặc tư vấn phân bón phù hợp với cây trồng. Hỏi tôi nhé!</div>
+            </div>
+
+            <div class="chatbot-quick-replies px-2 pb-2" id="chatbot-quick-replies">
+                <button type="button" class="chatbot-chip" data-msg="Gợi ý cho tôi 3 sản phẩm bán chạy nhất">Sản phẩm bán chạy</button>
+                <button type="button" class="chatbot-chip" data-msg="Tôi trồng lúa, nên dùng loại nào giai đoạn đẻ nhánh?">Tư vấn cho lúa</button>
+                <button type="button" class="chatbot-chip" data-msg="Kiểm tra giúp tôi cách chọn phân bón hữu cơ phù hợp">Phân hữu cơ</button>
+                <button type="button" class="chatbot-chip" data-msg="Cho tôi biết cách liên hệ tư vấn nhanh">Liên hệ tư vấn</button>
             </div>
 
             <div class="chatbot-typing d-none" id="chatbot-typing">
@@ -327,6 +344,50 @@
             transition: transform .15s;
         }
         #chatbot-toggle:hover { transform: scale(1.08); }
+        .chatbot-hint {
+            position: absolute;
+            right: 66px;
+            bottom: 10px;
+            background: #fff;
+            color: #1B5E20;
+            border: 1px solid #a5d6a7;
+            border-radius: 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 8px 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,.12);
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity .2s ease, transform .2s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            max-width: 210px;
+        }
+        .chatbot-hint i {
+            color: #2E7D32;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .chatbot-hint::after {
+            content: '';
+            position: absolute;
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-left: 7px solid #fff;
+        }
+        .chatbot-hint.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
         .chatbot-badge {
             position: absolute; top: 4px; right: 4px;
             background: #dc3545; color: #fff;
@@ -345,6 +406,28 @@
             border: 1px solid #dee2e6;
         }
         .chatbot-header { background: #1B5E20; }
+        .chatbot-quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            border-top: 1px solid #eef2f4;
+            background: #fff;
+        }
+        .chatbot-chip {
+            border: 1px solid #c8e6c9;
+            background: #f7fbf6;
+            color: #1B5E20;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+        .chatbot-chip:hover {
+            background: #e8f5e9;
+            border-color: #81c784;
+        }
         .chatbot-messages {
             height: 320px;
             overflow-y: auto;
@@ -389,8 +472,41 @@
             40% { transform: scale(1.35); opacity:1; }
         }
         @@media (max-width: 500px) {
-            #chatbot-panel { width: calc(100vw - 32px); right: -8px; }
-            #chatbot-widget { bottom: 16px; right: 16px; }
+            #chatbot-panel {
+                width: min(340px, calc(100vw - 24px));
+                right: 0;
+                bottom: 72px;
+            }
+
+            #chatbot-widget {
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 146px);
+                right: 12px;
+            }
+
+            .chatbot-hint {
+                right: 0;
+                bottom: 64px;
+                width: 190px;
+                max-width: 190px;
+                white-space: normal;
+                line-height: 1.3;
+            }
+
+            .chatbot-hint::after {
+                right: 20px;
+                top: auto;
+                bottom: -7px;
+                transform: none;
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-top: 7px solid #fff;
+                border-bottom: 0;
+            }
+
+            #chatbot-toggle {
+                width: 54px;
+                height: 54px;
+            }
         }
     </style>
 
@@ -403,13 +519,45 @@
         const inputEl = document.getElementById('chatbot-input');
         const sendBtn = document.getElementById('chatbot-send');
         const typingEl = document.getElementById('chatbot-typing');
+        const hintEl = document.getElementById('chatbot-hint');
+        const hintTextEl = document.getElementById('chatbot-hint-text');
+        const quickRepliesEl = document.getElementById('chatbot-quick-replies');
 
         let sessionId = sessionStorage.getItem('cbSession') || '';
+        const hintMessages = [
+            'Hỏi tôi về sản phẩm phù hợp',
+            'Bấm để tư vấn nhanh',
+            'Có mẫu câu hỏi sẵn bên trong'
+        ];
+        let hintIndex = 0;
+        let hintTimer = null;
+
+        function showChatHint() {
+            if (!hintEl || panel.style.display !== 'none') return;
+
+            if (hintTextEl) {
+                hintTextEl.textContent = hintMessages[hintIndex % hintMessages.length];
+            }
+            hintIndex += 1;
+            hintEl.style.display = 'block';
+
+            requestAnimationFrame(() => hintEl.classList.add('show'));
+
+            clearTimeout(hintTimer);
+            hintTimer = setTimeout(() => {
+                hintEl.classList.remove('show');
+                setTimeout(() => { hintEl.style.display = 'none'; }, 220);
+            }, 2100);
+        }
 
         toggle.addEventListener('click', () => {
             const isHidden = panel.style.display === 'none';
             panel.style.display = isHidden ? 'block' : 'none';
             if (isHidden) {
+                if (hintEl) {
+                    hintEl.classList.remove('show');
+                    hintEl.style.display = 'none';
+                }
                 inputEl.focus();
                 document.getElementById('chatbot-badge').style.display = 'none';
             }
@@ -417,9 +565,10 @@
         closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
 
         function appendBubble(role, text) {
+            const safeText = (text || '').trim();
             const div = document.createElement('div');
             div.className = 'cb-bubble ' + (role === 'user' ? 'cb-user' : 'cb-assistant');
-            div.innerHTML = text
+            div.innerHTML = safeText
                 .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                 .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
                 .replace(/\n/g,'<br>');
@@ -457,6 +606,19 @@
         inputEl.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl.value); }
         });
+
+        quickRepliesEl?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.chatbot-chip');
+            if (!btn) return;
+
+            const text = btn.getAttribute('data-msg') || '';
+            if (!text) return;
+
+            sendMessage(text);
+        });
+
+        setTimeout(showChatHint, 1400);
+        setInterval(showChatHint, 18000);
     })();
     </script>
     <!-- ===== END CHATBOT WIDGET ===== -->
@@ -467,5 +629,56 @@
     <script src="~/js/cart.js" asp-append-version="true"></script>
     <script src="~/js/wishlist.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        async function submitCallbackRequest() {
+            const input = document.getElementById('footerCallbackPhone');
+            const btn = document.getElementById('footerCallbackBtn');
+            const msg = document.getElementById('footerCallbackMsg');
+            const phone = input.value.trim();
+
+            if (!phone) {
+                msg.textContent = 'Vui lòng nhập số điện thoại.';
+                msg.style.color = '#c00';
+                msg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang gửi...';
+
+            try {
+                const token = document.querySelector('meta[name="__RequestVerificationToken"]')?.content
+                    || document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                const form = new FormData();
+                form.append('phone', phone);
+                if (token) form.append('__RequestVerificationToken', token);
+
+                const res = await fetch('/Home/CallbackRequest', { method: 'POST', body: form });
+                const data = await res.json();
+
+                if (res.ok) {
+                    msg.textContent = '✅ ' + data.message;
+                    msg.style.color = '#2E7D32';
+                    input.value = '';
+                } else {
+                    msg.textContent = '⚠️ ' + (data.message || 'Có lỗi xảy ra.');
+                    msg.style.color = '#c00';
+                }
+            } catch {
+                msg.textContent = '⚠️ Không gửi được, vui lòng thử lại.';
+                msg.style.color = '#c00';
+            } finally {
+                msg.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'GỌI LẠI<br>NGAY';
+            }
+        }
+
+        document.getElementById('footerCallbackPhone')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitCallbackRequest();
+        });
+    </script>
 </body>
 </html>

@@ -6,6 +6,11 @@ public class AiSettingsViewModel
     public string? ManualModel { get; set; }
     public string OllamaEndpoint { get; set; } = "http://localhost:11434";
 
+    public bool UseGeminiForUser { get; set; }
+    public string GeminiModel { get; set; } = "gemini-2.5-flash";
+    public string? GeminiApiKey { get; set; }
+    public bool HasGeminiApiKey { get; set; }
+
     public double DetectedRamGb { get; set; }
     public int CpuCores { get; set; }
     public bool HasNvidiaGpu { get; set; }
@@ -17,19 +22,25 @@ public class AiSettingsViewModel
 
     public IReadOnlyList<string> SupportedModels { get; set; } = new[]
     {
-        // Sailor2 is prioritized for chat in this project.
         "Sailor2-20B-Chat",
         "Sailor2-8B-Chat",
         "Sailor2-1B-Chat",
-        // Qwen3
         "qwen3:8b",
         "qwen3:4b",
         "qwen3:1.7b",
-        // Llama3
         "llama3.1:8b",
         "llama3.2:3b",
-        // Phi-4
         "phi4",
         "phi4-mini"
+    };
+
+    public IReadOnlyList<string> GeminiModels { get; set; } = new[]
+    {
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
     };
 }

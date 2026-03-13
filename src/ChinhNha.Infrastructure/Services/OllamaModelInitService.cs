@@ -1,7 +1,10 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ChinhNha.Application.Interfaces;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 
 namespace ChinhNha.Infrastructure.Services;
@@ -31,54 +34,201 @@ public class OllamaModelInitService : BackgroundService
 
     private readonly ILogger<OllamaModelInitService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly string _ollamaEndpoint;
 
     public OllamaModelInitService(
         ILogger<OllamaModelInitService> logger,
         IHttpClientFactory httpClientFactory,
+        IServiceScopeFactory serviceScopeFactory,
         IConfiguration configuration)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _serviceScopeFactory = serviceScopeFactory;
         _ollamaEndpoint = configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Chờ app hoàn tất khởi động trước khi thực hiện
-        await Task.Delay(TimeSpan.FromSeconds(8), stoppingToken);
-        if (stoppingToken.IsCancellationRequested) return;
-
-        _logger.LogInformation("[OllamaInit] Đang kiểm tra Ollama tại {Endpoint}...", _ollamaEndpoint);
-
-        var (reachable, rawNames) = await GetOllamaRawNamesAsync(stoppingToken);
-        if (!reachable)
+        try
         {
-            _logger.LogInformation("[OllamaInit] Ollama chưa chạy — bỏ qua tự động pull.");
-            return;
+            // Chờ app hoàn tất khởi động trước khi thực hiện
+            await Task.Delay(TimeSpan.FromSeconds(8), stoppingToken);
+            if (stoppingToken.IsCancellationRequested) return;
+
+            _logger.LogInformation("[OllamaInit] Đang kiểm tra Ollama tại {Endpoint}...", _ollamaEndpoint);
+
+            var (reachable, rawNames) = await GetOllamaRawNamesAsync(stoppingToken);
+            if (!reachable)
+            {
+                _logger.LogInformation("[OllamaInit] Ollama chưa chạy — bỏ qua tự động pull.");
+                return;
+            }
+
+            var recommendedModel = GetRecommendedModel();
+            _logger.LogInformation("[OllamaInit] Model gợi ý cho phần cứng này: {Model}", recommendedModel);
+
+            if (!ModelToOllamaTag.TryGetValue(recommendedModel, out var ollamaTag))
+            {
+                _logger.LogWarning("[OllamaInit] Không tìm thấy Ollama tag cho model '{Model}'.", recommendedModel);
+                return;
+            }
+
+            // Kiểm tra model đã được cài chưa (so sánh theo prefix của tag)
+            bool alreadyInstalled = rawNames.Any(n =>
+                n.StartsWith(ollamaTag, StringComparison.OrdinalIgnoreCase));
+
+            if (alreadyInstalled)
+            {
+                _logger.LogInformation("[OllamaInit] Model '{Tag}' đã được cài sẵn. Không cần pull.", ollamaTag);
+            }
+
+            if (!alreadyInstalled)
+            {
+                _logger.LogInformation("[OllamaInit] Chưa tìm thấy '{Tag}'. Bắt đầu tự động tải (có thể mất vài phút)...", ollamaTag);
+                await PullModelAsync(ollamaTag, stoppingToken);
+
+                // Refresh model list after pull
+                var refreshed = await GetOllamaRawNamesAsync(stoppingToken);
+                rawNames = refreshed.RawNames;
+            }
+
+            using var scope = _serviceScopeFactory.CreateScope();
+            var aiModelSelectionService = scope.ServiceProvider.GetRequiredService<IAiModelSelectionService>();
+
+            await EnsureModelUsableOrDowngradeAsync(recommendedModel, rawNames, aiModelSelectionService, stoppingToken);
         }
-
-        var recommendedModel = GetRecommendedModel();
-        _logger.LogInformation("[OllamaInit] Model gợi ý cho phần cứng này: {Model}", recommendedModel);
-
-        if (!ModelToOllamaTag.TryGetValue(recommendedModel, out var ollamaTag))
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
-            _logger.LogWarning("[OllamaInit] Không tìm thấy Ollama tag cho model '{Model}'.", recommendedModel);
-            return;
+            _logger.LogInformation("[OllamaInit] Tiến trình khởi tạo model bị hủy do ứng dụng dừng.");
         }
-
-        // Kiểm tra model đã được cài chưa (so sánh theo prefix của tag)
-        bool alreadyInstalled = rawNames.Any(n =>
-            n.StartsWith(ollamaTag, StringComparison.OrdinalIgnoreCase));
-
-        if (alreadyInstalled)
+        catch (Exception ex)
         {
-            _logger.LogInformation("[OllamaInit] Model '{Tag}' đã được cài sẵn. Không cần pull.", ollamaTag);
-            return;
+            _logger.LogError(ex, "[OllamaInit] Lỗi ngoài ý muốn khi khởi tạo model. Bỏ qua để không ảnh hưởng vòng đời ứng dụng.");
         }
+    }
 
-        _logger.LogInformation("[OllamaInit] Chưa tìm thấy '{Tag}'. Bắt đầu tự động tải (có thể mất vài phút)...", ollamaTag);
-        await PullModelAsync(ollamaTag, stoppingToken);
+    private async Task EnsureModelUsableOrDowngradeAsync(
+        string startDisplayModel,
+        IReadOnlyList<string> installedRawNames,
+        IAiModelSelectionService aiModelSelectionService,
+        CancellationToken ct)
+    {
+        var currentModel = startDisplayModel;
+        var knownModels = installedRawNames.ToList();
+
+        while (!ct.IsCancellationRequested)
+        {
+            if (!ModelToOllamaTag.TryGetValue(currentModel, out var currentTag))
+            {
+                _logger.LogWarning("[OllamaInit] Không tìm thấy tag cho model '{Model}'. Dừng kiểm tra.", currentModel);
+                return;
+            }
+
+            if (!knownModels.Any(name => name.StartsWith(currentTag, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogInformation("[OllamaInit] Model '{Tag}' chưa cài. Tự động pull...", currentTag);
+                await PullModelAsync(currentTag, ct);
+
+                var refreshed = await GetOllamaRawNamesAsync(ct);
+                knownModels = refreshed.RawNames;
+            }
+
+            var testResult = await TestModelAsync(currentTag, ct);
+            if (testResult == ModelTestResult.Ok)
+            {
+                _logger.LogInformation("[OllamaInit] Model '{Model}' hoạt động bình thường.", currentModel);
+                return;
+            }
+
+            if (testResult != ModelTestResult.InsufficientMemory)
+            {
+                _logger.LogWarning("[OllamaInit] Test model '{Model}' thất bại (không phải lỗi RAM). Giữ nguyên cấu hình hiện tại.", currentModel);
+                return;
+            }
+
+            var smallerModel = GetSmallerSailorModel(currentModel);
+            if (smallerModel == null)
+            {
+                _logger.LogWarning("[OllamaInit] Model '{Model}' thiếu RAM và không còn model Sailor nhỏ hơn để fallback.", currentModel);
+                return;
+            }
+
+            _logger.LogWarning(
+                "[OllamaInit] Model '{CurrentModel}' thiếu RAM. Tự động fallback xuống '{SmallerModel}'.",
+                currentModel,
+                smallerModel);
+
+            await aiModelSelectionService.SaveSettingsAsync(
+                autoSelectEnabled: false,
+                manualModel: smallerModel,
+                ollamaEndpoint: _ollamaEndpoint);
+
+            currentModel = smallerModel;
+        }
+    }
+
+    private async Task<ModelTestResult> TestModelAsync(string ollamaTag, CancellationToken ct)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(20);
+
+            var payload = JsonSerializer.Serialize(new
+            {
+                model = ollamaTag,
+                messages = new[] { new { role = "user", content = "ping" } },
+                stream = false
+            });
+
+            using var response = await client.PostAsync(
+                $"{_ollamaEndpoint.TrimEnd('/')}/api/chat",
+                new StringContent(payload, Encoding.UTF8, "application/json"),
+                ct);
+
+            var body = await response.Content.ReadAsStringAsync(ct);
+            if (response.IsSuccessStatusCode)
+            {
+                return ModelTestResult.Ok;
+            }
+
+            if (body.Contains("requires more system memory", StringComparison.OrdinalIgnoreCase))
+            {
+                return ModelTestResult.InsufficientMemory;
+            }
+
+            _logger.LogWarning("[OllamaInit] Test model '{Tag}' trả về HTTP {Status}: {Body}", ollamaTag, (int)response.StatusCode, body);
+            return ModelTestResult.OtherError;
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            _logger.LogWarning("[OllamaInit] Test model '{Tag}' bị timeout.", ollamaTag);
+            return ModelTestResult.OtherError;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[OllamaInit] Lỗi khi test model '{Tag}'.", ollamaTag);
+            return ModelTestResult.OtherError;
+        }
+    }
+
+    private static string? GetSmallerSailorModel(string currentModel)
+    {
+        return currentModel switch
+        {
+            "Sailor2-20B-Chat" => "Sailor2-8B-Chat",
+            "Sailor2-8B-Chat" => "Sailor2-1B-Chat",
+            _ => null
+        };
+    }
+
+    private enum ModelTestResult
+    {
+        Ok,
+        InsufficientMemory,
+        OtherError
     }
 
     /// <summary>

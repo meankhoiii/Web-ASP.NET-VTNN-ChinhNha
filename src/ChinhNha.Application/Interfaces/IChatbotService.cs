@@ -18,6 +18,16 @@ public interface IChatbotService
     /// <param name="userEmail">Email người dùng đã đăng nhập (null nếu khách).</param>
     Task<string> ChatAsync(string message, string sessionId, bool isAdmin = false, string? userEmail = null);
 
+    /// <summary>
+    /// Gửi tin nhắn và nhận phản hồi AI theo dạng stream từng phần nội dung.
+    /// </summary>
+    IAsyncEnumerable<string> ChatStreamAsync(
+        string message,
+        string sessionId,
+        bool isAdmin = false,
+        string? userEmail = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Lấy lịch sử hội thoại của một phiên.</summary>
     Task<IEnumerable<ChatMessageDto>> GetHistoryAsync(string sessionId, int limit = 20);
 }

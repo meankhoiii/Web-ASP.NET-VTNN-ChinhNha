@@ -1,12 +1,13 @@
 @model ChinhNha.Web.Areas.Admin.Models.AiSettingsViewModel
 @{
     ViewData["Title"] = "Cấu hình AI";
+    Layout = "_AdminLayout";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Cấu hình AI Chatbot</h2>
-        <p class="text-muted mb-0">Tự động chọn Sailor2 phù hợp theo phần cứng, hoặc khóa thủ công.</p>
+        <p class="text-muted mb-0">Tự động chọn model phù hợp theo phần cứng, hoặc khóa thủ công.</p>
     </div>
 </div>
 
@@ -14,6 +15,12 @@
 {
     <div class="alert alert-success">@success</div>
 }
+
+<div id="aiSettingsNotify" class="alert d-none" role="alert"></div>
+
+<div class="progress mb-3 d-none" id="aiSettingsProgressWrap" style="height: 10px;">
+    <div id="aiSettingsProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+</div>
 
 <div class="row g-4">
     <div class="col-lg-7">
@@ -36,6 +43,7 @@
                                 <option value="@item">@item</option>
                             }
                         </select>
+                        <div class="form-text">Mặc định hệ thống ưu tiên Sailor nếu cấu hình phù hợp.</div>
                     </div>
 
                     <div class="mb-3">
@@ -43,7 +51,40 @@
                         <input asp-for="OllamaEndpoint" class="form-control" placeholder="http://localhost:11434" />
                     </div>
 
-                    <button type="submit" class="btn btn-success">
+                    <hr class="my-3" />
+                    <h6 class="mb-3">Gemini (Cloud) cho User Chat</h6>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input asp-for="UseGeminiForUser" class="form-check-input" />
+                        <label asp-for="UseGeminiForUser" class="form-check-label">Bật Gemini cho chatbot user</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="GeminiModel" class="form-label">Gemini model</label>
+                        <select asp-for="GeminiModel" class="form-select">
+                            @foreach (var item in Model.GeminiModels)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="GeminiApiKey" class="form-label">Gemini API Key</label>
+                        <input asp-for="GeminiApiKey" class="form-control" placeholder="AIza..." autocomplete="off" />
+                        <div class="form-text">
+                            @if (Model.HasGeminiApiKey)
+                            {
+                                <span>Đã có key lưu an toàn trong DB (dạng mã hóa). Để trống nếu không đổi key.</span>
+                            }
+                            else
+                            {
+                                <span>Key sẽ được mã hóa trước khi lưu DB, không nằm trong file config/git.</span>
+                            }
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" id="aiSettingsSaveBtn">
                         <i class="bi bi-save me-1"></i>Lưu cấu hình
                     </button>
                 </form>
@@ -74,7 +115,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Model Sailor2 đã cài</h5>
+                <h5 class="card-title">Model đã cài trong Ollama</h5>
                 @if (Model.InstalledModels.Any())
                 {
                     <ul class="mb-0">
@@ -92,3 +133,125 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    const form = document.querySelector('form[method="post"]');
+    if (!form) return;
+
+    const notifyEl = document.getElementById('aiSettingsNotify');
+    const progressWrap = document.getElementById('aiSettingsProgressWrap');
+    const progressBar = document.getElementById('aiSettingsProgressBar');
+    const saveBtn = document.getElementById('aiSettingsSaveBtn');
+    const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+    function showNotify(type, message) {
+        notifyEl.className = 'alert';
+        notifyEl.classList.add(type === 'error' ? 'alert-danger' : type === 'warning' ? 'alert-warning' : type === 'success' ? 'alert-success' : 'alert-info');
+        notifyEl.classList.remove('d-none');
+        notifyEl.textContent = message;
+    }
+
+    function setProgress(percent) {
+        const value = Math.max(0, Math.min(100, Number(percent) || 0));
+        progressWrap.classList.remove('d-none');
+        progressBar.style.width = value + '%';
+        progressBar.setAttribute('aria-valuenow', String(value));
+    }
+
+    async function submitWithStream() {
+        const model = {
+            autoSelectEnabled: document.getElementById('AutoSelectEnabled')?.checked || false,
+            manualModel: document.getElementById('ManualModel')?.value || null,
+            ollamaEndpoint: document.getElementById('OllamaEndpoint')?.value || '',
+            useGeminiForUser: document.getElementById('UseGeminiForUser')?.checked || false,
+            geminiModel: document.getElementById('GeminiModel')?.value || 'gemini-2.0-flash',
+            geminiApiKey: document.getElementById('GeminiApiKey')?.value || null
+        };
+
+        saveBtn.disabled = true;
+        showNotify('status', 'Đang gửi yêu cầu lưu cấu hình...');
+        setProgress(5);
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (antiForgeryToken) {
+                headers['RequestVerificationToken'] = antiForgeryToken;
+            }
+
+            const res = await fetch('/Admin/AiSettings/SaveStream', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(model)
+            });
+
+            if (!res.ok) {
+                throw new Error('HTTP ' + res.status);
+            }
+
+            if (!res.body) {
+                throw new Error('Không nhận được dữ liệu stream từ server.');
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let completed = false;
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const payloadLine = line.trim();
+                    if (!payloadLine) continue;
+
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadLine);
+                    } catch {
+                        continue;
+                    }
+
+                    if (payload.progress !== undefined && payload.progress !== null) {
+                        setProgress(payload.progress);
+                    }
+
+                    if (payload.type === 'status') {
+                        showNotify('status', payload.message || 'Đang xử lý...');
+                    } else if (payload.type === 'warning') {
+                        showNotify('warning', payload.message || 'Có cảnh báo khi xử lý model.');
+                    } else if (payload.type === 'error') {
+                        showNotify('error', payload.message || 'Lưu cấu hình thất bại.');
+                    } else if (payload.type === 'success') {
+                        showNotify('success', payload.message || 'Lưu cấu hình thành công.');
+                    } else if (payload.type === 'done') {
+                        completed = true;
+                    }
+                }
+            }
+
+            if (completed) {
+                setProgress(100);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showNotify('error', 'Không thể lưu cấu hình. Vui lòng thử lại.');
+            console.error(err);
+        } finally {
+            saveBtn.disabled = false;
+        }
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitWithStream();
+    });
+})();
+</script>
+}

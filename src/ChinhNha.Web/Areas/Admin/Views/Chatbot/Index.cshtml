@@ -4,9 +4,15 @@
 }
 
 <style>
+    .chat-page {
+        height: calc(100dvh - 116px);
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+    }
     .chat-container {
-        height: calc(100vh - 220px);
-        min-height: 420px;
+        flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
     }
@@ -71,60 +77,69 @@
         40% { transform: scale(1.3); opacity: 1; }
     }
     .quick-actions .btn { font-size: 0.8rem; }
+
+    @@media (max-width: 767px) {
+        .chat-page {
+            height: calc(100dvh - 96px);
+            min-height: 460px;
+        }
+    }
 </style>
 
-<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <div>
-        <h1 class="h2 mb-0"><i class="bi bi-robot text-primary me-2"></i> Trợ lý AI Admin</h1>
-        <p class="text-muted mb-0 mt-1 small">Hỏi báo cáo, kiểm tra kho, tra cứu đơn hàng bằng ngôn ngữ tự nhiên.</p>
+<div class="chat-page">
+    <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div>
+            <h1 class="h2 mb-0"><i class="bi bi-robot text-primary me-2"></i> Trợ lý AI Admin</h1>
+            <p class="text-muted mb-0 mt-1 small">Hỏi báo cáo, kiểm tra kho, tra cứu đơn hàng bằng ngôn ngữ tự nhiên.</p>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" id="clearChatBtn">
+            <i class="bi bi-trash me-1"></i> Xoá lịch sử
+        </button>
     </div>
-    <button class="btn btn-sm btn-outline-secondary" id="clearChatBtn">
-        <i class="bi bi-trash me-1"></i> Xoá lịch sử
-    </button>
-</div>
 
-<!-- Quick action prompts -->
-<div class="quick-actions d-flex flex-wrap gap-2 mb-3">
-    <button class="btn btn-outline-success btn-sm quick-btn" data-prompt="Doanh thu 7 ngày gần đây là bao nhiêu?">
-        <i class="bi bi-graph-up me-1"></i>Doanh thu 7 ngày
-    </button>
-    <button class="btn btn-outline-warning btn-sm quick-btn" data-prompt="Những sản phẩm nào đang sắp hết hàng?">
-        <i class="bi bi-exclamation-triangle me-1"></i>Sắp hết hàng
-    </button>
-    <button class="btn btn-outline-primary btn-sm quick-btn" data-prompt="Top 5 sản phẩm bán chạy nhất hiện tại?">
-        <i class="bi bi-trophy me-1"></i>Top bán chạy
-    </button>
-    <button class="btn btn-outline-info btn-sm quick-btn" data-prompt="Có bao nhiêu đơn hàng trong 30 ngày qua?">
-        <i class="bi bi-receipt me-1"></i>Đơn hàng 30 ngày
-    </button>
-</div>
+    <!-- Quick action prompts -->
+    <div class="quick-actions d-flex flex-wrap gap-2 mb-3">
+        <button class="btn btn-outline-success btn-sm quick-btn" data-prompt="Doanh thu 7 ngày gần đây là bao nhiêu?">
+            <i class="bi bi-graph-up me-1"></i>Doanh thu 7 ngày
+        </button>
+        <button class="btn btn-outline-warning btn-sm quick-btn" data-prompt="Những sản phẩm nào đang sắp hết hàng?">
+            <i class="bi bi-exclamation-triangle me-1"></i>Sắp hết hàng
+        </button>
+        <button class="btn btn-outline-primary btn-sm quick-btn" data-prompt="Top 5 sản phẩm bán chạy nhất hiện tại?">
+            <i class="bi bi-trophy me-1"></i>Top bán chạy
+        </button>
+        <button class="btn btn-outline-info btn-sm quick-btn" data-prompt="Có bao nhiêu đơn hàng trong 30 ngày qua?">
+            <i class="bi bi-receipt me-1"></i>Đơn hàng 30 ngày
+        </button>
+    </div>
 
-<div class="chat-container">
-    <div class="chat-messages" id="chatMessages">
-        <!-- Initial greeting -->
-        <div class="d-flex">
-            <div class="chat-bubble bubble-assistant">
-                👋 Xin chào Admin! Tôi là trợ lý AI của Chính Nha.<br>
-                Hãy hỏi tôi về: doanh thu, đơn hàng, tồn kho, sản phẩm bán chạy hoặc bất kỳ thông tin kinh doanh nào.
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <!-- Initial greeting -->
+            <div class="d-flex">
+                <div class="chat-bubble bubble-assistant">
+                    👋 Xin chào Admin! Tôi là trợ lý AI của Chính Nha.<br>
+                    Hãy hỏi tôi về: doanh thu, đơn hàng, tồn kho, sản phẩm bán chạy hoặc bất kỳ thông tin kinh doanh nào.
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Typing indicator -->
-    <div class="chat-typing" id="typingIndicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <span>Đang xử lý...</span>
-    </div>
+        <!-- Typing indicator -->
+        <div class="chat-typing" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <span>Đang xử lý...</span>
+        </div>
 
-    <!-- Input area -->
-    <div class="input-group">
-        <input type="text" id="chatInput" class="form-control" 
-               placeholder="Nhập câu hỏi, ví dụ: Doanh thu hôm nay?" maxlength="500" />
-        <button class="btn btn-primary" id="sendBtn">
-            <i class="bi bi-send-fill"></i>
-        </button>
+        <!-- Input area -->
+        <div class="input-group">
+            <input type="text" id="chatInput" class="form-control" 
+                   placeholder="Nhập câu hỏi, ví dụ: Doanh thu hôm nay?" maxlength="500" />
+            <button class="btn btn-primary" id="sendBtn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -139,21 +154,25 @@
     let sessionId = localStorage.getItem('adminChatSession') || '';
     const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-    function appendBubble(role, text) {
-        const wrap = document.createElement('div');
-        wrap.className = role === 'user' ? 'd-flex justify-content-end' : 'd-flex';
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-assistant');
-        // Simple markdown-like rendering
-        bubble.innerHTML = text
+    function renderText(text) {
+        return text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
+    }
+
+    function appendBubble(role, text) {
+        const wrap = document.createElement('div');
+        wrap.className = role === 'user' ? 'd-flex justify-content-end' : 'd-flex';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-assistant');
+        bubble.innerHTML = renderText(text);
         wrap.appendChild(bubble);
         msgsEl.appendChild(wrap);
         msgsEl.scrollTop = msgsEl.scrollHeight;
+        return bubble;
     }
 
     async function sendMessage(msg) {
@@ -163,23 +182,69 @@
         sendBtn.disabled = true;
         typingEl.style.display = 'flex';
 
+        const assistantBubble = appendBubble('assistant', '');
+        let streamedText = '';
+
         try {
             const headers = { 'Content-Type': 'application/json' };
             if (antiForgeryToken) headers['RequestVerificationToken'] = antiForgeryToken;
 
-            const res = await fetch('/Admin/Chatbot/Send', {
+            const res = await fetch('/Admin/Chatbot/Stream', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ message: msg, sessionId })
             });
 
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
-            sessionId = data.sessionId || sessionId;
-            localStorage.setItem('adminChatSession', sessionId);
-            appendBubble('assistant', data.reply || 'Không nhận được phản hồi.');
+            if (!res.body) throw new Error('Streaming response body is empty');
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const payloadLine = line.trim();
+                    if (!payloadLine) continue;
+
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadLine);
+                    } catch {
+                        continue;
+                    }
+
+                    if (payload.type === 'meta' && payload.sessionId) {
+                        sessionId = payload.sessionId;
+                        localStorage.setItem('adminChatSession', sessionId);
+                        continue;
+                    }
+
+                    if (payload.type === 'chunk' && payload.content) {
+                        streamedText += payload.content;
+                        assistantBubble.innerHTML = renderText(streamedText);
+                        msgsEl.scrollTop = msgsEl.scrollHeight;
+                        continue;
+                    }
+
+                    if (payload.type === 'error') {
+                        throw new Error(payload.message || 'Streaming failed');
+                    }
+                }
+            }
+
+            if (!streamedText.trim()) {
+                assistantBubble.innerHTML = renderText('Không nhận được phản hồi.');
+            }
         } catch (err) {
-            appendBubble('assistant', '❌ Lỗi kết nối. Vui lòng thử lại.');
+            assistantBubble.innerHTML = renderText('❌ Lỗi kết nối. Vui lòng thử lại.');
             console.error(err);
         } finally {
             sendBtn.disabled = false;

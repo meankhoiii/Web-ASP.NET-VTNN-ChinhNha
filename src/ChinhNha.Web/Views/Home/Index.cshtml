@@ -309,7 +309,7 @@
         <div class="alert-box d-flex align-items-center">
             <i class="bi bi-megaphone-fill fs-2 me-3 text-danger"></i>
             <div>
-                <strong>THÔNG BÁO:</strong> Đại lý đang có chương trình giảm giá 5% cho phân bón NPK mùa vụ Đông Xuân. Gọi <strong class="text-danger">0909.123.456</strong> để đặt hàng ngay!
+                <strong>THÔNG BÁO:</strong> Đại lý đang có chương trình giảm giá 5% cho phân bón NPK mùa vụ Đông Xuân. Gọi <strong class="text-danger">0352.787.350</strong> để đặt hàng ngay!
             </div>
         </div>
     </div>
@@ -345,16 +345,13 @@
     <div class="col-lg-9">
         <div class="hero-banner text-center text-md-start">
             <div class="row align-items-center h-100">
-                <div class="col-md-8">
+                <div class="col-12">
             <h1 class="hero-main-title mb-3">TỔNG ĐẠI LÝ PHÂN BÓN & VẬT TƯ NÔNG NGHIỆP</h1>
             <p class="hero-sub mb-4">Chúng tôi cam kết 100% hàng chính hãng, giá gốc từ nhà máy. Đặc biệt nhận tư vấn liều lượng phân bón cho từng loại cây trồng để đạt năng suất cao nhất.</p>
             <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
                 <a href="#danh-sach-san-pham" class="btn btn-primary py-3 px-4" style="font-size: clamp(1rem, 3vw, 1.3rem);"><i class="bi bi-cart-down-fill me-2"></i> XEM SP PHÂN BÓN</a>
-                <a href="tel:0909123456" class="btn btn-cta py-3 px-4" style="font-size: clamp(1rem, 3vw, 1.3rem);"><i class="bi bi-telephone-outbound-fill me-2"></i> GỌI TƯ VẤN NGAY</a>
+                <a href="tel:0352787350" class="btn btn-cta py-3 px-4" style="font-size: clamp(1rem, 3vw, 1.3rem);"><i class="bi bi-telephone-outbound-fill me-2"></i> GỌI TƯ VẤN NGAY</a>
             </div>
-                </div>
-                <div class="col-md-4 d-none d-md-block text-center">
-                    <img src="https://via.placeholder.com/300x300.png?text=H%C3%8CNH+%E1%BA%A2NH+C%E1%BB%ACA+H%C3%80NG" alt="Cửa hàng Chính Nha" class="img-fluid border border-4 border-success rounded">
                 </div>
             </div>
         </div>
@@ -410,14 +407,17 @@
     </div>
 </div>
 
+@if (User.Identity?.IsAuthenticated == true)
+{
 <div class="mb-5 mt-5" id="goi-y-cho-ban">
     <h2 class="section-heading"><i class="bi bi-magic text-warning me-2"></i> GỢI Ý DÀNH CHO BẠN</h2>
     <div class="p-3 bg-white border border-2 border-success rounded">
         <div id="homeRecLoading" class="text-muted">Đang tải danh sách gợi ý...</div>
         <div id="homeRecGrid" class="home-rec-grid" style="display:none;"></div>
-        <div id="homeRecEmpty" class="text-muted" style="display:none;">Đăng nhập để xem gợi ý cá nhân hóa cho tài khoản của bạn.</div>
+        <div id="homeRecEmpty" class="text-muted" style="display:none;">Không tìm thấy gợi ý phù hợp.</div>
     </div>
 </div>
+}
 
 <div class="mb-5 mt-5">
     <h2 class="section-heading"><i class="bi bi-cloud-sun-fill text-warning me-2"></i> THÔNG TIN THỜI TIẾT TẠI RẪY NÀY</h2>
@@ -472,36 +472,8 @@
         }
         else
         {
-            <!-- Mock blogs if empty -->
-            <div class="col-md-4 mb-4">
-                <div class="blog-box flex-column d-flex">
-                    <img src="https://via.placeholder.com/400x250.png?text=KY+THUAT+LUA" class="blog-img" alt="Blog">
-                    <div class="p-3 d-flex flex-column flex-grow-1">
-                        <div class="blog-date"><i class="bi bi-calendar-event me-1"></i> 11/03/2026</div>
-                        <a href="#" class="blog-title">Phòng trừ sâu cuốn lá và rầy nâu trên lúa Đông Xuân</a>
-                        <p class="blog-excerpt mb-0 flex-grow-1">Hướng dẫn chi tiết dọn sạch sâu cuốn lá hiệu quả cho năng suất lúa...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="blog-box flex-column d-flex">
-                    <img src="https://via.placeholder.com/400x250.png?text=KY+THUAT+CAFE" class="blog-img" alt="Blog">
-                    <div class="p-3 d-flex flex-column flex-grow-1">
-                        <div class="blog-date"><i class="bi bi-calendar-event me-1"></i> 05/03/2026</div>
-                        <a href="#" class="blog-title">Bí quyết ép sầu riêng ra mập trái, xanh gai bằng NPK</a>
-                        <p class="blog-excerpt mb-0 flex-grow-1">Chia sẻ kinh nghiệm sử dụng đúng loại NPK để tránh rụng trái sinh lý...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="blog-box flex-column d-flex">
-                    <img src="https://via.placeholder.com/400x250.png?text=KY+THUAT+CANH+TAC" class="blog-img" alt="Blog">
-                    <div class="p-3 d-flex flex-column flex-grow-1">
-                        <div class="blog-date"><i class="bi bi-calendar-event me-1"></i> 01/03/2026</div>
-                        <a href="#" class="blog-title">Liều dùng thuốc BVTV an toàn, tránh bị ngộ độc</a>
-                        <p class="blog-excerpt mb-0 flex-grow-1">Bà con nhất định phải nhớ quy tắc 4 đúng khi phun thuốc bảo vệ thực vật...</p>
-                    </div>
-                </div>
+            <div class="col-12">
+                <p class="text-muted fs-5 py-3 text-center">Chưa có bài viết kỹ thuật nào. <a href="/tin-tuc" class="text-success fw-bold">Xem tất cả tin tức</a></p>
             </div>
         }
     </div>

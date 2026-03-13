@@ -6,9 +6,9 @@ namespace ChinhNha.Domain.Entities;
 public class Order : BaseEntity, IAggregateRoot
 {
     public string OrderCode { get; set; } = string.Empty;
-    
-    public string UserId { get; set; } = string.Empty;
-    public AppUser User { get; set; } = null!;
+
+    public string? UserId { get; set; }
+    public AppUser? User { get; set; }
 
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
@@ -20,6 +20,7 @@ public class Order : BaseEntity, IAggregateRoot
 
     public string ReceiverName { get; set; } = string.Empty;
     public string ReceiverPhone { get; set; } = string.Empty;
+    public string? ReceiverEmail { get; set; }
     public string ShippingProvince { get; set; } = string.Empty;
     public string ShippingDistrict { get; set; } = string.Empty;
     public string ShippingWard { get; set; } = string.Empty;

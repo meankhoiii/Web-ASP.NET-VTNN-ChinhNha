@@ -1,4 +1,7 @@
 using System.ComponentModel;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using ChinhNha.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
@@ -25,12 +28,17 @@ public class InventoryPlugin
         if (string.IsNullOrWhiteSpace(productName))
             return "Vui lòng cung cấp tên sản phẩm cần kiểm tra.";
 
-        var keyword = productName.ToLower();
-        var products = await _context.Products
-            .Where(p => p.IsActive && p.Name.ToLower().Contains(keyword))
+        var keyword = NormalizeForSearch(productName);
+        var candidates = await _context.Products
+            .Where(p => p.IsActive)
             .Select(p => new { p.Name, p.StockQuantity, p.Unit, p.MinStockLevel })
-            .Take(5)
+            .Take(300)
             .ToListAsync();
+
+        var products = candidates
+            .Where(p => NormalizeForSearch(p.Name).Contains(keyword))
+            .Take(5)
+            .ToList();
 
         if (!products.Any())
             return $"Không tìm thấy sản phẩm nào khớp với '{productName}'.";
@@ -50,12 +58,17 @@ public class InventoryPlugin
         if (string.IsNullOrWhiteSpace(productName))
             return "Vui lòng cung cấp tên sản phẩm.";
 
-        var keyword = productName.ToLower();
-        var products = await _context.Products
-            .Where(p => p.IsActive && p.Name.ToLower().Contains(keyword))
+        var keyword = NormalizeForSearch(productName);
+        var candidates = await _context.Products
+            .Where(p => p.IsActive)
             .Select(p => new { p.Name, p.BasePrice, p.SalePrice, p.Unit, p.Description, p.StockQuantity })
-            .Take(3)
+            .Take(300)
             .ToListAsync();
+
+        var products = candidates
+            .Where(p => NormalizeForSearch(p.Name).Contains(keyword))
+            .Take(3)
+            .ToList();
 
         if (!products.Any())
             return $"Không tìm thấy sản phẩm '{productName}'.";
@@ -78,14 +91,18 @@ public class InventoryPlugin
         if (string.IsNullOrWhiteSpace(query))
             return "Vui lòng mô tả nhu cầu của bạn.";
 
-        var keyword = query.ToLower();
-        var products = await _context.Products
-            .Where(p => p.IsActive && p.StockQuantity > 0 &&
-                        (p.Name.ToLower().Contains(keyword) ||
-                         (p.Description != null && p.Description.ToLower().Contains(keyword))))
-            .Select(p => new { p.Name, p.BasePrice, p.SalePrice, p.Unit })
-            .Take(5)
+        var keyword = NormalizeForSearch(query);
+        var candidates = await _context.Products
+            .Where(p => p.IsActive && p.StockQuantity > 0)
+            .Select(p => new { p.Name, p.BasePrice, p.SalePrice, p.Unit, p.Description })
+            .Take(400)
             .ToListAsync();
+
+        var products = candidates
+            .Where(p => NormalizeForSearch(p.Name).Contains(keyword) ||
+                        (!string.IsNullOrWhiteSpace(p.Description) && NormalizeForSearch(p.Description).Contains(keyword)))
+            .Take(5)
+            .ToList();
 
         if (!products.Any())
             return "Hiện tại chúng tôi chưa có sản phẩm phù hợp với yêu cầu. Vui lòng liên hệ nhân viên để được tư vấn thêm.";
@@ -96,5 +113,34 @@ public class InventoryPlugin
             return $"- {p.Name}: {price:N0}đ/{p.Unit}";
         });
         return "Gợi ý sản phẩm phù hợp:\n" + string.Join("\n", lines) + "\n\nBạn cần tư vấn thêm về sản phẩm nào không?";
+    }
+
+    private static string NormalizeForSearch(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value
+            .Replace("\u200B", string.Empty)
+            .Replace("\u200C", string.Empty)
+            .Replace("\u200D", string.Empty)
+            .Replace("\uFEFF", string.Empty)
+            .Normalize(NormalizationForm.FormD);
+
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            sb.Append(char.IsPunctuation(c) ? ' ' : char.ToLowerInvariant(c));
+        }
+
+        return Regex.Replace(sb.ToString(), "\\s+", " ").Trim();
     }
 }

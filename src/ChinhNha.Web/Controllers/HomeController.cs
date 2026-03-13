@@ -5,6 +5,7 @@ using ChinhNha.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace ChinhNha.Web.Controllers;
@@ -171,6 +172,40 @@ public class HomeController : Controller
         
         TempData["Success"] = "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong 24 giờ.";
         return RedirectToAction(nameof(Contact));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CallbackRequest([FromForm] string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return BadRequest(new { message = "Vui lòng nhập số điện thoại." });
+
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.Length < 9 || digits.Length > 11)
+            return BadRequest(new { message = "Số điện thoại không hợp lệ." });
+
+        var contact = new ContactMessage
+        {
+            FullName = "Khách vãng lai",
+            Phone = phone.Trim(),
+            Subject = "Yêu cầu gọi lại",
+            Message = $"Khách yêu cầu gọi lại qua số: {phone.Trim()}"
+        };
+        await _contactMessageRepo.AddAsync(contact);
+
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(
+                adminEmail,
+                "[VTNN Chính Nha] Có khách yêu cầu gọi lại",
+                $"<h3>Yêu cầu gọi lại</h3><p><strong>Số điện thoại:</strong> {phone.Trim()}</p><p>Vui lòng liên hệ lại với khách sớm nhất!</p>",
+                $"Khách yêu cầu gọi lại: {phone.Trim()}"
+            );
+        }
+
+        return Ok(new { message = "Đã nhận! Chúng tôi sẽ gọi lại ngay cho bà con." });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
