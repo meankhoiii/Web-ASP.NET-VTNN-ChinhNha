@@ -41,14 +41,14 @@ public class CartController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
+    public async Task<IActionResult> AddToCart(int productId, int quantity = 1, int? variantId = null)
     {
         try
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var sessionId = GetOrCreateSessionId();
 
-            await _cartService.AddItemToCartAsync(userId, sessionId, productId, quantity);
+            await _cartService.AddItemToCartAsync(userId, sessionId, productId, quantity, variantId);
             
             // Lấy lại giỏ hàng để cập nhật số lượng
             var cart = await _cartService.GetCartAsync(userId, sessionId);
@@ -68,5 +68,17 @@ public class CartController : Controller
         await _cartService.RemoveItemFromCartAsync(cartItemId);
 
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCartCount()
+    {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sessionId = GetOrCreateSessionId();
+
+        var cart = await _cartService.GetCartAsync(userId, sessionId);
+        var totalItems = cart?.Items?.Sum(c => c.Quantity) ?? 0;
+
+        return Json(new { success = true, totalItems });
     }
 }

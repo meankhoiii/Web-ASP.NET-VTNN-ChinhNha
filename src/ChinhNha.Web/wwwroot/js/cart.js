@@ -1,5 +1,10 @@
-function addToCart(productId, quantity = 1) {
-    $.post('/Cart/AddToCart', { productId: productId, quantity: quantity }, function (response) {
+function addToCart(productId, quantity = 1, variantId = null) {
+    const payload = { productId: productId, quantity: quantity };
+    if (variantId) {
+        payload.variantId = variantId;
+    }
+
+    $.post('/Cart/AddToCart', payload, function (response) {
         if (response.success) {
             // Cập nhật số lượng trên icon giỏ hàng header
             $('.cart-count').text(response.totalItems);
@@ -19,3 +24,15 @@ function addToCart(productId, quantity = 1) {
         }
     });
 }
+
+function refreshCartCount() {
+    $.get('/Cart/GetCartCount', function (response) {
+        if (response && response.success) {
+            $('.cart-count').text(response.totalItems);
+        }
+    });
+}
+
+$(function () {
+    refreshCartCount();
+});

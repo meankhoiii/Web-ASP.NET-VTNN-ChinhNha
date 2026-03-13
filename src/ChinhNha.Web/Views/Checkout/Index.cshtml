@@ -2,7 +2,7 @@
 @model CheckoutViewModel
 
 @{
-    ViewData["Title"] = "Điền thông tin nhận phân bón";
+    ViewData["Title"] = "Điền thông tin nhận hàng";
 }
 
 <style>
@@ -103,6 +103,17 @@
         color: var(--price-red);
         font-weight: 900;
     }
+
+    .checkout-error-banner {
+        border: 3px solid #b71c1c;
+        background: #ffebee;
+        color: #b71c1c;
+        border-radius: 10px;
+        font-size: clamp(1rem, 2.8vw, 1.2rem);
+        font-weight: 700;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+    }
 </style>
 
 <div class="row">
@@ -116,12 +127,12 @@
         <div class="col-lg-7">
             <div class="checkout-section">
                 <h2 class="section-title"><i class="bi bi-truck me-2"></i> THÔNG TIN NHẬN HÀNG</h2>
-                
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger fs-5 fw-bold mb-3"></div>
+
+                <div asp-validation-summary="ModelOnly" class="checkout-error-banner"></div>
 
                 <div class="mb-4">
                     <label asp-for="ReceiverName" class="form-label">Tên người nhận (Họ & Tên):</label>
-                    <input asp-for="ReceiverName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                    <input asp-for="ReceiverName" class="form-control" placeholder="Ví dụ: Phan Minh Khôi" />
                     <span asp-validation-for="ReceiverName" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
                 </div>
 
@@ -132,8 +143,40 @@
                 </div>
 
                 <div class="mb-4">
-                    <label asp-for="ShippingAddress" class="form-label">Địa chỉ rẫy / Nhà chi tiết:</label>
-                    <textarea asp-for="ShippingAddress" class="form-control" rows="3" placeholder="Ghi rõ xã, huyện, tỉnh để tính cước xe rẻ nhất..."></textarea>
+                    <label asp-for="ReceiverEmail" class="form-label">Email nhận xác nhận (không bắt buộc):</label>
+                    <input asp-for="ReceiverEmail" class="form-control" placeholder="Ví dụ: tenban@email.com" />
+                    <span asp-validation-for="ReceiverEmail" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label asp-for="ShippingProvince" class="form-label">Tỉnh/Thành phố:</label>
+                        <select asp-for="ShippingProvince" id="shippingProvince" class="form-select">
+                            <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                        </select>
+                        <span asp-validation-for="ShippingProvince" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="ShippingDistrict" class="form-label">Quận/Huyện:</label>
+                        <select asp-for="ShippingDistrict" id="shippingDistrict" class="form-select">
+                            <option value="">-- Chọn Quận/Huyện --</option>
+                        </select>
+                        <span asp-validation-for="ShippingDistrict" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="ShippingWard" class="form-label">Phường/Xã:</label>
+                        <select asp-for="ShippingWard" id="shippingWard" class="form-select">
+                            <option value="">-- Chọn Phường/Xã --</option>
+                        </select>
+                        <span asp-validation-for="ShippingWard" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="ShippingAddress" class="form-label">Địa chỉ chi tiết (số nhà, ấp/thôn, đường):</label>
+                    <textarea asp-for="ShippingAddress" class="form-control" rows="3" placeholder="Ví dụ: Số 12, ấp Tân Phú, gần chợ..." ></textarea>
                     <span asp-validation-for="ShippingAddress" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
                 </div>
 
@@ -143,22 +186,6 @@
                 </div>
             </div>
 
-            <div class="checkout-section">
-                <h2 class="section-title"><i class="bi bi-cash-coin me-2"></i> CÁCH THỨC THANH TOÁN</h2>
-                
-                <label class="payment-option d-flex align-items-center active" for="codPayment">
-                    <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="COD" id="codPayment" checked onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
-                    <span class="payment-label">TRẢ TIỀN KHI NHẬN HÀNG (TIỀN MẶT)</span>
-                </label>
-                
-                <label class="payment-option d-flex align-items-center" for="vnpayPayment">
-                    <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpayPayment" onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
-                    <div>
-                        <span class="payment-label">CHUYỂN KHOẢN TRƯỚC (QUA THẺ ATM / VNPAY)</span>
-                        <div class="fs-5 text-muted mt-2 fw-bold" style="margin-left: 40px;">Hệ thống sẽ chuyển qua trang ngân hàng để nhập thẻ.</div>
-                    </div>
-                </label>
-            </div>
         </div>
 
         <div class="col-lg-5">
@@ -181,7 +208,7 @@
                 
                 <div class="order-totals">
                     <div class="d-flex justify-content-between mb-3 text-dark">
-                        <span>Tiền Phân Bón:</span>
+                        <span>Tiền Hàng:</span>
                         <span>@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")đ</span>
                     </div>
                     
@@ -193,6 +220,23 @@
                     <div class="d-flex justify-content-between mb-4 mt-3">
                         <span class="fs-2 text-danger">TỔNG CỘNG:</span>
                         <span class="total-amount">@Model.Cart.Items.Sum(x => x.UnitPrice * x.Quantity).ToString("N0")đ</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <h3 class="fw-bold text-success mb-3"><i class="bi bi-cash-coin me-2"></i> CÁCH THỨC THANH TOÁN</h3>
+
+                        <label class="payment-option d-flex align-items-center active" for="codPayment">
+                            <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="COD" id="codPayment" checked onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
+                            <span class="payment-label">TRẢ TIỀN KHI NHẬN HÀNG (TIỀN MẶT)</span>
+                        </label>
+
+                        <label class="payment-option d-flex align-items-center" for="vnpayPayment">
+                            <input class="payment-radio" type="radio" asp-for="PaymentMethod" value="VNPay" id="vnpayPayment" onchange="document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('active')); this.parentElement.classList.add('active');">
+                            <div>
+                                <span class="payment-label">CHUYỂN KHOẢN TRƯỚC (QUA THẺ ATM / VNPAY)</span>
+                                <div class="fs-5 text-muted mt-2 fw-bold" style="margin-left: 40px;">Hệ thống sẽ chuyển qua trang ngân hàng để nhập thẻ.</div>
+                            </div>
+                        </label>
                     </div>
 
                     <button type="submit" class="btn-checkout"><i class="bi bi-send-check-fill me-2"></i> XÁC NHẬN GỬI ĐƠN</button>
@@ -207,4 +251,99 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        (function () {
+            const provinceSelect = document.getElementById('shippingProvince');
+            const districtSelect = document.getElementById('shippingDistrict');
+            const wardSelect = document.getElementById('shippingWard');
+
+            if (!provinceSelect || !districtSelect || !wardSelect) return;
+
+            let selectedProvince = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShippingProvince ?? string.Empty));
+            let selectedDistrict = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShippingDistrict ?? string.Empty));
+            let selectedWard = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShippingWard ?? string.Empty));
+
+            function fillSelect(select, items, placeholder, selectedValue) {
+                select.innerHTML = '';
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = placeholder;
+                select.appendChild(defaultOpt);
+
+                for (const item of items) {
+                    const opt = document.createElement('option');
+                    opt.value = item.name;
+                    opt.textContent = item.name;
+                    if (selectedValue && selectedValue === item.name) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                }
+            }
+
+            async function loadProvinces() {
+                const res = await fetch('/api/address/provinces');
+                if (!res.ok) return;
+                const data = await res.json();
+                fillSelect(provinceSelect, data, '-- Chọn Tỉnh/Thành phố --', selectedProvince);
+                if (selectedProvince) {
+                    await loadDistricts(selectedProvince);
+                }
+            }
+
+            async function loadDistricts(provinceName) {
+                fillSelect(districtSelect, [], '-- Chọn Quận/Huyện --', null);
+                fillSelect(wardSelect, [], '-- Chọn Phường/Xã --', null);
+
+                if (!provinceName) return;
+
+                const url = '/api/address/districts?provinceName=' + encodeURIComponent(provinceName);
+                const res = await fetch(url);
+                if (!res.ok) return;
+
+                const data = await res.json();
+                fillSelect(districtSelect, data, '-- Chọn Quận/Huyện --', selectedDistrict);
+
+                if (selectedDistrict) {
+                    await loadWards(provinceName, selectedDistrict);
+                }
+
+                selectedDistrict = null;
+            }
+
+            async function loadWards(provinceName, districtName) {
+                fillSelect(wardSelect, [], '-- Chọn Phường/Xã --', null);
+
+                if (!provinceName || !districtName) return;
+
+                const url = '/api/address/wards?provinceName=' + encodeURIComponent(provinceName)
+                    + '&districtName=' + encodeURIComponent(districtName);
+                const res = await fetch(url);
+                if (!res.ok) return;
+
+                const data = await res.json();
+                fillSelect(wardSelect, data, '-- Chọn Phường/Xã --', selectedWard);
+
+                selectedWard = null;
+            }
+
+            provinceSelect.addEventListener('change', async function () {
+                selectedDistrict = null;
+                selectedWard = null;
+                await loadDistricts(this.value);
+            });
+
+            districtSelect.addEventListener('change', async function () {
+                selectedWard = null;
+                await loadWards(provinceSelect.value, this.value);
+            });
+
+            const summaryError = document.querySelector('.validation-summary-errors');
+            if (summaryError) {
+                summaryError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            loadProvinces();
+        })();
+    </script>
 }
