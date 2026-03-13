@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Danh sach yeu thich";
+    ViewData["Title"] = "Danh sách yêu thích";
 }
 
 <style>
@@ -110,12 +110,12 @@
     <div class="wishlist-wrap">
         <div class="wishlist-header">
             <div>
-                <h2 class="fw-bold mb-1"><i class="bi bi-heart-fill text-danger me-2"></i>Danh sach yeu thich</h2>
-                <small class="text-muted">Theo doi san pham ban quan tam va phat hien gia giam nhanh.</small>
+                <h2 class="fw-bold mb-1"><i class="bi bi-heart-fill text-danger me-2"></i>Danh sách yêu thích</h2>
+                <small class="text-muted">Theo dõi sản phẩm bạn quan tâm và phát hiện giá giảm nhanh.</small>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <a class="btn btn-outline-success btn-sm" href="/Product"><i class="bi bi-shop me-1"></i>Tiep tuc mua sam</a>
-                <button class="btn btn-success btn-sm" type="button" onclick="loadWishlist()"><i class="bi bi-arrow-repeat me-1"></i>Tai lai</button>
+                <a class="btn btn-outline-success btn-sm" href="/Product"><i class="bi bi-shop me-1"></i>Tiếp tục mua sắm</a>
+                <button class="btn btn-success btn-sm" type="button" onclick="loadWishlist()"><i class="bi bi-arrow-repeat me-1"></i>Tải lại</button>
             </div>
         </div>
 
@@ -125,17 +125,17 @@
             <table class="table table-hover align-middle wishlist-table">
                 <thead>
                     <tr>
-                        <th>San pham</th>
-                        <th class="text-end">Gia hien tai</th>
-                        <th class="text-end">Bien dong gia</th>
-                        <th class="text-center">Uu tien</th>
-                        <th class="text-center">Trang thai</th>
-                        <th class="text-end">Hanh dong</th>
+                        <th>Sản phẩm</th>
+                        <th class="text-end">Giá hiện tại</th>
+                        <th class="text-end">Biến động giá</th>
+                        <th class="text-center">Ưu tiên</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-end">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="wishlistBody">
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">Dang tai du lieu...</td>
+                        <td colspan="6" class="text-center text-muted py-4">Đang tải dữ liệu...</td>
                     </tr>
                 </tbody>
             </table>
@@ -164,11 +164,11 @@
             });
 
             if (!res.ok) {
-                renderAlert('Khong the cap nhat trang thai da mua.', 'danger');
+                renderAlert('Không thể cập nhật trạng thái đã mua.', 'danger');
                 return;
             }
 
-            renderAlert('Da danh dau san pham la da mua.', 'success');
+            renderAlert('Đã đánh dấu sản phẩm là đã mua.', 'success');
             await loadWishlist();
         }
 
@@ -177,16 +177,16 @@
                 return;
             }
 
-            if (!confirm('Ban chac chan muon xoa san pham nay khoi wishlist?')) {
+            if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này khỏi wishlist?')) {
                 return;
             }
 
             const result = await removeFromWishlist(productId);
             if (result && result.success) {
-                renderAlert('Da xoa san pham khoi wishlist.', 'success');
+                renderAlert('Đã xóa sản phẩm khỏi wishlist.', 'success');
                 await loadWishlist();
             } else {
-                renderAlert('Khong the xoa san pham khoi wishlist.', 'danger');
+                renderAlert('Không thể xóa sản phẩm khỏi wishlist.', 'danger');
             }
         }
 
@@ -194,8 +194,8 @@
             const body = document.getElementById('wishlistBody');
             const mobileBody = document.getElementById('wishlistMobileBody');
             if (!items || items.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Wishlist dang trong. <a href="/Product">Kham pha san pham ngay</a>.</td></tr>';
-                mobileBody.innerHTML = '<div class="text-center text-muted py-4">Wishlist dang trong. <a href="/Product">Kham pha san pham ngay</a>.</div>';
+                body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Wishlist đang trống. <a href="/Product">Khám phá sản phẩm ngay</a>.</td></tr>';
+                mobileBody.innerHTML = '<div class="text-center text-muted py-4">Wishlist đang trống. <a href="/Product">Khám phá sản phẩm ngay</a>.</div>';
                 return;
             }
 
@@ -214,16 +214,16 @@
                 }
 
                 const purchasedBadge = item.purchasedAt
-                    ? '<span class="badge text-bg-success">Da mua</span>'
-                    : '<span class="badge text-bg-warning">Dang theo doi</span>';
+                    ? '<span class="badge text-bg-success">Đã mua</span>'
+                    : '<span class="badge text-bg-warning">Đang theo dõi</span>';
 
                 return '<tr>'
                     + '<td>'
                     + '<div class="d-flex align-items-center gap-2">'
                     + '<img class="wishlist-img" src="' + (item.productImage || '/images/no-image.png') + '" alt="' + (item.productName || '') + '" onerror="this.src=\'/images/no-image.png\'" />'
                     + '<div>'
-                    + '<div class="fw-semibold">' + (item.productName || 'San pham') + '</div>'
-                    + '<small class="text-muted">Them luc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</small>'
+                        + '<div class="fw-semibold">' + (item.productName || 'Sản phẩm') + '</div>'
+                        + '<small class="text-muted">Thêm lúc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</small>'
                     + '</div></div></td>'
                     + '<td class="text-end fw-bold">' + fmtPrice(currentPrice) + '</td>'
                     + '<td class="text-end">' + priceChangeHtml + '</td>'
@@ -231,9 +231,9 @@
                     + '<td class="text-center">' + purchasedBadge + '</td>'
                     + '<td class="text-end">'
                     + '<div class="d-flex justify-content-end flex-wrap gap-2">'
-                    + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
-                    + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Da mua</button>')
-                    + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xoa</button>'
+                        + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
+                        + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Đã mua</button>')
+                        + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xóa</button>'
                     + '</div></td>'
                     + '</tr>';
             }).join('');
@@ -253,27 +253,27 @@
                 }
 
                 const purchasedBadge = item.purchasedAt
-                    ? '<span class="badge text-bg-success">Da mua</span>'
-                    : '<span class="badge text-bg-warning">Dang theo doi</span>';
+                    ? '<span class="badge text-bg-success">Đã mua</span>'
+                    : '<span class="badge text-bg-warning">Đang theo dõi</span>';
 
                 return '<div class="wishlist-mobile-card">'
                     + '<div class="wishlist-mobile-top">'
                     + '<img class="wishlist-img" src="' + (item.productImage || '/images/no-image.png') + '" alt="' + (item.productName || '') + '" onerror="this.src=\'/images/no-image.png\'" />'
                     + '<div class="flex-grow-1">'
-                    + '<div class="fw-semibold mb-1">' + (item.productName || 'San pham') + '</div>'
-                    + '<div class="small text-muted mb-2">Them luc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</div>'
+                        + '<div class="fw-semibold mb-1">' + (item.productName || 'Sản phẩm') + '</div>'
+                        + '<div class="small text-muted mb-2">Thêm lúc: ' + new Date(item.addedAt).toLocaleString('vi-VN') + '</div>'
                     + purchasedBadge
                     + '</div></div>'
                     + '<div class="wishlist-mobile-meta">'
-                    + '<div><div class="text-muted small">Gia hien tai</div><div class="fw-bold">' + fmtPrice(currentPrice) + '</div></div>'
-                    + '<div><div class="text-muted small">Bien dong</div><div>' + priceChangeHtml + '</div></div>'
-                    + '<div><div class="text-muted small">Uu tien</div><div class="fw-semibold">' + (item.priority || 3) + '/5</div></div>'
-                    + '<div><div class="text-muted small">Trang thai</div><div>' + purchasedBadge + '</div></div>'
+                        + '<div><div class="text-muted small">Giá hiện tại</div><div class="fw-bold">' + fmtPrice(currentPrice) + '</div></div>'
+                        + '<div><div class="text-muted small">Biến động</div><div>' + priceChangeHtml + '</div></div>'
+                        + '<div><div class="text-muted small">Ưu tiên</div><div class="fw-semibold">' + (item.priority || 3) + '/5</div></div>'
+                        + '<div><div class="text-muted small">Trạng thái</div><div>' + purchasedBadge + '</div></div>'
                     + '</div>'
                     + '<div class="wishlist-mobile-actions">'
-                    + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
-                    + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Da mua</button>')
-                    + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xoa</button>'
+                        + '<a class="btn btn-outline-primary btn-sm wishlist-action-btn" href="/Product?searchQuery=' + encodeURIComponent(item.productName || '') + '">Xem SP</a>'
+                        + (item.purchasedAt ? '' : '<button class="btn btn-outline-success btn-sm wishlist-action-btn" type="button" onclick="markPurchased(' + item.productId + ')">Đã mua</button>')
+                        + '<button class="btn btn-outline-danger btn-sm wishlist-action-btn" type="button" onclick="removeItem(' + item.productId + ')">Xóa</button>'
                     + '</div>'
                     + '</div>';
             }).join('');
@@ -282,8 +282,8 @@
         async function loadWishlist() {
             const body = document.getElementById('wishlistBody');
             const mobileBody = document.getElementById('wishlistMobileBody');
-            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Dang tai du lieu...</td></tr>';
-            mobileBody.innerHTML = '<div class="text-center text-muted py-4">Dang tai du lieu...</div>';
+            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Đang tải dữ liệu...</td></tr>';
+            mobileBody.innerHTML = '<div class="text-center text-muted py-4">Đang tải dữ liệu...</div>';
 
             try {
                 const res = await fetch('/api/Wishlist', { credentials: 'include' });
@@ -292,8 +292,8 @@
                     return;
                 }
                 if (!res.ok) {
-                    renderAlert('Khong the tai du lieu wishlist.', 'danger');
-                    body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Loi tai du lieu.</td></tr>';
+                    renderAlert('Không thể tải dữ liệu wishlist.', 'danger');
+                    body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Lỗi tải dữ liệu.</td></tr>';
                     return;
                 }
 
@@ -303,8 +303,8 @@
                     updateWishlistCount();
                 }
             } catch {
-                renderAlert('Co loi ket noi khi tai wishlist.', 'danger');
-                body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Khong ket noi duoc may chu.</td></tr>';
+                renderAlert('Có lỗi kết nối khi tải wishlist.', 'danger');
+                body.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Không kết nối được máy chủ.</td></tr>';
             }
         }
 

@@ -22,6 +22,10 @@
     }
 
     async function updateWishlistCount() {
+        if (!document.querySelector('.wishlist-count')) {
+            return;
+        }
+
         try {
             const res = await fetch('/api/Wishlist/count', { credentials: 'include' });
             if (res.status === 401) {
@@ -55,20 +59,20 @@
         });
 
         if (res.status === 401) {
-            showWishlistToast('Yeu cau dang nhap', 'Vui long dang nhap de su dung wishlist.', 'error');
+            showWishlistToast('Yêu cầu đăng nhập', 'Vui lòng đăng nhập để sử dụng wishlist.', 'error');
             window.location.href = '/Account/Login';
             return { success: false, unauthorized: true };
         }
 
         const data = await parseJsonSafe(res);
         if (!res.ok) {
-            const msg = data && data.message ? data.message : 'Khong the them vao wishlist.';
-            showWishlistToast('Loi', msg, 'error');
+            const msg = data && data.message ? data.message : 'Không thể thêm vào wishlist.';
+            showWishlistToast('Lỗi', msg, 'error');
             return { success: false };
         }
 
         await updateWishlistCount();
-        showWishlistToast('Thanh cong', 'Da them san pham vao danh sach yeu thich.');
+        showWishlistToast('Thành công', 'Đã thêm sản phẩm vào danh sách yêu thích.');
         return { success: true, data: data };
     }
 
@@ -85,13 +89,13 @@
 
         const data = await parseJsonSafe(res);
         if (!res.ok) {
-            const msg = data && data.message ? data.message : 'Khong the xoa khoi wishlist.';
-            showWishlistToast('Loi', msg, 'error');
+            const msg = data && data.message ? data.message : 'Không thể xóa khỏi wishlist.';
+            showWishlistToast('Lỗi', msg, 'error');
             return { success: false };
         }
 
         await updateWishlistCount();
-        showWishlistToast('Thanh cong', 'Da xoa san pham khoi wishlist.');
+        showWishlistToast('Thành công', 'Đã xóa sản phẩm khỏi wishlist.');
         return { success: true };
     }
 

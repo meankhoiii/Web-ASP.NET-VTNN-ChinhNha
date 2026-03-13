@@ -6,16 +6,16 @@ function addToCart(productId, quantity = 1) {
             
             // Hiển thị toast thông báo
             if (typeof showToast === 'function') {
-                showToast("Thanh cong", "Da them san pham vao gio hang!");
+                showToast("Thành công", "Đã thêm sản phẩm vào giỏ hàng!");
             }
         } else {
             if (typeof showToast === 'function') {
-                showToast("Loi", "Khong the them vao gio: " + response.message, "error");
+                showToast("Lỗi", "Không thể thêm vào giỏ: " + response.message, "error");
             }
         }
     }).fail(function () {
         if (typeof showToast === 'function') {
-            showToast("Loi", "Co loi xay ra khi ket noi den may chu.", "error");
+            showToast("Lỗi", "Có lỗi xảy ra khi kết nối đến máy chủ.", "error");
         }
     });
 }

@@ -52,7 +52,7 @@
 			toast.innerHTML = ''
 				+ '<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;">'
 				+ '  <div>'
-				+ '    <div style="font-weight:800;color:' + colors.title + ';">' + (title || 'Thong bao') + '</div>'
+				+ '    <div style="font-weight:800;color:' + colors.title + ';">' + (title || 'Thông báo') + '</div>'
 				+ '    <div style="font-size:.92rem;color:' + colors.text + ';line-height:1.35;">' + (message || '') + '</div>'
 				+ '  </div>'
 				+ '  <button type="button" aria-label="close" style="border:none;background:transparent;color:' + colors.title + ';font-size:1.1rem;line-height:1;cursor:pointer;">x</button>'
@@ -76,7 +76,7 @@
 
 			setTimeout(removeToast, 2600);
 		} catch {
-			alert((title || 'Thong bao') + ': ' + (message || ''));
+			alert((title || 'Thông báo') + ': ' + (message || ''));
 		}
 	};
 })();
