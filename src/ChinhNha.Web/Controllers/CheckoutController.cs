@@ -12,7 +12,6 @@ using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
 
-[Authorize]
 public class CheckoutController : Controller
 {
     private readonly ICartService _cartService;
@@ -84,6 +83,21 @@ public class CheckoutController : Controller
 
         if (!ModelState.IsValid)
         {
+            var invalidFields = ModelState
+                .Where(static kvp => kvp.Value?.Errors.Count > 0)
+                .Select(kvp => $"{kvp.Key}: {string.Join(" | ", kvp.Value!.Errors.Select(static e => e.ErrorMessage))}")
+                .ToList();
+
+            _logger.LogWarning(
+                "Checkout validation failed for user {UserId}. Errors: {Errors}",
+                userId ?? "guest",
+                string.Join(" || ", invalidFields));
+
+            if (!ModelState.ContainsKey(string.Empty))
+            {
+                ModelState.AddModelError(string.Empty, "Không thể gửi đơn. Vui lòng kiểm tra lại các trường thông tin nhận hàng bên dưới.");
+            }
+
             return View(model);
         }
 
@@ -94,14 +108,22 @@ public class CheckoutController : Controller
 
         try
         {
+            var normalizedFullAddress = string.Join(", ",
+                new[] { model.ShippingAddress, model.ShippingWard, model.ShippingDistrict, model.ShippingProvince }
+                    .Where(static x => !string.IsNullOrWhiteSpace(x)));
+
             var order = await _orderService.CreateOrderFromCartAsync(
                 cartId: cart.Id,
-                userId: userId ?? string.Empty,
+                userId: userId,
                 shippingName: model.ReceiverName,
                 shippingPhone: model.ReceiverPhone,
-                shippingAddress: model.ShippingAddress,
+                shippingAddress: normalizedFullAddress,
+                shippingProvince: model.ShippingProvince,
+                shippingDistrict: model.ShippingDistrict,
+                shippingWard: model.ShippingWard,
                 shippingNote: model.Note,
-                paymentMethod: model.PaymentMethod
+                paymentMethod: model.PaymentMethod,
+                receiverEmail: model.ReceiverEmail
             );
 
             if (model.PaymentMethod == "VNPay")
@@ -116,7 +138,8 @@ public class CheckoutController : Controller
                 };
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-                var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress);
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress, baseUrl);
                 
                 return Redirect(paymentUrl);
             }
@@ -185,6 +208,47 @@ public class CheckoutController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RetryPayment(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var order = await _orderService.GetOrderByIdAsync(id);
+        if (order == null || !string.Equals(order.UserId, userId, StringComparison.Ordinal))
+        {
+            return NotFound();
+        }
+
+        if (order.IsPaid
+            || !string.Equals(order.PaymentMethod, PaymentMethod.VNPay.ToString(), StringComparison.OrdinalIgnoreCase)
+            || order.Status == OrderStatus.Cancelled
+            || order.Status == OrderStatus.Returned)
+        {
+            TempData["PaymentMessage"] = "Đơn hàng này không đủ điều kiện thanh toán lại qua VNPay.";
+            return RedirectToAction("OrderDetail", "Customer", new { id });
+        }
+
+        var paymentInfo = new PaymentInformationDto
+        {
+            OrderType = "other",
+            Amount = order.TotalAmount,
+            OrderDescription = $"Thanh toán lại đơn hàng CHINHNHA{order.Id}",
+            Name = order.ShippingName,
+            OrderId = order.Id
+        };
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress, baseUrl);
+        return Redirect(paymentUrl);
+    }
+
     private async Task SendOrderCreatedNotificationsAsync(OrderDto order, CheckoutViewModel model)
     {
         // Real-time notification to admin via SignalR
@@ -196,10 +260,14 @@ public class CheckoutController : Controller
             message = $"Đơn hàng mới #{order.Id} — {order.UserFullName ?? model.ReceiverName} — {order.TotalAmount:N0}đ"
         });
 
-        if (!string.IsNullOrWhiteSpace(order.UserEmail))
+        var customerEmail = !string.IsNullOrWhiteSpace(order.UserEmail)
+            ? order.UserEmail
+            : order.ReceiverEmail;
+
+        if (!string.IsNullOrWhiteSpace(customerEmail))
         {
             await _emailService.SendAsync(
-                order.UserEmail,
+                customerEmail,
                 $"[ChinhNha] Xác nhận đơn hàng #{order.Id}",
                 $"<p>Xin chào <strong>{model.ReceiverName}</strong>,</p><p>Đơn hàng <strong>#{order.Id}</strong> đã được tạo thành công.</p><p><strong>Phương thức thanh toán:</strong> {order.PaymentMethod}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p><p>Chúng tôi sẽ sớm liên hệ để xác nhận đơn hàng.</p>",
                 $"Don hang #{order.Id} da duoc tao. Phuong thuc thanh toan: {order.PaymentMethod}. Tong tien: {order.TotalAmount:N0}đ."
@@ -212,18 +280,22 @@ public class CheckoutController : Controller
             await _emailService.SendAsync(
                 adminEmail,
                 $"[ChinhNha] Đơn hàng mới #{order.Id}",
-                $"<p>Có đơn hàng mới <strong>#{order.Id}</strong>.</p><p><strong>Khách hàng:</strong> {order.UserFullName}</p><p><strong>Người nhận:</strong> {model.ReceiverName}</p><p><strong>Số điện thoại:</strong> {model.ReceiverPhone}</p><p><strong>Thanh toán:</strong> {order.PaymentMethod}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p><p><strong>Địa chỉ:</strong> {model.ShippingAddress}</p>",
-                $"Don hang moi #{order.Id}. Khach hang: {order.UserFullName}. Nguoi nhan: {model.ReceiverName}. So dien thoai: {model.ReceiverPhone}. Thanh toan: {order.PaymentMethod}. Tong tien: {order.TotalAmount:N0}đ."
+                $"<p>Có đơn hàng mới <strong>#{order.Id}</strong>.</p><p><strong>Khách hàng:</strong> {order.UserFullName}</p><p><strong>Người nhận:</strong> {model.ReceiverName}</p><p><strong>Số điện thoại:</strong> {model.ReceiverPhone}</p><p><strong>Email:</strong> {model.ReceiverEmail ?? "(không cung cấp)"}</p><p><strong>Thanh toán:</strong> {order.PaymentMethod}</p><p><strong>Tổng tiền:</strong> {order.TotalAmount:N0}đ</p><p><strong>Địa chỉ:</strong> {model.ShippingAddress}, {model.ShippingWard}, {model.ShippingDistrict}, {model.ShippingProvince}</p>",
+                $"Don hang moi #{order.Id}. Khach hang: {order.UserFullName}. Nguoi nhan: {model.ReceiverName}. So dien thoai: {model.ReceiverPhone}. Email: {model.ReceiverEmail ?? "(khong cung cap)"}. Thanh toan: {order.PaymentMethod}. Tong tien: {order.TotalAmount:N0}đ."
             );
         }
     }
 
     private async Task SendPaymentNotificationsAsync(OrderDto order, PaymentResponseDto response, bool isSuccess)
     {
-        if (!string.IsNullOrWhiteSpace(order.UserEmail))
+        var customerEmail = !string.IsNullOrWhiteSpace(order.UserEmail)
+            ? order.UserEmail
+            : order.ReceiverEmail;
+
+        if (!string.IsNullOrWhiteSpace(customerEmail))
         {
             await _emailService.SendAsync(
-                order.UserEmail,
+                customerEmail,
                 isSuccess
                     ? $"[ChinhNha] Thanh toán VNPay thành công cho đơn #{order.Id}"
                     : $"[ChinhNha] Thanh toán VNPay chưa hoàn tất cho đơn #{order.Id}",

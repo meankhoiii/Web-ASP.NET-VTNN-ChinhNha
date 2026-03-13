@@ -56,7 +56,18 @@ public class OrderService : IOrderService
         return true;
     }
 
-    public async Task<OrderDto> CreateOrderFromCartAsync(int cartId, string userId, string shippingName, string shippingPhone, string shippingAddress, string? shippingNote, string paymentMethod)
+    public async Task<OrderDto> CreateOrderFromCartAsync(
+        int cartId,
+        string? userId,
+        string shippingName,
+        string shippingPhone,
+        string shippingAddress,
+        string shippingProvince,
+        string shippingDistrict,
+        string shippingWard,
+        string? shippingNote,
+        string paymentMethod,
+        string? receiverEmail = null)
     {
         var cart = await _cartRepository.GetCartWithItemsByIdAsync(cartId);
         if (cart == null || !cart.CartItems.Any())
@@ -69,11 +80,16 @@ public class OrderService : IOrderService
 
         var order = new Order
         {
+            OrderCode = GenerateOrderCode(),
             UserId = userId,
             OrderDate = DateTime.UtcNow,
             Status = OrderStatus.Pending,
             ReceiverName = shippingName,
             ReceiverPhone = shippingPhone,
+            ReceiverEmail = string.IsNullOrWhiteSpace(receiverEmail) ? null : receiverEmail.Trim(),
+            ShippingProvince = shippingProvince,
+            ShippingDistrict = shippingDistrict,
+            ShippingWard = shippingWard,
             ShippingAddress = shippingAddress,
             Note = shippingNote,
             ShippingFee = 30000,
@@ -149,8 +165,29 @@ public class OrderService : IOrderService
 
     public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus newStatus)
     {
-        var order = await _orderRepository.GetByIdAsync(orderId);
+        var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderId);
         if (order == null) return false;
+
+        if (order.Status == newStatus)
+        {
+            return false;
+        }
+
+        // Final states should not be changed again; delivered can only move to returned.
+        if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Returned)
+        {
+            return false;
+        }
+
+        if (order.Status == OrderStatus.Delivered && newStatus != OrderStatus.Returned)
+        {
+            return false;
+        }
+
+        if (newStatus == OrderStatus.Cancelled || newStatus == OrderStatus.Returned)
+        {
+            await RestoreInventoryForOrderAsync(order, $"Hoàn kho do chuyển trạng thái đơn sang {newStatus}.");
+        }
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
@@ -231,5 +268,28 @@ public class OrderService : IOrderService
         return Enum.TryParse<PaymentMethod>(paymentMethod, true, out var parsed)
             ? parsed
             : PaymentMethod.COD;
+    }
+
+    private async Task RestoreInventoryForOrderAsync(Order order, string notePrefix)
+    {
+        foreach (var item in order.OrderItems)
+        {
+            await _inventoryService.RecordTransactionAsync(
+                productId: item.ProductId,
+                type: TransactionType.Return,
+                quantity: item.Quantity,
+                note: $"{notePrefix} Đơn #{order.Id}",
+                variantId: item.ProductVariantId,
+                orderId: order.Id
+            );
+        }
+    }
+
+    private static string GenerateOrderCode()
+    {
+        // Format: CN + yyyyMMddHHmmssfff + 1 random digit => 20 chars max.
+        var now = DateTime.UtcNow;
+        var randomDigit = Random.Shared.Next(0, 10);
+        return $"CN{now:yyyyMMddHHmmssfff}{randomDigit}";
     }
 }

@@ -53,10 +53,27 @@ public class InventoryService : IInventoryService
 
         int stockBefore = await _inventoryRepository.GetCurrentStockQuantityAsync(productId, variantId);
 
+        var entityStock = variantId.HasValue
+            ? product.Variants.FirstOrDefault(v => v.Id == variantId)?.StockQuantity ?? 0
+            : product.StockQuantity;
+
+        // Some seeded products may not have inventory transactions yet.
+        // In that case, use the current Product/Variant stock as the opening baseline.
+        if (stockBefore == 0 && entityStock != 0)
+        {
+            stockBefore = entityStock;
+        }
+
         // Import and Return increase stock; Export, Loss, Adjustment decrease
         int stockAfter = (type == TransactionType.Import || type == TransactionType.Return)
             ? stockBefore + quantity
             : stockBefore - quantity;
+
+        if (stockAfter < 0)
+        {
+            throw new InvalidOperationException(
+                $"Tồn kho không đủ cho giao dịch {type}. Sản phẩm #{productId}, biến thể #{variantId?.ToString() ?? "N/A"}, tồn hiện tại: {stockBefore}, yêu cầu: {quantity}.");
+        }
 
         var referenceId = orderId ?? purchaseOrderId;
         var referenceType = orderId.HasValue ? "Order" : (purchaseOrderId.HasValue ? "PurchaseOrder" : "Manual");

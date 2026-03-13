@@ -13,7 +13,7 @@ public class VNPayService : IVNPayService
         _configuration = configuration;
     }
 
-    public string CreatePaymentUrl(PaymentInformationDto model, string ipAddress)
+    public string CreatePaymentUrl(PaymentInformationDto model, string ipAddress, string? baseUrl = null)
     {
         var vnpay = new VnPayLibrary();
 
@@ -31,13 +31,17 @@ public class VNPayService : IVNPayService
         vnpay.AddRequestData("vnp_Locale", _configuration["VNPay:Locale"] ?? "vn");
         vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + model.OrderId);
         vnpay.AddRequestData("vnp_OrderType", model.OrderType);
-        vnpay.AddRequestData("vnp_ReturnUrl", _configuration["VNPay:PaymentBackReturnUrl"] ?? "");
+        var returnUrl = !string.IsNullOrWhiteSpace(baseUrl)
+            ? $"{baseUrl.TrimEnd('/')}/Checkout/PaymentCallback"
+            : (_configuration["VNPay:PaymentBackReturnUrl"] ?? "");
+
+        vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
         vnpay.AddRequestData("vnp_TxnRef", $"{model.OrderId}_{DateTime.Now.Ticks}"); // Unique transaction ref
 
-        var baseUrl = _configuration["VNPay:BaseUrl"] ?? "";
+        var gatewayBaseUrl = _configuration["VNPay:BaseUrl"] ?? "";
         var hashSecret = _configuration["VNPay:HashSecret"] ?? "";
         
-        var paymentUrl = vnpay.CreateRequestUrl(baseUrl, hashSecret);
+        var paymentUrl = vnpay.CreateRequestUrl(gatewayBaseUrl, hashSecret);
 
         return paymentUrl;
     }
