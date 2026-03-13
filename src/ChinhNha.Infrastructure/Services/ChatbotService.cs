@@ -57,8 +57,14 @@ public class ChatbotService : IChatbotService
 
             if (!settings.OllamaReachable)
             {
-                return "⚠️ Hệ thống AI đang tạm thời không khả dụng (Ollama chưa chạy). " +
-                       "Vui lòng liên hệ nhân viên hoặc thử lại sau.";
+                return "⚠️ Hệ thống AI đang tạm thời không khả dụng (Ollama chưa chạy hoặc phản hồi quá chậm). " +
+                       "Vui lòng kiểm tra Ollama rồi thử lại sau.";
+            }
+
+            if (settings.InstalledModels.Count == 0)
+            {
+                return "⚠️ Ollama đã chạy nhưng chưa có model nào được cài. " +
+                       "Hãy chạy lệnh như 'ollama pull sailor2:1b' hoặc model bạn muốn dùng rồi thử lại.";
             }
 
             using var scope = _scopeFactory.CreateScope();

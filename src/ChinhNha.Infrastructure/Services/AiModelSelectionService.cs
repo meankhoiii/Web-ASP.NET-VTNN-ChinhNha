@@ -193,7 +193,7 @@ public class AiModelSelectionService : IAiModelSelectionService
         try
         {
             var client = _httpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromSeconds(2);
+            client.Timeout = TimeSpan.FromSeconds(10);
 
             using var response = await client.GetAsync($"{endpoint.TrimEnd('/')}/api/tags");
             if (!response.IsSuccessStatusCode)
@@ -222,10 +222,17 @@ public class AiModelSelectionService : IAiModelSelectionService
                     continue;
                 }
 
-                // Map common Ollama tags to requested display names.
-                if (name.StartsWith("sailor2:1b", StringComparison.OrdinalIgnoreCase)) installed.Add("Sailor2-1B-Chat");
-                if (name.StartsWith("sailor2:8b", StringComparison.OrdinalIgnoreCase)) installed.Add("Sailor2-8B-Chat");
+                // Map Ollama tags → display names dùng trong app.
+                if (name.StartsWith("sailor2:1b",  StringComparison.OrdinalIgnoreCase)) installed.Add("Sailor2-1B-Chat");
+                if (name.StartsWith("sailor2:8b",  StringComparison.OrdinalIgnoreCase)) installed.Add("Sailor2-8B-Chat");
                 if (name.StartsWith("sailor2:20b", StringComparison.OrdinalIgnoreCase)) installed.Add("Sailor2-20B-Chat");
+                if (name.StartsWith("qwen3:8b",    StringComparison.OrdinalIgnoreCase)) installed.Add("qwen3:8b");
+                if (name.StartsWith("qwen3:4b",    StringComparison.OrdinalIgnoreCase)) installed.Add("qwen3:4b");
+                if (name.StartsWith("qwen3:1.7b",  StringComparison.OrdinalIgnoreCase)) installed.Add("qwen3:1.7b");
+                if (name.StartsWith("llama3.1:8b", StringComparison.OrdinalIgnoreCase)) installed.Add("llama3.1:8b");
+                if (name.StartsWith("llama3.2:3b", StringComparison.OrdinalIgnoreCase)) installed.Add("llama3.2:3b");
+                if (name.StartsWith("phi4-mini",   StringComparison.OrdinalIgnoreCase)) installed.Add("phi4-mini");
+                else if (name.StartsWith("phi4",   StringComparison.OrdinalIgnoreCase)) installed.Add("phi4");
             }
 
             return (true, installed.Distinct(StringComparer.OrdinalIgnoreCase).ToList());

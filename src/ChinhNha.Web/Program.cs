@@ -107,6 +107,7 @@ builder.Services.AddHttpClient();
 // ---- AI / ML.NET Service ----
 builder.Services.AddSingleton<IInventoryForecastService, DemandForecastService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHostedService<OllamaModelInitService>();
 
 // ---- SignalR ----
 builder.Services.AddSignalR();

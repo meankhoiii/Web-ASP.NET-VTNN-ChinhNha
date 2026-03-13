@@ -6,6 +6,10 @@ namespace ChinhNha.Infrastructure.Data;
 
 public static class DbSeeder
 {
+    private const string DefaultAdminEmail = "admin@chinhnha.id.vn";
+    private const string DefaultAdminPassword = "Admin@123";
+    private const string DefaultAdminFullName = "Administrator";
+
     public static async Task SeedAsync(AppDbContext context, IPasswordHashService passwordHashService)
     {
         // 1. Tạo Roles
@@ -21,23 +25,34 @@ public static class DbSeeder
 
         await context.SaveChangesAsync();
 
-        // 2. Tạo Admin User
+        // 2. Upsert Admin User
         var adminUser = await context.Users
             .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.Email == "admin@chinhnha.id.vn");
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == DefaultAdminEmail.ToLower());
 
         if (adminUser == null)
         {
             adminUser = new AppUser
             {
-                Email = "admin@chinhnha.id.vn",
-                FullName = "Administrator",
+                Email = DefaultAdminEmail,
+                FullName = DefaultAdminFullName,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                PasswordHash = passwordHashService.HashPassword(DefaultAdminPassword)
             };
 
-            adminUser.PasswordHash = passwordHashService.HashPassword("Admin@123");
             context.Users.Add(adminUser);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            adminUser.Email = DefaultAdminEmail;
+            adminUser.FullName = string.IsNullOrWhiteSpace(adminUser.FullName)
+                ? DefaultAdminFullName
+                : adminUser.FullName;
+            adminUser.IsActive = true;
+            adminUser.PasswordHash = passwordHashService.HashPassword(DefaultAdminPassword);
+
             await context.SaveChangesAsync();
         }
 
