@@ -3,6 +3,18 @@
 
 @{
     ViewData["Title"] = "Chi Tiết Đơn Hàng";
+
+    static string ToVietnameseStatus(ChinhNha.Domain.Enums.OrderStatus status) => status switch
+    {
+        ChinhNha.Domain.Enums.OrderStatus.Pending => "Chờ xử lý",
+        ChinhNha.Domain.Enums.OrderStatus.Confirmed => "Đã xác nhận",
+        ChinhNha.Domain.Enums.OrderStatus.Processing => "Đang xử lý",
+        ChinhNha.Domain.Enums.OrderStatus.Shipping => "Đang giao",
+        ChinhNha.Domain.Enums.OrderStatus.Delivered => "Đã giao",
+        ChinhNha.Domain.Enums.OrderStatus.Cancelled => "Đã hủy",
+        ChinhNha.Domain.Enums.OrderStatus.Returned => "Đã trả hàng",
+        _ => status.ToString()
+    };
 }
 
 <style>
@@ -43,9 +55,13 @@
     }
 
     .status-pending { background: #FFF3CD; color: #856404; }
+    .status-confirmed { background: #D1ECF1; color: #0C5460; }
+    .status-processing { background: #CCE5FF; color: #004085; }
+    .status-shipping { background: #CFE2FF; color: #084298; }
     .status-paid { background: #D4EDDA; color: #155724; }
     .status-delivered { background: #D1ECF1; color: #0C5460; }
     .status-cancelled { background: #F8D7DA; color: #721C24; }
+    .status-returned { background: #E2E3E5; color: #41464B; }
 
     .info-group {
         background: #F9F9F9;
@@ -126,7 +142,7 @@
                     </div>
                     <div class="col-md-6 text-end">
                         <span class="order-status-badge status-@Model.Status.ToString().ToLower()">
-                            @Model.Status
+                            @ToVietnameseStatus(Model.Status)
                         </span>
                         @if (Model.IsPaid)
                         {
@@ -190,6 +206,24 @@
                                 }
                             </span>
                         </div>
+                        @if (!Model.IsPaid
+                            && string.Equals(Model.PaymentMethod, ChinhNha.Domain.Enums.PaymentMethod.VNPay.ToString(), StringComparison.OrdinalIgnoreCase)
+                            && Model.Status != ChinhNha.Domain.Enums.OrderStatus.Cancelled
+                            && Model.Status != ChinhNha.Domain.Enums.OrderStatus.Returned)
+                        {
+                            <div class="info-row pt-3">
+                                <span class="info-label">Thanh toán lại:</span>
+                                <span class="info-value">
+                                    <form asp-controller="Checkout" asp-action="RetryPayment" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-credit-card"></i> Thanh toán VNPay
+                                        </button>
+                                    </form>
+                                </span>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

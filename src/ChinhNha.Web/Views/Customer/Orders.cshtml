@@ -1,8 +1,19 @@
 @using ChinhNha.Web.Models
+@using ChinhNha.Domain.Enums
 @model CustomerOrdersViewModel
 
 @{
     ViewData["Title"] = "Lịch Sử Đơn Hàng";
+
+    static string ToVietnameseStatus(ChinhNha.Domain.Enums.OrderStatus status) => status switch
+    {
+        ChinhNha.Domain.Enums.OrderStatus.Pending => "Chờ xử lý",
+        ChinhNha.Domain.Enums.OrderStatus.Processing => "Đang xử lý",
+        ChinhNha.Domain.Enums.OrderStatus.Shipping => "Đang giao",
+        ChinhNha.Domain.Enums.OrderStatus.Delivered => "Đã giao",
+        ChinhNha.Domain.Enums.OrderStatus.Cancelled => "Đã hủy",
+        _ => status.ToString()
+    };
 }
 
 <style>
@@ -35,9 +46,13 @@
     }
 
     .status-pending { background: #FFF3CD; color: #856404; }
+    .status-confirmed { background: #D1ECF1; color: #0C5460; }
+    .status-processing { background: #CCE5FF; color: #004085; }
+    .status-shipping { background: #CFE2FF; color: #084298; }
     .status-paid { background: #D4EDDA; color: #155724; }
     .status-delivered { background: #D1ECF1; color: #0C5460; }
     .status-cancelled { background: #F8D7DA; color: #721C24; }
+    .status-returned { background: #E2E3E5; color: #41464B; }
 
     .pagination-custom .page-link {
         color: #2E7D32;
@@ -83,7 +98,7 @@
                                 <small class="text-muted">Trạng thái:</small>
                                 <br />
                                 <span class="order-status status-@order.Status.ToString().ToLower()">
-                                    @order.Status
+                                    @ToVietnameseStatus(order.Status)
                                 </span>
                             </div>
                             @if (order.IsPaid)
@@ -98,6 +113,19 @@
                             <a href="/Customer/OrderDetail/@order.Id" class="btn btn-sm btn-primary">
                                 <i class="bi bi-eye"></i> Xem Chi Tiết
                             </a>
+                            @if (!order.IsPaid
+                                && string.Equals(order.PaymentMethod, PaymentMethod.VNPay.ToString(), StringComparison.OrdinalIgnoreCase)
+                                && order.Status != ChinhNha.Domain.Enums.OrderStatus.Cancelled
+                                && order.Status != ChinhNha.Domain.Enums.OrderStatus.Returned)
+                            {
+                                <form asp-controller="Checkout" asp-action="RetryPayment" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@order.Id" />
+                                    <button type="submit" class="btn btn-sm btn-warning mt-2">
+                                        <i class="bi bi-credit-card"></i> Thanh toán VNPay
+                                    </button>
+                                </form>
+                            }
                         </div>
                     </div>
                 </div>

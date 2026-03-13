@@ -3,6 +3,18 @@
 @{
     ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
     Layout = "_AdminLayout";
+
+    static string ToVietnameseStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "Chờ xử lý",
+        OrderStatus.Confirmed => "Đã xác nhận",
+        OrderStatus.Processing => "Đang xử lý",
+        OrderStatus.Shipping => "Đang giao",
+        OrderStatus.Delivered => "Đã giao hoàn tất",
+        OrderStatus.Cancelled => "Đã hủy",
+        OrderStatus.Returned => "Đã trả hàng",
+        _ => status.ToString()
+    };
 }
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -11,11 +23,13 @@
         
         @switch (Model.Status)
         {
-            case OrderStatus.Pending: <span class="badge bg-warning text-dark fs-6 align-text-top">Chờ xử lý</span>; break;
-            case OrderStatus.Processing: <span class="badge bg-primary fs-6 align-text-top">Đang xử lý</span>; break;
-            case OrderStatus.Shipping: <span class="badge bg-info text-dark fs-6 align-text-top">Đang giao</span>; break;
-            case OrderStatus.Delivered: <span class="badge bg-success fs-6 align-text-top">Đã giao hoàn tất</span>; break;
-            case OrderStatus.Cancelled: <span class="badge bg-danger fs-6 align-text-top">Đã huỷ</span>; break;
+            case OrderStatus.Pending: <span class="badge bg-warning text-dark fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Pending)</span>; break;
+            case OrderStatus.Confirmed: <span class="badge bg-info text-dark fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Confirmed)</span>; break;
+            case OrderStatus.Processing: <span class="badge bg-primary fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Processing)</span>; break;
+            case OrderStatus.Shipping: <span class="badge bg-info text-dark fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Shipping)</span>; break;
+            case OrderStatus.Delivered: <span class="badge bg-success fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Delivered)</span>; break;
+            case OrderStatus.Cancelled: <span class="badge bg-danger fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Cancelled)</span>; break;
+            case OrderStatus.Returned: <span class="badge bg-secondary fs-6 align-text-top">@ToVietnameseStatus(OrderStatus.Returned)</span>; break;
         }
     </div>
     
@@ -138,22 +152,22 @@
                             {
                                 if (Model.Status == val)
                                 {
-                                    <option value="@val" selected disabled>@val.ToString() (Hiện tại)</option>
+                                    <option value="@val" selected disabled>@ToVietnameseStatus(val) (Hiện tại)</option>
                                 }
                                 else
                                 {
-                                    <option value="@val">Chuyển sang: @val.ToString()</option>
+                                    <option value="@val">Chuyển sang: @ToVietnameseStatus(val)</option>
                                 }
                             }
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100" @(Model.Status == OrderStatus.Delivered || Model.Status == OrderStatus.Cancelled ? "disabled" : "")>
+                    <button type="submit" class="btn btn-primary w-100" @(Model.Status == OrderStatus.Cancelled || Model.Status == OrderStatus.Returned ? "disabled" : "")>
                         Xác nhận cập nhật
                     </button>
                     
-                    @if (Model.Status == OrderStatus.Delivered || Model.Status == OrderStatus.Cancelled)
+                    @if (Model.Status == OrderStatus.Cancelled || Model.Status == OrderStatus.Returned)
                     {
-                        <div class="form-text mt-2 text-danger">Đơn hàng đã chốt (Giao thành công / Huỷ) không thể đổi trạng thái.</div>
+                        <div class="form-text mt-2 text-danger">Đơn hàng đã chốt (Hủy/Trả hàng) không thể đổi trạng thái.</div>
                     }
                 </form>
             </div>
