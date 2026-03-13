@@ -7,7 +7,6 @@
     ViewData["OgImage"] = Model.Product.Images?.FirstOrDefault(i => i.IsPrimary)?.ImageUrl;
     var productUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/san-pham/{Model.Product.Slug}";
     var encodedProductUrl = Uri.EscapeDataString(productUrl);
-    var encodedProductTitle = Uri.EscapeDataString(Model.Product.Name);
 }
 
 <style>
@@ -107,19 +106,6 @@
         margin-top: 15px;
     }
     .btn-buy-large:hover { background-color: #BF360C; color: #fff; }
-    .btn-wishlist-large {
-        background-color: #fff;
-        color: #ad1457;
-        font-size: clamp(1.05rem, 2.8vw, 1.3rem);
-        font-weight: 800;
-        padding: 12px 20px;
-        border: 2px solid #f8bbd0;
-        border-radius: 8px;
-        text-transform: uppercase;
-        width: 100%;
-        margin-top: 10px;
-    }
-    .btn-wishlist-large:hover { border-color: #ec407a; color: #880e4f; }
 
     .section-header {
         background: linear-gradient(135deg, var(--green-main), var(--green-dark));
@@ -206,7 +192,7 @@
 
     .share-actions {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.75rem;
     }
 
@@ -258,18 +244,23 @@
 <div class="row">
     <!-- Hình Ảnh -->
     <div class="col-lg-5 mb-4">
-        @if (Model.Product.Images != null && Model.Product.Images.Any(i => i.IsPrimary))
+        @if (Model.Product.Images != null && Model.Product.Images.Any())
         {
-            <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" alt="@Model.Product.Name" class="product-detail-img" />
-            <div class="d-flex gap-2">
-                <img src="@Model.Product.Images.First(i => i.IsPrimary).ImageUrl" class="thumbnail-img active" />
-                <div class="thumbnail-img d-flex align-items-center justify-content-center bg-light">
-                    <i class="bi bi-image text-muted fs-3"></i>
+            var primaryImage = Model.Product.Images.FirstOrDefault(i => i.IsPrimary) ?? Model.Product.Images.First();
+            <img id="mainProductImage" src="@primaryImage.ImageUrl" alt="@Model.Product.Name" class="product-detail-img" />
+
+            @if (Model.Product.Images.Count > 1)
+            {
+                <div class="d-flex gap-2 flex-wrap">
+                    @foreach (var img in Model.Product.Images.Take(6))
+                    {
+                        <img src="@img.ImageUrl"
+                             class="thumbnail-img @(img.ImageUrl == primaryImage.ImageUrl ? "active" : string.Empty)"
+                             alt="@Model.Product.Name"
+                             onclick="setMainImage('@img.ImageUrl', this)" />
+                    }
                 </div>
-                <div class="thumbnail-img d-flex align-items-center justify-content-center bg-light">
-                    <i class="bi bi-image text-muted fs-3"></i>
-                </div>
-            </div>
+            }
         }
         else
         {
@@ -287,10 +278,10 @@
         <div class="detail-price">@Model.Product.BasePrice.ToString("N0") VNĐ</div>
         
         <div class="info-block">
-            <p><strong><i class="bi bi-check-circle-fill me-2"></i> 100% Phân bón chính hãng, chuẩn xuất xứ.</strong></p>
-            <p><strong><i class="bi bi-telephone-fill me-2"></i> Tư vấn cách pha, cách rải: 0909.123.456 (Gặp kỹ sư Nông nghiệp)</strong></p>
-            <hr>
-            <p class="mb-0"><strong>Tóm tắt công dụng:</strong> @Model.Product.Description</p>
+            <p><strong><i class="bi bi-tags-fill me-2"></i> Danh mục:</strong> @(Model.Product.CategoryName ?? "Đang cập nhật")</p>
+            <p><strong><i class="bi bi-building me-2"></i> Nhà cung cấp:</strong> @(Model.Product.SupplierName ?? "Đang cập nhật")</p>
+            <p><strong><i class="bi bi-box-seam me-2"></i> Đơn vị:</strong> @(!string.IsNullOrWhiteSpace(Model.Product.Unit) ? Model.Product.Unit : "Đang cập nhật")</p>
+            <p class="mb-0"><strong><i class="bi bi-clipboard-data me-2"></i> Tóm tắt:</strong> @(Model.Product.ShortDescription ?? Model.Product.Description ?? "Đang cập nhật")</p>
         </div>
 
         <div class="p-3 p-md-4 border border-3 border-warning rounded" style="background-color: #fff9e6; overflow: visible;">
@@ -307,19 +298,13 @@
             <button class="btn-buy-large" onclick="addToCartDetails(@Model.Product.Id)">
                 <i class="bi bi-cart-plus-fill me-2"></i> BỎ VÀO GIỎ / MUA NGAY
             </button>
-            <button class="btn-wishlist-large" onclick="addToWishlistDetails(@Model.Product.Id)">
-                <i class="bi bi-heart-fill me-2"></i> THÊM VÀO YÊU THÍCH
-            </button>
 
             <div class="share-actions mt-3">
                 <a class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=@encodedProductUrl">
-                    <i class="bi bi-facebook me-1"></i> Chia se Facebook
+                    <i class="bi bi-facebook me-1"></i> Chia sẻ Facebook
                 </a>
                 <a class="btn btn-outline-info" target="_blank" rel="noopener noreferrer" href="https://zalo.me/share?url=@encodedProductUrl">
-                    <i class="bi bi-chat-dots-fill me-1"></i> Chia se Zalo
-                </a>
-                <a class="btn btn-outline-secondary" target="_blank" rel="noopener noreferrer" href="https://twitter.com/intent/tweet?url=@encodedProductUrl&text=@encodedProductTitle">
-                    <i class="bi bi-share-fill me-1"></i> Chia se X
+                    <i class="bi bi-chat-dots-fill me-1"></i> Chia sẻ Zalo
                 </a>
             </div>
         </div>
@@ -331,54 +316,102 @@
     <div class="col-12">
         <h2 class="section-header"><i class="bi bi-stars me-2"></i> SẢN PHẨM TƯƠNG TỰ</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white mb-4">
-            <div id="similarProductsLoading" class="text-muted">Dang tai goi y tuong tu...</div>
+            <div id="similarProductsLoading" class="text-muted">Đang tải gợi ý tương tự...</div>
             <div id="similarProductsList" class="rec-grid" style="display:none;"></div>
-            <div id="similarProductsEmpty" class="text-muted" style="display:none;">Chua co goi y tuong tu cho san pham nay.</div>
+            <div id="similarProductsEmpty" class="text-muted" style="display:none;">Chưa có gợi ý tương tự cho sản phẩm này.</div>
         </div>
 
         <h2 class="section-header"><i class="bi bi-link-45deg me-2"></i> THƯỜNG MUA KÈM</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white mb-4">
-            <div id="fbtLoading" class="text-muted">Dang tai danh sach mua kem...</div>
+            <div id="fbtLoading" class="text-muted">Đang tải danh sách mua kèm...</div>
             <div id="fbtList" class="rec-grid" style="display:none;"></div>
-            <div id="fbtEmpty" class="text-muted" style="display:none;">Chua co du lieu mua kem.</div>
+            <div id="fbtEmpty" class="text-muted" style="display:none;">Chưa có dữ liệu mua kèm.</div>
         </div>
 
         <h2 class="section-header"><i class="bi bi-card-heading me-2"></i> THÔNG TIN CHI TIẾT SẢN PHẨM</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
-            <p>Sản phẩm này được sản xuất trên dây chuyền công nghệ hiện đại, đảm bảo chất lượng và an toàn. Phù hợp cho nhiều loại cây trồng khác nhau, giúp cây phát triển mạnh, ra rễ nhanh, đánh bật đọt non, tăng năng suất mủ/quả vượt trội.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Product.Description))
+            {
+                <p class="mb-0">@Model.Product.Description</p>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Product.ShortDescription))
+            {
+                <p class="mb-0">@Model.Product.ShortDescription</p>
+            }
+            else
+            {
+                <p class="mb-0 text-muted">Nội dung chi tiết đang được cập nhật từ nhà cung cấp.</p>
+            }
         </div>
 
         <h2 class="section-header"><i class="bi bi-droplet-half me-2"></i> THÀNH PHẦN HÓA HỌC / HỮU CƠ</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Đạm (N): 15% (Giúp bung đọt, xanh lá)</li>
-                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Lân (P2O5): 15% (Phát triển rễ, mập thân)</li>
-                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Kali (K2O): 15% (Nuôi trái, chắc hạt)</li>
-                <li class="mb-2"><i class="bi bi-dot text-success fs-2"></i> Bổ sung vi lượng: TE (Bo, Kẽm, Magie...) giúp hạn chế rụng trái.</li>
-            </ul>
+            @if (!string.IsNullOrWhiteSpace(Model.Product.TechnicalInfo))
+            {
+                <p class="mb-0">@Model.Product.TechnicalInfo</p>
+            }
+            else
+            {
+                <p class="mb-0 text-muted">Chưa có thông tin thành phần kỹ thuật cho sản phẩm này.</p>
+            }
         </div>
 
         <h2 class="section-header"><i class="bi bi-book-half me-2"></i> HƯỚNG DẪN CÁCH SỬ DỤNG</h2>
         <div class="text-content-large p-3 border border-2 border-success rounded bg-white">
-            <p><strong>1. Đối với cây ăn trái (Sầu riêng, Mít, Cam...):</strong></p>
-            <p>Bón 0.5 - 1kg/cây/lần. Bón 3 lần/năm (sau thu hoạch, trước ra hoa, nuôi trái). Nên cuốc rãnh quanh tán rồi lấp đất.</p>
-            <br>
-            <p><strong>2. Đối với Lúa / Rau màu:</strong></p>
-            <p>Bón 10-15kg/1000m2. Bón lót trước khi gieo và bón thúc khi cây vươn lóng.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Product.UsageInstructions))
+            {
+                <p class="mb-0">@Model.Product.UsageInstructions</p>
+            }
+            else
+            {
+                <p class="mb-0 text-muted">Chưa có hướng dẫn sử dụng cụ thể cho sản phẩm này.</p>
+            }
         </div>
 
         <h2 class="section-header"><i class="bi bi-chat-quote-fill me-2"></i> NHẬN XÉT CỦA BÀ CON ĐÃ MUA</h2>
         <div class="text-content-large p-4 border border-2 border-success rounded bg-white">
-            <div class="review-box">
-                <div class="reviewer-name">Anh Hoàng (Nông dân trồng lúa) <span class="text-warning ms-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span></div>
-                <div class="text-success fw-bold fs-5"><i class="bi bi-check-circle-fill"></i> Đã mua và bón thử nghiệm</div>
-                <div class="review-text">"Phân hạt đều, dễ rải. Lúa nhà tôi bón xong 3 ngày là thấy nở bụi mạnh, lá xanh bền tới lúc trổ. Đại lý Chính Nha giao hàng cũng mau lẹ."</div>
-            </div>
-            
-            <div class="review-box">
-                <div class="reviewer-name">Chị Thu (Trồng tiêu) <span class="text-warning ms-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></span></div>
-                <div class="text-success fw-bold fs-5"><i class="bi bi-check-circle-fill"></i> Đã mua 20 bao</div>
-                <div class="review-text">"Giá tốt hơn ngoài chợ đại lý huyện. Đỡ tốn công chở vì có xe giao tới tận rẫy."</div>
+            @if (Model.ReviewStats != null)
+            {
+                <div class="mb-3 p-3 rounded border bg-light">
+                    <strong>Đánh giá trung bình:</strong> @Model.ReviewStats.AverageRating.ToString("0.0")/5
+                    <span class="text-muted">(@Model.ReviewStats.TotalReviews lượt đánh giá)</span>
+                </div>
+            }
+
+            @if (Model.Reviews != null && Model.Reviews.Any())
+            {
+                foreach (var review in Model.Reviews)
+                {
+                    <div class="review-box">
+                        <div class="reviewer-name">
+                            @review.UserName
+                            <span class="text-warning ms-2">
+                                @for (var i = 0; i < review.Rating; i++)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                            </span>
+                        </div>
+                        <div class="text-success fw-bold fs-6">
+                            @if (review.IsVerifiedPurchase)
+                            {
+                                <span><i class="bi bi-check-circle-fill"></i> Đã mua hàng</span>
+                            }
+                        </div>
+                        <div class="review-text">@review.Content</div>
+                        <div class="text-muted small mt-1">@review.CreatedAt.ToString("dd/MM/yyyy")</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-muted">Chưa có đánh giá cho sản phẩm này.</div>
+            }
+
+            <div class="mt-3">
+                <a class="btn btn-outline-success" href="/ProductReview/ProductReviews?productId=@Model.Product.Id">
+                    Xem tất cả đánh giá
+                </a>
             </div>
         </div>
     </div>
@@ -387,6 +420,19 @@
 @section Scripts {
     <script>
         const productId = @Model.Product.Id;
+
+        function setMainImage(imageUrl, thumbEl) {
+            const mainImage = document.getElementById('mainProductImage');
+            if (!mainImage) return;
+
+            mainImage.src = imageUrl;
+            document.querySelectorAll('.thumbnail-img').forEach(function (img) {
+                img.classList.remove('active');
+            });
+            if (thumbEl) {
+                thumbEl.classList.add('active');
+            }
+        }
 
         function updateQty(change) {
             let input = document.getElementById('qty');
@@ -401,25 +447,7 @@
             if (typeof addToCart === "function") {
                 addToCart(productId, qty);
                 if (typeof showToast === "function") {
-                    showToast("Thanh cong", "Da them " + qty + " san pham vao gio hang.");
-                }
-            }
-        }
-
-        async function addToWishlistDetails(productId) {
-            if (typeof addToWishlist !== "function") {
-                if (typeof showToast === "function") {
-                    showToast("Thong bao", "Chuc nang wishlist chua san sang.", "warning");
-                }
-                return;
-            }
-
-            const result = await addToWishlist(productId);
-            if (result && result.success) {
-                const btn = document.querySelector('.btn-wishlist-large');
-                if (btn) {
-                    btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> ĐÃ THÊM VÀO YÊU THÍCH';
-                    btn.disabled = true;
+                    showToast("Thành công", "Đã thêm " + qty + " sản phẩm vào giỏ hàng.");
                 }
             }
         }
@@ -430,7 +458,7 @@
 
         function buildRecCardHtml(item, type) {
             const image = item.imageUrl || item.recommendedProductImage || '/images/no-image.png';
-            const name = item.name || item.recommendedProductName || 'San pham';
+            const name = item.name || item.recommendedProductName || 'Sản phẩm';
             const price = (item.salePrice ?? item.basePrice ?? item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0);
             const slug = item.slug || null;
             const detailUrl = slug ? '/san-pham/' + slug : '/Product?searchQuery=' + encodeURIComponent(name);
@@ -441,8 +469,7 @@
                 + '<div class="rec-price">' + formatPriceVn(price) + '</div>'
                 + '<div class="d-flex flex-wrap gap-2 mt-auto">'
                 + '<a class="btn btn-outline-success btn-sm" href="' + detailUrl + '">Xem</a>'
-                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addToCart(' + (item.id || item.recommendedProductId) + ', 1)">Them gio</button>'
-                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + (item.id || item.recommendedProductId) + ')">Yeu thich</button>'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addToCart(' + (item.id || item.recommendedProductId) + ', 1)">Thêm giỏ</button>'
                 + '</div>'
                 + '</div>';
         }

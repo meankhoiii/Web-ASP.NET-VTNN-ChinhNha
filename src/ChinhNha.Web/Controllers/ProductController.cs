@@ -8,11 +8,13 @@ namespace ChinhNha.Web.Controllers;
 public class ProductController : Controller
 {
     private readonly IProductService _productService;
+    private readonly IProductReviewService _productReviewService;
     private const int PageSize = 12;
 
-    public ProductController(IProductService productService)
+    public ProductController(IProductService productService, IProductReviewService productReviewService)
     {
         _productService = productService;
+        _productReviewService = productReviewService;
     }
 
     public async Task<IActionResult> Index(int? categoryId, string? searchQuery, int pageNumber = 1)
@@ -65,10 +67,15 @@ public class ProductController : Controller
         // Get some related products (same category)
         var relatedResult = await _productService.GetProductsByCategoryAsync(product.CategoryId);
 
+        var reviewStats = await _productReviewService.GetProductReviewStatsAsync(product.Id);
+        var reviews = await _productReviewService.GetProductReviewsAsync(product.Id, 1, 5, true);
+
         var model = new ProductDetailsViewModel
         {
             Product = product,
-            RelatedProducts = relatedResult.Where(p => p.Id != product.Id).Take(4)
+            RelatedProducts = relatedResult.Where(p => p.Id != product.Id).Take(4),
+            Reviews = reviews,
+            ReviewStats = reviewStats
         };
 
         ViewData["MetaDescription"] = product.MetaDescription ?? product.ShortDescription ?? product.Description ?? product.Name;

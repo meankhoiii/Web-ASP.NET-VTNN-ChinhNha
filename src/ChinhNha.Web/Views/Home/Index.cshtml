@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = "Trang chủ";
-    ViewData["MetaDescription"] = "Chinh Nha cung cap phan bon, vat tu nong nghiep, tin tuc ky thuat mua vu va goi y san pham thong minh.";
+    ViewData["MetaDescription"] = "Chính Nha cung cấp phân bón, vật tư nông nghiệp, tin tức kỹ thuật mùa vụ và gợi ý sản phẩm thông minh.";
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -15,7 +15,50 @@
         border: 3px solid #2E7D32;
         border-radius: 10px;
         padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        height: 100%;
+    }
+
+    .hero-category-panel {
+        background: linear-gradient(180deg, #f7fbf2 0%, #eef7e8 100%);
+        border: 3px solid #2E7D32;
+        border-radius: 10px;
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .hero-category-title {
+        color: #1B5E20;
+        font-size: 1.15rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hero-category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .hero-category-link {
+        background: #fff;
+        border: 2px solid #c8e6c9;
+        border-radius: 8px;
+        color: #1B5E20;
+        font-weight: 800;
+        padding: 0.9rem 1rem;
+        text-decoration: none;
+        line-height: 1.35;
+        transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    }
+
+    .hero-category-link:hover {
+        border-color: #2E7D32;
+        background-color: #ffffff;
+        transform: translateX(4px);
     }
     @@media (min-width: 768px) {
         .hero-banner { padding: 2.5rem; }
@@ -231,33 +274,12 @@
         margin: 8px 0;
     }
 
-    .newsletter-card {
-        padding: 1.5rem;
-    }
-
-    .newsletter-form .form-control,
-    .newsletter-form .btn {
-        min-height: 52px;
-    }
-
     @@media (max-width: 767.98px) {
         .alert-box {
             flex-direction: column;
             align-items: flex-start !important;
             text-align: left;
             gap: 0.75rem;
-        }
-
-        .newsletter-card {
-            padding: 1rem;
-        }
-
-        .newsletter-form {
-            width: 100%;
-        }
-
-        .newsletter-form .btn {
-            width: 100%;
         }
 
         .home-rec-grid {
@@ -267,10 +289,14 @@
         .section-heading {
             padding: 12px 14px;
         }
+
+        .hero-category-link:hover {
+            transform: none;
+        }
     }
 </style>
 
-<div class="row mb-4">
+<div class="row mb-2">
     <div class="col-12">
         @if (TempData["NewsletterSuccess"] != null)
         {
@@ -289,37 +315,48 @@
     </div>
 </div>
 
-<div class="mb-5 mt-5">
-    <h2 class="section-heading"><i class="bi bi-envelope-paper-fill text-warning me-2"></i> NHAN BAN TIN KHUYEN MAI</h2>
-    <div class="newsletter-card bg-white border border-2 border-success rounded">
-        <div class="row align-items-center g-3">
-            <div class="col-lg-6">
-                <h4 class="fw-bold text-success mb-2">Dang ky newsletter ChinhNha</h4>
-                <p class="mb-0 text-muted">Nhan tin khuyen mai, thong bao giam gia va meo canh tac moi qua email.</p>
+<div class="row g-4 mb-5 mt-0 align-items-stretch">
+    <div class="col-lg-3">
+        <div class="hero-category-panel">
+            <div class="hero-category-title">
+                <i class="bi bi-grid-fill"></i>
+                <span>Danh mục sản phẩm</span>
             </div>
-            <div class="col-lg-6">
-                <form method="post" action="/Home/SubscribeNewsletter" class="newsletter-form d-flex flex-column flex-sm-row gap-2">
-                    @Html.AntiForgeryToken()
-                    <input type="email" name="email" class="form-control form-control-lg" placeholder="Nhap email cua ban" required />
-                    <button type="submit" class="btn btn-success btn-lg fw-bold">Dang ky</button>
-                </form>
+            <div class="hero-category-list">
+                @if (Model.Categories != null && Model.Categories.Any())
+                {
+                    foreach (var cat in Model.Categories.Take(6))
+                    {
+                        <a href="/Product?searchQuery=@cat.Name" class="hero-category-link">
+                            @cat.Name
+                        </a>
+                    }
+                }
+                else
+                {
+                    <a href="/Product" class="hero-category-link">PHÂN BÓN NPK</a>
+                    <a href="/Product" class="hero-category-link">PHÂN HỮU CƠ</a>
+                    <a href="/Product" class="hero-category-link">THUỐC TRỪ SÂU</a>
+                    <a href="/Product" class="hero-category-link">VẬT TƯ KHÁC</a>
+                }
             </div>
         </div>
     </div>
-</div>
-
-<div class="hero-banner text-center text-md-start">
-    <div class="row align-items-center">
-        <div class="col-md-8">
+    <div class="col-lg-9">
+        <div class="hero-banner text-center text-md-start">
+            <div class="row align-items-center h-100">
+                <div class="col-md-8">
             <h1 class="hero-main-title mb-3">TỔNG ĐẠI LÝ PHÂN BÓN & VẬT TƯ NÔNG NGHIỆP</h1>
             <p class="hero-sub mb-4">Chúng tôi cam kết 100% hàng chính hãng, giá gốc từ nhà máy. Đặc biệt nhận tư vấn liều lượng phân bón cho từng loại cây trồng để đạt năng suất cao nhất.</p>
             <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
                 <a href="#danh-sach-san-pham" class="btn btn-primary py-3 px-4" style="font-size: clamp(1rem, 3vw, 1.3rem);"><i class="bi bi-cart-down-fill me-2"></i> XEM SP PHÂN BÓN</a>
                 <a href="tel:0909123456" class="btn btn-cta py-3 px-4" style="font-size: clamp(1rem, 3vw, 1.3rem);"><i class="bi bi-telephone-outbound-fill me-2"></i> GỌI TƯ VẤN NGAY</a>
             </div>
-        </div>
-        <div class="col-md-4 d-none d-md-block text-center">
-            <img src="https://via.placeholder.com/300x300.png?text=H%C3%8CNH+%E1%BA%A2NH+C%E1%BB%ACA+H%C3%80NG" alt="Cửa hàng Chính Nha" class="img-fluid border border-4 border-success rounded">
+                </div>
+                <div class="col-md-4 d-none d-md-block text-center">
+                    <img src="https://via.placeholder.com/300x300.png?text=H%C3%8CNH+%E1%BA%A2NH+C%E1%BB%ACA+H%C3%80NG" alt="Cửa hàng Chính Nha" class="img-fluid border border-4 border-success rounded">
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -374,37 +411,11 @@
 </div>
 
 <div class="mb-5 mt-5" id="goi-y-cho-ban">
-    <h2 class="section-heading"><i class="bi bi-magic text-warning me-2"></i> GOI Y DANH CHO BAN</h2>
+    <h2 class="section-heading"><i class="bi bi-magic text-warning me-2"></i> GỢI Ý DÀNH CHO BẠN</h2>
     <div class="p-3 bg-white border border-2 border-success rounded">
-        <div id="homeRecLoading" class="text-muted">Dang tai danh sach goi y...</div>
+        <div id="homeRecLoading" class="text-muted">Đang tải danh sách gợi ý...</div>
         <div id="homeRecGrid" class="home-rec-grid" style="display:none;"></div>
-        <div id="homeRecEmpty" class="text-muted" style="display:none;">Dang nhap de xem goi y ca nhan hoa cho tai khoan cua ban.</div>
-    </div>
-</div>
-
-<div class="mb-5 mt-5">
-    <h2 class="section-heading"><i class="bi bi-tags-fill text-warning me-2"></i> TRUY CẬP NHANH CÁC DÒNG SẢN PHẨM</h2>
-    <div class="row justify-content-center">
-        @if (Model.Categories != null && Model.Categories.Any())
-        {
-            foreach (var cat in Model.Categories.Take(4))
-            {
-                <div class="col-6 col-md-3 mb-4">
-                    <a href="/Product?searchQuery=@cat.Name" class="category-box">
-                        <i class="bi bi-box-seam-fill category-icon"></i>
-                        <div class="category-name">@cat.Name</div>
-                    </a>
-                </div>
-            }
-        }
-        else
-        {
-            <!-- Mock Categories if empty -->
-            <div class="col-6 col-md-3 mb-4"><a href="/Product" class="category-box"><i class="bi bi-box-seam-fill category-icon" style="color:#FFCC00;"></i><div class="category-name">PHÂN BÓN NPK</div></a></div>
-            <div class="col-6 col-md-3 mb-4"><a href="/Product" class="category-box"><i class="bi bi-tree-fill category-icon" style="color:#006400;"></i><div class="category-name">PHÂN HỮU CƠ</div></a></div>
-            <div class="col-6 col-md-3 mb-4"><a href="/Product" class="category-box"><i class="bi bi-bug-fill category-icon" style="color:#CC0000;"></i><div class="category-name">THUỐC TRỪ SÂU</div></a></div>
-            <div class="col-6 col-md-3 mb-4"><a href="/Product" class="category-box"><i class="bi bi-tools category-icon" style="color:#555;"></i><div class="category-name">VẬT TƯ KHÁC</div></a></div>
-        }
+        <div id="homeRecEmpty" class="text-muted" style="display:none;">Đăng nhập để xem gợi ý cá nhân hóa cho tài khoản của bạn.</div>
     </div>
 </div>
 
@@ -537,7 +548,7 @@
 
         function buildHomeRecCard(item) {
             const image = item.recommendedProductImage || '/images/no-image.png';
-            const name = item.recommendedProductName || 'San pham';
+            const name = item.recommendedProductName || 'Sản phẩm';
             const price = item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0;
             const link = '/Product?searchQuery=' + encodeURIComponent(name);
             const recommendationId = item.id || 0;
@@ -546,11 +557,11 @@
             return '<div class="home-rec-card">'
                 + '<img src="' + image + '" alt="' + name + '" onerror="this.src=\'/images/no-image.png\'" />'
                 + '<a class="home-rec-name" href="' + link + '" onclick="return onHomeRecommendationClick(event, ' + recommendationId + ')">' + name + '</a>'
-                + '<div class="small text-muted">' + (item.recommendationReason || 'De xuat cho ban') + '</div>'
+                + '<div class="small text-muted">' + (item.recommendationReason || 'Đề xuất cho bạn') + '</div>'
                 + '<div class="home-rec-price">' + formatHomeRecPrice(price) + '</div>'
                 + '<div class="d-flex gap-2 mt-auto">'
-                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addRecommendedToCart(' + productId + ', ' + recommendationId + ')">Them gio</button>'
-                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + productId + ')">Yeu thich</button>'
+                + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addRecommendedToCart(' + productId + ', ' + recommendationId + ')">Thêm giỏ</button>'
+                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + productId + ')">Yêu thích</button>'
                 + '</div>'
                 + '</div>';
         }
@@ -654,7 +665,7 @@
                 })
                 .catch(err => {
                     if (typeof showToast === 'function') {
-                        showToast('Canh bao', 'Khong lay duoc thong tin thoi tiet luc nay.', 'warning');
+                        showToast('Cảnh báo', 'Không lấy được thông tin thời tiết lúc này.', 'warning');
                     }
                 });
         }
