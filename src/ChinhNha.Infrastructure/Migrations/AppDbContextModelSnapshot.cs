@@ -135,7 +135,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.BlogCategory", b =>
@@ -162,7 +162,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BlogCategories");
+                    b.ToTable("BlogCategories", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.BlogPost", b =>
@@ -224,7 +224,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("BlogPosts");
+                    b.ToTable("BlogPosts", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Cart", b =>
@@ -254,7 +254,7 @@ namespace ChinhNha.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Carts");
+                    b.ToTable("Carts", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.CartItem", b =>
@@ -291,7 +291,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ChatMessage", b =>
@@ -325,7 +325,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChatMessages");
+                    b.ToTable("ChatMessages", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ContactMessage", b =>
@@ -370,7 +370,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ContactMessages");
+                    b.ToTable("ContactMessages", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.InventoryForecast", b =>
@@ -413,7 +413,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("InventoryForecasts");
+                    b.ToTable("InventoryForecasts", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.InventoryTransaction", b =>
@@ -470,7 +470,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("InventoryTransactions");
+                    b.ToTable("InventoryTransactions", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Order", b =>
@@ -562,7 +562,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.OrderItem", b =>
@@ -608,7 +608,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Payment", b =>
@@ -650,7 +650,7 @@ namespace ChinhNha.Infrastructure.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Product", b =>
@@ -760,7 +760,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ProductCategory", b =>
@@ -807,7 +807,7 @@ namespace ChinhNha.Infrastructure.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("ProductCategories");
+                    b.ToTable("ProductCategories", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ProductImage", b =>
@@ -838,7 +838,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages");
+                    b.ToTable("ProductImages", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ProductRecommendation", b =>
@@ -905,7 +905,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProductRecommendations");
+                    b.ToTable("ProductRecommendations", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ProductReview", b =>
@@ -958,7 +958,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ProductReviews");
+                    b.ToTable("ProductReviews", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.ProductVariant", b =>
@@ -1007,7 +1007,7 @@ namespace ChinhNha.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[SKU] IS NOT NULL");
 
-                    b.ToTable("ProductVariants");
+                    b.ToTable("ProductVariants", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.PurchaseOrder", b =>
@@ -1063,7 +1063,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("PurchaseOrders");
+                    b.ToTable("PurchaseOrders", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.PurchaseOrderItem", b =>
@@ -1103,7 +1103,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("PurchaseOrderId");
 
-                    b.ToTable("PurchaseOrderItems");
+                    b.ToTable("PurchaseOrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Role", b =>
@@ -1160,7 +1160,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SavedSearchFilters");
+                    b.ToTable("SavedSearchFilters", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.SearchAnalytics", b =>
@@ -1206,7 +1206,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SearchAnalytics");
+                    b.ToTable("SearchAnalytics", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.SiteSettings", b =>
@@ -1229,7 +1229,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SiteSettings");
+                    b.ToTable("SiteSettings", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Supplier", b =>
@@ -1276,7 +1276,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers");
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.UserAddress", b =>
@@ -1325,7 +1325,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAddresses");
+                    b.ToTable("UserAddresses", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.Wishlist", b =>
@@ -1370,7 +1370,7 @@ namespace ChinhNha.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Wishlists");
+                    b.ToTable("Wishlists", (string)null);
                 });
 
             modelBuilder.Entity("ChinhNha.Domain.Entities.AppUserRole", b =>
