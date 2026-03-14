@@ -32,8 +32,6 @@ public class AppDbContext : DbContext
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
-    public DbSet<Banner> Banners => Set<Banner>();
-    public DbSet<PolicyPage> PolicyPages => Set<PolicyPage>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<SearchAnalytics> SearchAnalytics => Set<SearchAnalytics>();
