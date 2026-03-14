@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
@@ -137,7 +138,7 @@ public class CheckoutController : Controller
                     OrderId = order.Id
                 };
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+                var ipAddress = GetClientIpForVnPay();
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress, baseUrl);
                 
@@ -167,12 +168,57 @@ public class CheckoutController : Controller
     [HttpGet]
     public async Task<IActionResult> PaymentCallback()
     {
+        var (handled, orderId, response) = await HandleVnPayCallbackAsync();
+        if (!handled)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        if (response!.Success)
+        {
+            TempData["PaymentMessage"] = $"Thanh toán VNPay thành công! (Mã giao dịch: {response.TransactionId})";
+        }
+        else
+        {
+            TempData["PaymentMessage"] = "Thanh toán VNPay thất bại hoặc bị hủy.";
+        }
+
+        return RedirectToAction("Success", new { id = orderId });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/vnpay/return")]
+    public async Task<IActionResult> VNPayReturn()
+    {
+        return await PaymentCallback();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/vnpay/ipn")]
+    public async Task<IActionResult> VNPayIpn()
+    {
+        var (handled, _, response) = await HandleVnPayCallbackAsync();
+        if (!handled)
+        {
+            return Json(new { RspCode = "01", Message = "Order not found" });
+        }
+
+        if (response == null)
+        {
+            return Json(new { RspCode = "99", Message = "Invalid response" });
+        }
+
+        return Json(new { RspCode = "00", Message = "Confirm Success" });
+    }
+
+    private async Task<(bool handled, int orderId, PaymentResponseDto? response)> HandleVnPayCallbackAsync()
+    {
         var queryDictionary = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
         var response = _vnpayService.PaymentExecute(queryDictionary);
 
         if (response == null || string.IsNullOrEmpty(response.OrderId))
         {
-            return RedirectToAction("Index", "Home");
+            return (false, 0, null);
         }
 
         if (int.TryParse(response.OrderId, out int orderId))
@@ -189,23 +235,24 @@ public class CheckoutController : Controller
             );
 
             var order = await _orderService.GetOrderByIdAsync(orderId);
-            if (order == null) return NotFound();
+            if (order == null)
+            {
+                return (false, 0, response);
+            }
 
             if (response.Success)
             {
                 await SendPaymentNotificationsAsync(order, response, true);
-                TempData["PaymentMessage"] = $"Thanh toán VNPay thành công! (Mã giao dịch: {response.TransactionId})";
             }
             else
             {
                 await SendPaymentNotificationsAsync(order, response, false);
-                TempData["PaymentMessage"] = $"Thanh toán VNPay thất bại hoặc bị hủy.";
             }
 
-            return RedirectToAction("Success", new { id = orderId });
+            return (true, orderId, response);
         }
 
-        return RedirectToAction("Index", "Home");
+        return (false, 0, response);
     }
 
     [Authorize]
@@ -243,10 +290,15 @@ public class CheckoutController : Controller
             OrderId = order.Id
         };
 
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var ipAddress = GetClientIpForVnPay();
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
         var paymentUrl = _vnpayService.CreatePaymentUrl(paymentInfo, ipAddress, baseUrl);
         return Redirect(paymentUrl);
+    }
+
+    private string GetClientIpForVnPay()
+    {
+        return "localhost";
     }
 
     private async Task SendOrderCreatedNotificationsAsync(OrderDto order, CheckoutViewModel model)
