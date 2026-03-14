@@ -17,6 +17,7 @@ public class ProductDto
     public int? SupplierId { get; set; }
     public string? SupplierName { get; set; } // Flattened from Supplier
 
+    public decimal ImportPrice { get; set; }
     public decimal BasePrice { get; set; }
     public decimal? SalePrice { get; set; }
     public int StockQuantity { get; set; }

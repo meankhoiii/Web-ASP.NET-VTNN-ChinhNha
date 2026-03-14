@@ -10,6 +10,7 @@ public class CreateProductRequest
     public string? TechnicalInfo { get; set; }
     public int CategoryId { get; set; }
     public int? SupplierId { get; set; }
+    public decimal ImportPrice { get; set; }
     public decimal BasePrice { get; set; }
     public decimal? SalePrice { get; set; }
     public int StockQuantity { get; set; }

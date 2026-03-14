@@ -111,6 +111,15 @@
         <div class="col-lg-5">
             <div class="form-section bg-light border-danger">
                 <div class="form-section-title bg-danger"><i class="bi bi-currency-dollar me-2"></i> ĐỊNH GIÁ & THEO DÕI SỐ LƯỢNG KHO</div>
+
+                <div class="mb-4">
+                    <label asp-for="ImportPrice" class="form-label text-secondary">Ghi Giá Nhập (Tiền VNĐ):</label>
+                    <div class="input-group input-group-lg">
+                        <input asp-for="ImportPrice" class="form-control fw-bold fs-4" type="number" step="1" />
+                        <span class="input-group-text bg-secondary text-white fw-bold">VNĐ</span>
+                    </div>
+                    <span asp-validation-for="ImportPrice" class="text-danger fw-bold fs-5 mt-1 d-block"></span>
+                </div>
                 
                 <div class="mb-4">
                     <label asp-for="BasePrice" class="form-label text-danger">Ghi Giá Bán Mặc Định (Tiền VNĐ):</label>

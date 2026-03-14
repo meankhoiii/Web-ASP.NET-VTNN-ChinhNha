@@ -16,6 +16,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.SKU).IsUnique().HasFilter("[SKU] IS NOT NULL");
 
         builder.Property(p => p.ShortDescription).HasMaxLength(500);
+        builder.Property(p => p.ImportPrice).HasColumnType("decimal(18,2)");
         builder.Property(p => p.BasePrice).HasColumnType("decimal(18,2)");
         builder.Property(p => p.SalePrice).HasColumnType("decimal(18,2)");
         builder.Property(p => p.Weight).HasColumnType("decimal(10,2)");

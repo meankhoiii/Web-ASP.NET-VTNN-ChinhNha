@@ -33,6 +33,10 @@ public class ProductFormViewModel
     [Display(Name = "Nhà cung cấp")]
     public int? SupplierId { get; set; }
     
+    [Required(ErrorMessage = "Giá nhập là bắt buộc")]
+    [Display(Name = "Giá nhập (VND)")]
+    public decimal ImportPrice { get; set; }
+
     [Required(ErrorMessage = "Giá cơ bản là bắt buộc")]
     [Display(Name = "Giá bán (VND)")]
     public decimal BasePrice { get; set; }

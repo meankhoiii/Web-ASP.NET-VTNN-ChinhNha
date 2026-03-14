@@ -18,6 +18,7 @@ public class Product : BaseEntity, IAggregateRoot
     public int? SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
 
+    public decimal ImportPrice { get; set; }
     public decimal BasePrice { get; set; }
     public decimal? SalePrice { get; set; }
     public int StockQuantity { get; set; } = 0;

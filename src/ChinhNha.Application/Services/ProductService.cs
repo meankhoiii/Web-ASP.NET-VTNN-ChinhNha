@@ -82,6 +82,7 @@ public class ProductService : IProductService
             TechnicalInfo = request.TechnicalInfo,
             CategoryId = request.CategoryId,
             SupplierId = request.SupplierId,
+            ImportPrice = request.ImportPrice,
             BasePrice = request.BasePrice,
             SalePrice = request.SalePrice,
             StockQuantity = request.StockQuantity,
@@ -132,6 +133,7 @@ public class ProductService : IProductService
         product.TechnicalInfo = request.TechnicalInfo;
         product.CategoryId = request.CategoryId;
         product.SupplierId = request.SupplierId;
+        product.ImportPrice = request.ImportPrice;
         product.BasePrice = request.BasePrice;
         product.SalePrice = request.SalePrice;
         product.StockQuantity = request.StockQuantity;

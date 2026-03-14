@@ -72,6 +72,15 @@
                     <div class="card bg-light border-0 mb-3">
                         <div class="card-body">
                             <h5 class="card-title fw-bold border-bottom pb-2">Giá & Tồn kho</h5>
+
+                            <div class="mb-3">
+                                <label asp-for="ImportPrice" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="ImportPrice" class="form-control" type="number" step="1" />
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                                <span asp-validation-for="ImportPrice" class="text-danger small"></span>
+                            </div>
                             
                             <div class="mb-3">
                                 <label asp-for="BasePrice" class="form-label"></label>

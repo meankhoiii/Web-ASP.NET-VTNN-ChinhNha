@@ -30,7 +30,7 @@
                 <th scope="col">Tên sản phẩm</th>
                 <th scope="col">Mã SKU</th>
                 <th scope="col">Danh mục</th>
-                <th scope="col">Giá bán</th>
+                <th scope="col">Giá nhập / Giá bán / Sale</th>
                 <th scope="col">Tồn kho</th>
                 <th scope="col" class="text-center">Active</th>
                 <th scope="col" class="text-end">Hành động</th>
@@ -51,7 +51,11 @@
                     </td>
                     <td>@(p.SKU ?? "-")</td>
                     <td>@p.CategoryName</td>
-                    <td>@p.BasePrice.ToString("N0")₫</td>
+                    <td>
+                        <div class="small text-muted">Nhập: @p.ImportPrice.ToString("N0")₫</div>
+                        <div class="fw-bold">Bán: @p.BasePrice.ToString("N0")₫</div>
+                        <div class="text-warning-emphasis">Sale: @(p.SalePrice?.ToString("N0") + "₫" ?? "-")</div>
+                    </td>
                     <td>
                         @if (p.StockQuantity <= p.MinStockLevel)
                         {
