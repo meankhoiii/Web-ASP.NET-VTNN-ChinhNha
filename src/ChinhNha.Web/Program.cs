@@ -6,6 +6,7 @@ using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
+using ChinhNha.Web.Areas.Admin.Services;
 using ChinhNha.Web.Middleware;
 using ChinhNha.Web.Hubs;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -102,6 +103,7 @@ builder.Services.AddScoped<IPasswordHashService, Pbkdf2PasswordHashService>();
 builder.Services.AddScoped<IAiModelSelectionService, AiModelSelectionService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddScoped<IProductRecommendationService, ProductRecommendationService>();
+builder.Services.AddScoped<IDatabaseBackupService, SqlServerDatabaseBackupService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 

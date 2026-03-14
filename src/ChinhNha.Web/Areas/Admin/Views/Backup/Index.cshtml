@@ -1,0 +1,109 @@
+@model ChinhNha.Web.Areas.Admin.Models.DatabaseBackupViewModel
+
+@{
+    ViewData["Title"] = "Sao lưu và khôi phục";
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">Sao lưu và khôi phục dữ liệu</h1>
+            <p class="text-muted mb-0">Thư mục sao lưu: <code>@Model.BackupDirectory</code></p>
+        </div>
+        <form asp-action="CreateBackup" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-download me-1"></i>Tạo bản sao lưu mới
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success">@success</div>
+    }
+
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="alert alert-warning">
+        <strong>Lưu ý quan trọng:</strong> Khi khôi phục, hệ thống luôn tạo một bản sao lưu an toàn mới trước khi thực hiện khôi phục.
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Danh sách bản sao lưu</h5>
+        </div>
+        <div class="card-body">
+            @if (!Model.Backups.Any())
+            {
+                <div class="text-muted">Chưa có bản sao lưu nào.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Tên file</th>
+                                <th>Thời gian tạo</th>
+                                <th>Kích thước</th>
+                                <th>Loại</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var backup in Model.Backups)
+                            {
+                                <tr>
+                                    <td><code>@backup.FileName</code></td>
+                                    <td>@backup.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                    <td>@FormatSize(backup.FileSizeBytes)</td>
+                                    <td>
+                                        @if (backup.IsPreRestoreBackup)
+                                        {
+                                            <span class="badge text-bg-secondary">An toàn trước khôi phục</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-primary">Thủ công/Hệ thống</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-action="Restore" method="post" class="d-inline"
+                                              onsubmit="return confirm('Khôi phục từ bản này? Hệ thống sẽ tạo một bản sao lưu mới trước khi khôi phục.');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="backupFileName" value="@backup.FileName" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Khôi phục
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string FormatSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB"];
+        double size = bytes;
+        var unit = 0;
+
+        while (size >= 1024 && unit < units.Length - 1)
+        {
+            size /= 1024;
+            unit++;
+        }
+
+        return $"{size:0.##} {units[unit]}";
+    }
+}

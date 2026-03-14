@@ -241,6 +241,9 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Audit" ? "active" : "")" href="/Admin/Audit">
             <i class="bi bi-shield-check text-dark"></i> Nhật ký hệ thống
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Backup" ? "active" : "")" href="/Admin/Backup">
+            <i class="bi bi-hdd-stack text-secondary"></i> Sao lưu và khôi phục
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Kinh doanh</span>
