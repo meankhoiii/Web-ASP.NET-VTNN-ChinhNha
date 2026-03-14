@@ -36,8 +36,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading audit logs");
-            return BadRequest("Error loading audit logs");
+            _logger.LogError(ex, "Loi khi tai nhat ky he thong");
+            return BadRequest("Không thể tải nhật ký hệ thống.");
         }
     }
 
@@ -54,8 +54,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading user audit logs");
-            return BadRequest("Error loading logs");
+            _logger.LogError(ex, "Loi khi tai nhat ky theo nguoi dung");
+            return BadRequest("Không thể tải nhật ký theo người dùng.");
         }
     }
 
@@ -72,8 +72,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading action audit logs");
-            return BadRequest("Error loading logs");
+            _logger.LogError(ex, "Loi khi tai nhat ky theo thao tac");
+            return BadRequest("Không thể tải nhật ký theo thao tác.");
         }
     }
 
@@ -91,8 +91,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading entity audit logs");
-            return BadRequest("Error loading logs");
+            _logger.LogError(ex, "Loi khi tai nhat ky theo doi tuong");
+            return BadRequest("Không thể tải nhật ký theo đối tượng.");
         }
     }
 
@@ -130,8 +130,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error filtering audit logs");
-            return BadRequest("Error filtering logs");
+            _logger.LogError(ex, "Loi khi loc nhat ky he thong");
+            return BadRequest("Không thể lọc nhật ký hệ thống.");
         }
     }
 
@@ -148,8 +148,8 @@ public class AuditController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading audit log details");
-            return BadRequest("Error loading details");
+            _logger.LogError(ex, "Loi khi tai chi tiet nhat ky");
+            return BadRequest("Không thể tải chi tiết nhật ký.");
         }
     }
 
@@ -159,12 +159,12 @@ public class AuditController : Controller
         try
         {
             // TODO: Implement CSV export
-            return BadRequest("Export not yet implemented");
+            return BadRequest("Chức năng xuất CSV đang được phát triển.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error exporting audit logs");
-            return BadRequest("Error exporting logs");
+            _logger.LogError(ex, "Loi khi xuat nhat ky he thong");
+            return BadRequest("Không thể xuất nhật ký hệ thống.");
         }
     }
 }

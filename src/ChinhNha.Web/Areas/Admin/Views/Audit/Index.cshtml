@@ -2,7 +2,7 @@
 @model IEnumerable<AuditLogDto>
 
 @{
-    ViewData["Title"] = "Audit Logs";
+    ViewData["Title"] = "Nhật ký hệ thống";
     var stats = (AuditLogStatsDto?)ViewBag.AuditStats;
 }
 
@@ -146,7 +146,7 @@
 
 <div class="audit-container">
     <h1 class="fw-bold mb-4">
-        <i class="bi bi-database-check"></i> Audit Logs
+        <i class="bi bi-database-check"></i> Nhật ký hệ thống
     </h1>
 
     @if (stats != null)
@@ -154,15 +154,15 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">@stats.TotalAuditLogs</div>
-                <div class="stat-label">Total Logs</div>
+                <div class="stat-label">Tổng số log</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" style="color: #4CAF50;">@stats.SuccessfulActions</div>
-                <div class="stat-label">Successful</div>
+                <div class="stat-label">Thành công</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" style="color: #f44336;">@stats.FailedActions</div>
-                <div class="stat-label">Failed</div>
+                <div class="stat-label">Thất bại</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value">
@@ -172,34 +172,34 @@
                     }
                     else
                     {
-                        <span>N/A</span>
+                        <span>Không có</span>
                     }
                 </div>
-                <div class="stat-label">Success Rate</div>
+                <div class="stat-label">Tỷ lệ thành công</div>
             </div>
         </div>
 
         <div class="filter-section">
-            <h5 class="fw-bold mb-3">Filter Logs</h5>
+            <h5 class="fw-bold mb-3">Bộ lọc nhật ký</h5>
             <form method="get" action="/Admin/Audit/Filter" class="filter-form">
-                <input type="date" name="fromDate" class="form-control" placeholder="From Date" />
-                <input type="date" name="toDate" class="form-control" placeholder="To Date" />
+                <input type="date" name="fromDate" class="form-control" placeholder="Từ ngày" />
+                <input type="date" name="toDate" class="form-control" placeholder="Đến ngày" />
                 <select name="action" class="form-control">
-                    <option value="">Select Action</option>
+                    <option value="">Chọn thao tác</option>
                     @foreach (var actionEntry in stats.ActionCounts)
                     {
                         <option value="@actionEntry.Key">@actionEntry.Key (@actionEntry.Value)</option>
                     }
                 </select>
                 <select name="entityType" class="form-control">
-                    <option value="">Select Entity Type</option>
+                    <option value="">Chọn loại đối tượng</option>
                     @foreach (var entityEntry in stats.EntityTypeCounts)
                     {
                         <option value="@entityEntry.Key">@entityEntry.Key (@entityEntry.Value)</option>
                     }
                 </select>
                 <button type="submit" class="btn-filter" style="grid-column: 1 / -1;">
-                    <i class="bi bi-funnel"></i> Apply Filter
+                    <i class="bi bi-funnel"></i> Áp dụng bộ lọc
                 </button>
             </form>
         </div>
@@ -210,14 +210,14 @@
         <table class="log-table">
             <thead>
                 <tr>
-                    <th>Date/Time</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Entity Type</th>
-                    <th>Entity ID</th>
-                    <th>Status</th>
-                    <th>IP Address</th>
-                    <th>Details</th>
+                    <th>Ngày giờ</th>
+                    <th>Người dùng</th>
+                    <th>Thao tác</th>
+                    <th>Đối tượng</th>
+                    <th>ID đối tượng</th>
+                    <th>Trạng thái</th>
+                    <th>Địa chỉ IP</th>
+                    <th>Chi tiết</th>
                 </tr>
             </thead>
             <tbody>
@@ -251,13 +251,13 @@
                             @if (log.IsSuccessful)
                             {
                                 <span class="status-success">
-                                    <i class="bi bi-check-circle"></i> Success
+                                    <i class="bi bi-check-circle"></i> Thành công
                                 </span>
                             }
                             else
                             {
                                 <span class="status-failed">
-                                    <i class="bi bi-x-circle"></i> Failed
+                                    <i class="bi bi-x-circle"></i> Thất bại
                                 </span>
                             }
                         </td>
@@ -273,7 +273,7 @@
                         </td>
                         <td>
                             <a href="/Admin/Audit/Details/@log.Id" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> View
+                                <i class="bi bi-eye"></i> Xem
                             </a>
                         </td>
                     </tr>
@@ -286,8 +286,8 @@
             <div class="pagination-custom">
                 @if (ViewBag.CurrentPage > 1)
                 {
-                    <a href="/Admin/Audit?page=1">First</a>
-                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage - 1)">Previous</a>
+                    <a href="/Admin/Audit?page=1">Đầu</a>
+                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage - 1)">Trước</a>
                 }
 
                 @for (int i = 1; i <= ViewBag.TotalPages; i++)
@@ -304,8 +304,8 @@
 
                 @if (ViewBag.CurrentPage < ViewBag.TotalPages)
                 {
-                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage + 1)">Next</a>
-                    <a href="/Admin/Audit?page=@(ViewBag.TotalPages)">Last</a>
+                    <a href="/Admin/Audit?page=@(ViewBag.CurrentPage + 1)">Sau</a>
+                    <a href="/Admin/Audit?page=@(ViewBag.TotalPages)">Cuối</a>
                 }
             </div>
         }
@@ -313,7 +313,7 @@
     else
     {
         <div class="alert alert-info text-center">
-            <i class="bi bi-info-circle-fill"></i> No audit logs found.
+            <i class="bi bi-info-circle-fill"></i> Chưa có dữ liệu nhật ký.
         </div>
     }
 </div>

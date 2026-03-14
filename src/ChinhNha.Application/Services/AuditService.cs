@@ -52,17 +52,13 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLogDto>> GetAuditLogsAsync(int pageNumber = 1, int pageSize = 50)
     {
-        var allLogs = await _auditRepository.ListAllAsync();
-        var paginated = allLogs
-            .OrderByDescending(l => l.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+        var paginated = (await _auditRepository.GetAuditLogsAsync(pageNumber, pageSize)).ToList();
+        var userMap = await BuildUserMapAsync(paginated);
 
         var result = new List<AuditLogDto>();
         foreach (var log in paginated)
         {
-            var user = await _userService.GetUserByIdAsync(log.UserId);
+            userMap.TryGetValue(log.UserId, out var user);
             result.Add(MapToDto(log, user));
         }
 
@@ -79,12 +75,13 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLogDto>> GetAuditLogsByDateRangeAsync(DateTime from, DateTime to, int pageNumber = 1, int pageSize = 50)
     {
-        var logs = await _auditRepository.GetAuditLogsByDateRangeAsync(from, to, pageNumber, pageSize);
+        var logs = (await _auditRepository.GetAuditLogsByDateRangeAsync(from, to, pageNumber, pageSize)).ToList();
+        var userMap = await BuildUserMapAsync(logs);
         var result = new List<AuditLogDto>();
 
         foreach (var log in logs)
         {
-            var user = await _userService.GetUserByIdAsync(log.UserId);
+            userMap.TryGetValue(log.UserId, out var user);
             result.Add(MapToDto(log, user));
         }
 
@@ -93,12 +90,13 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLogDto>> GetAuditLogsByActionAsync(string action, int pageNumber = 1, int pageSize = 50)
     {
-        var logs = await _auditRepository.GetAuditLogsByActionAsync(action, pageNumber, pageSize);
+        var logs = (await _auditRepository.GetAuditLogsByActionAsync(action, pageNumber, pageSize)).ToList();
+        var userMap = await BuildUserMapAsync(logs);
         var result = new List<AuditLogDto>();
 
         foreach (var log in logs)
         {
-            var user = await _userService.GetUserByIdAsync(log.UserId);
+            userMap.TryGetValue(log.UserId, out var user);
             result.Add(MapToDto(log, user));
         }
 
@@ -107,12 +105,13 @@ public class AuditService : IAuditService
 
     public async Task<IEnumerable<AuditLogDto>> GetAuditLogsByEntityAsync(string entityType, int? entityId = null, int pageNumber = 1, int pageSize = 50)
     {
-        var logs = await _auditRepository.GetAuditLogsByEntityAsync(entityType, entityId, pageNumber, pageSize);
+        var logs = (await _auditRepository.GetAuditLogsByEntityAsync(entityType, entityId, pageNumber, pageSize)).ToList();
+        var userMap = await BuildUserMapAsync(logs);
         var result = new List<AuditLogDto>();
 
         foreach (var log in logs)
         {
-            var user = await _userService.GetUserByIdAsync(log.UserId);
+            userMap.TryGetValue(log.UserId, out var user);
             result.Add(MapToDto(log, user));
         }
 
@@ -153,7 +152,7 @@ public class AuditService : IAuditService
         {
             Id = log.Id,
             UserId = log.UserId,
-            UserName = user?.FullName ?? "Unknown User",
+            UserName = user?.FullName ?? "Người dùng không xác định",
             UserEmail = user?.Email ?? string.Empty,
             Action = log.Action,
             EntityType = log.EntityType,
@@ -167,5 +166,16 @@ public class AuditService : IAuditService
             IsSuccessful = log.IsSuccessful,
             ErrorMessage = log.ErrorMessage
         };
+    }
+
+    private async Task<Dictionary<string, AppUser?>> BuildUserMapAsync(IEnumerable<AuditLog> logs)
+    {
+        var map = new Dictionary<string, AppUser?>(StringComparer.Ordinal);
+        foreach (var userId in logs.Select(l => l.UserId).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct())
+        {
+            map[userId] = await _userService.GetUserByIdAsync(userId);
+        }
+
+        return map;
     }
 }

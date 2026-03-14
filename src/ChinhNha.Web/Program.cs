@@ -6,6 +6,7 @@ using ChinhNha.Domain.Interfaces;
 using ChinhNha.Infrastructure.Data;
 using ChinhNha.Infrastructure.Repositories;
 using ChinhNha.Infrastructure.Services;
+using ChinhNha.Web.Middleware;
 using ChinhNha.Web.Hubs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -145,6 +146,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AdminAuditLoggingMiddleware>();
 
 // SignalR Hubs
 app.MapHub<NotificationHub>("/hubs/notification");

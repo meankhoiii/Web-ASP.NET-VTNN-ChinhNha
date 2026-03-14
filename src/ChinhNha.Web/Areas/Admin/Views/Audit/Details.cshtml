@@ -3,11 +3,11 @@
 @model AuditLogDto
 
 @{
-    ViewData["Title"] = "Audit Log Details";
+    ViewData["Title"] = "Chi tiết nhật ký hệ thống";
     
     if (Model == null)
     {
-        <div class="alert alert-danger">Audit log not found</div>
+        <div class="alert alert-danger">Không tìm thấy bản ghi nhật ký.</div>
         return;
     }
     
@@ -146,42 +146,42 @@
 <div class="detail-container">
     <div class="back-link">
         <a href="/Admin/Audit" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Back to Logs
+            <i class="bi bi-arrow-left"></i> Quay lại nhật ký
         </a>
     </div>
 
     <h1 class="fw-bold mb-4">
-        <i class="bi bi-file-text"></i> Audit Log Details
+        <i class="bi bi-file-text"></i> Chi tiết nhật ký hệ thống
     </h1>
 
     <div class="detail-card">
         <h5>
-            <i class="bi bi-info-circle"></i> Basic Information
+            <i class="bi bi-info-circle"></i> Thông tin cơ bản
         </h5>
 
         <div class="detail-row">
-            <div class="detail-label">Log ID:</div>
+            <div class="detail-label">Mã log:</div>
             <div class="detail-value"><strong>@Model.Id</strong></div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">Timestamp:</div>
+            <div class="detail-label">Thời gian:</div>
             <div class="detail-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss.fff")</div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">Status:</div>
+            <div class="detail-label">Trạng thái:</div>
             <div class="detail-value">
                 @if (Model.IsSuccessful)
                 {
                     <span class="status-badge status-success">
-                        <i class="bi bi-check-circle"></i> Success
+                        <i class="bi bi-check-circle"></i> Thành công
                     </span>
                 }
                 else
                 {
                     <span class="status-badge status-failed">
-                        <i class="bi bi-x-circle"></i> Failed
+                        <i class="bi bi-x-circle"></i> Thất bại
                     </span>
                 }
             </div>
@@ -190,28 +190,28 @@
 
     <div class="detail-card">
         <h5>
-            <i class="bi bi-person"></i> User Information
+            <i class="bi bi-person"></i> Thông tin người dùng
         </h5>
 
         <div class="detail-row">
-            <div class="detail-label">User ID:</div>
+            <div class="detail-label">Mã người dùng:</div>
             <div class="detail-value"><strong>@Model.UserId</strong></div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">User Name:</div>
+            <div class="detail-label">Tên người dùng:</div>
             <div class="detail-value">@Model.UserName</div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">User Email:</div>
+            <div class="detail-label">Email:</div>
             <div class="detail-value">
                 <a href="mailto:@Model.UserEmail">@Model.UserEmail</a>
             </div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">IP Address:</div>
+            <div class="detail-label">Địa chỉ IP:</div>
             <div class="detail-value">
                 @if (!string.IsNullOrEmpty(Model.IPAddress))
                 {
@@ -219,13 +219,13 @@
                 }
                 else
                 {
-                    <span class="text-muted">Not recorded</span>
+                    <span class="text-muted">Không ghi nhận</span>
                 }
             </div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">User Agent:</div>
+            <div class="detail-label">Trình duyệt/thiết bị:</div>
             <div class="detail-value">
                 @if (!string.IsNullOrEmpty(Model.UserAgent))
                 {
@@ -233,7 +233,7 @@
                 }
                 else
                 {
-                    <span class="text-muted">Not recorded</span>
+                    <span class="text-muted">Không ghi nhận</span>
                 }
             </div>
         </div>
@@ -241,11 +241,11 @@
 
     <div class="detail-card">
         <h5>
-            <i class="bi bi-lightning-charge"></i> Action Information
+            <i class="bi bi-lightning-charge"></i> Thông tin thao tác
         </h5>
 
         <div class="detail-row">
-            <div class="detail-label">Action:</div>
+            <div class="detail-label">Thao tác:</div>
             <div class="detail-value">
                 <span class="badge" style="background-color: @GetActionColor(Model.Action); font-size: 1rem;">
                     @Model.Action
@@ -254,12 +254,12 @@
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">Entity Type:</div>
+            <div class="detail-label">Loại đối tượng:</div>
             <div class="detail-value"><strong>@Model.EntityType</strong></div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">Entity ID:</div>
+            <div class="detail-label">ID đối tượng:</div>
             <div class="detail-value">
                 @if (Model.EntityId.HasValue)
                 {
@@ -267,13 +267,13 @@
                 }
                 else
                 {
-                    <span class="text-muted">N/A</span>
+                    <span class="text-muted">Không có</span>
                 }
             </div>
         </div>
 
         <div class="detail-row">
-            <div class="detail-label">Description:</div>
+            <div class="detail-label">Mô tả:</div>
             <div class="detail-value">@Model.Description</div>
         </div>
     </div>
@@ -282,7 +282,7 @@
     {
         <div class="detail-card" style="border-color: #f44336;">
             <h5 style="color: #721C24;">
-                <i class="bi bi-exclamation-triangle"></i> Error Details
+                <i class="bi bi-exclamation-triangle"></i> Chi tiết lỗi
             </h5>
             <div class="error-box">
                 @Model.ErrorMessage
@@ -294,7 +294,7 @@
     {
         <div class="detail-card">
             <h5>
-                <i class="bi bi-arrow-left-right"></i> Value Changes
+                <i class="bi bi-arrow-left-right"></i> Thay đổi dữ liệu
             </h5>
 
             @if (oldValues.Count > 0 || newValues.Count > 0)
@@ -302,9 +302,9 @@
                 <table class="comparison-table">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">Field</th>
-                            <th style="width: 37.5%;">Old Value</th>
-                            <th style="width: 37.5%;">New Value</th>
+                            <th style="width: 25%;">Trường</th>
+                            <th style="width: 37.5%;">Giá trị cũ</th>
+                            <th style="width: 37.5%;">Giá trị mới</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -312,8 +312,8 @@
                             var allKeys = new HashSet<string>(oldValues.Keys.Union(newValues.Keys));
                             foreach (var key in allKeys)
                             {
-                                var oldVal = oldValues.ContainsKey(key) ? oldValues[key]?.ToString() : "(not set)";
-                                var newVal = newValues.ContainsKey(key) ? newValues[key]?.ToString() : "(not set)";
+                                var oldVal = oldValues.ContainsKey(key) ? oldValues[key]?.ToString() : "(chưa có)";
+                                var newVal = newValues.ContainsKey(key) ? newValues[key]?.ToString() : "(chưa có)";
 
                                 <tr>
                                     <td><strong>@key</strong></td>
@@ -327,25 +327,25 @@
             }
             else
             {
-                <p class="text-muted">No value changes recorded.</p>
+                <p class="text-muted">Không có thay đổi dữ liệu được ghi nhận.</p>
             }
         </div>
     }
 
     <div class="detail-card">
         <h5>
-            <i class="bi bi-code"></i> Raw JSON Data
+            <i class="bi bi-code"></i> Dữ liệu JSON gốc
         </h5>
 
         @if (!string.IsNullOrEmpty(Model.OldValues))
         {
-            <p class="fw-bold">Old Values:</p>
+            <p class="fw-bold">Giá trị cũ:</p>
             <div class="json-box">@Model.OldValues</div>
         }
 
         @if (!string.IsNullOrEmpty(Model.NewValues))
         {
-            <p class="fw-bold mt-3">New Values:</p>
+            <p class="fw-bold mt-3">Giá trị mới:</p>
             <div class="json-box">@Model.NewValues</div>
         }
     </div>

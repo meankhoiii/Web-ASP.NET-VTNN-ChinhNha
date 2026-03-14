@@ -2,6 +2,7 @@ using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Areas.Admin.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
@@ -21,15 +22,16 @@ public class RecommendationAnalyticsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(int days = 30, string? previewUserId = null, int previewLimit = 8)
+    public async Task<IActionResult> Index(int days = 30, int previewLimit = 8)
     {
         var safeDays = Math.Clamp(days, 1, 365);
         var safePreviewLimit = Math.Clamp(previewLimit, 1, 20);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var model = new RecommendationAnalyticsViewModel
         {
             Days = safeDays,
-            PreviewUserId = string.IsNullOrWhiteSpace(previewUserId) ? null : previewUserId,
+            PreviewUserId = currentUserId,
             PreviewLimit = safePreviewLimit
         };
 
@@ -52,16 +54,39 @@ public class RecommendationAnalyticsController : Controller
                     .Concat(model.TrendingRecommendations)
                     .GroupBy(x => x.RecommendationReason)
                     .OrderByDescending(g => g.Count())
-                    .ToDictionary(g => g.Key, g => g.Count());
+                    .ToDictionary(g => TranslateReason(g.Key), g => g.Count());
+            }
+            else
+            {
+                TempData["Error"] = "Không xác định được tài khoản đăng nhập để tạo dữ liệu gợi ý.";
             }
 
             return View(model);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading recommendation analytics");
-            TempData["Error"] = "Khong the tai thong ke recommendation. Vui long thu lai.";
+            _logger.LogError(ex, "Loi khi tai trang phan tich goi y san pham");
+            TempData["Error"] = "Không thể tải thống kê gợi ý sản phẩm. Vui lòng thử lại.";
             return View(model);
         }
+    }
+
+    private static string TranslateReason(string? reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            return "Khác";
+        }
+
+        return reason.Trim() switch
+        {
+            "Category" => "Cùng danh mục",
+            "Trending" => "Xu hướng",
+            "TopRated" => "Đánh giá cao",
+            "NewArrivals" => "Hàng mới",
+            "OnSale" => "Đang giảm giá",
+            "FrequentlyBoughtTogether" => "Thường mua kèm",
+            _ => reason
+        };
     }
 }
