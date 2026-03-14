@@ -53,7 +53,12 @@
 
                             <div class="mb-3">
                                 <label asp-for="ImageUrl" class="form-label fw-bold"></label>
-                                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                                <div class="input-group">
+                                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                                    <button type="button" class="btn btn-outline-secondary" onclick="CNMediaPicker.open('ImageUrl')">
+                                        <i class="bi bi-images"></i>
+                                    </button>
+                                </div>
                                 <div class="form-text">URL hình ảnh thu nhỏ đại diện.</div>
                             </div>
 
@@ -97,5 +102,19 @@
         document.addEventListener("DOMContentLoaded", function () {
             var easyMDE = new EasyMDE({ element: document.getElementById('Content') });
         });
+
+        window.CNMediaPicker = {
+            open: function (fieldId) {
+                const url = '/Admin/Media/Picker?fieldId=' + encodeURIComponent(fieldId);
+                window.open(url, 'cn-media-picker', 'width=1100,height=760');
+            },
+            pick: function (fieldId, value) {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.value = value;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        };
     </script>
 }

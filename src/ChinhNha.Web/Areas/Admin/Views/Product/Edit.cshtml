@@ -58,7 +58,12 @@
                     
                     <div class="mb-3">
                         <label asp-for="ImageUrl" class="form-label fw-bold"></label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        <div class="input-group">
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                            <button type="button" class="btn btn-outline-secondary" onclick="CNMediaPicker.open('ImageUrl')">
+                                <i class="bi bi-images"></i>
+                            </button>
+                        </div>
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
                             <div class="mt-2">
@@ -158,4 +163,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        window.CNMediaPicker = {
+            open: function (fieldId) {
+                const url = '/Admin/Media/Picker?fieldId=' + encodeURIComponent(fieldId);
+                window.open(url, 'cn-media-picker', 'width=1100,height=760');
+            },
+            pick: function (fieldId, value) {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.value = value;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        };
+    </script>
 }

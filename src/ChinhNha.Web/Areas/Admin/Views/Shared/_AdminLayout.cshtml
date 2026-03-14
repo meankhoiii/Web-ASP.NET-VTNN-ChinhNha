@@ -283,6 +283,9 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlogCategory" ? "active" : "")" href="/Admin/BlogCategory">
             <i class="bi bi-bookmarks text-primary"></i> Danh mục bài viết
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Media" ? "active" : "")" href="/Admin/Media">
+            <i class="bi bi-images text-warning"></i> Thư viện media
+        </a>
     </aside>
 
     <!-- MAIN CONTENT -->
