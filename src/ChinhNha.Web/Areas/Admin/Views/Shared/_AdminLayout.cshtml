@@ -253,6 +253,12 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" href="/Admin/Product">
             <i class="bi bi-boxes text-primary"></i> Sản phẩm
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ProductCategory" ? "active" : "")" href="/Admin/ProductCategory">
+            <i class="bi bi-diagram-3 text-info"></i> Danh mục sản phẩm
+        </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Supplier" ? "active" : "")" href="/Admin/Supplier">
+            <i class="bi bi-building text-secondary"></i> Nhà cung cấp
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Kho hàng</span>
@@ -273,6 +279,9 @@
         <span class="sidebar-section-label">Nội dung</span>
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Blog" ? "active" : "")" href="/Admin/Blog">
             <i class="bi bi-journal-richtext text-info"></i> Bài viết kỹ thuật
+        </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlogCategory" ? "active" : "")" href="/Admin/BlogCategory">
+            <i class="bi bi-bookmarks text-primary"></i> Danh mục bài viết
         </a>
     </aside>
 
