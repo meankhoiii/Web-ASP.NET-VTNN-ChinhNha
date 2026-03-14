@@ -235,9 +235,6 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" href="/Admin/Dashboard">
             <i class="bi bi-speedometer2 text-success"></i> Bảng điều khiển
         </a>
-        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RecommendationAnalytics" ? "active" : "")" href="/Admin/RecommendationAnalytics">
-            <i class="bi bi-graph-up-arrow text-primary"></i> Phân tích gợi ý
-        </a>
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Audit" ? "active" : "")" href="/Admin/Audit">
             <i class="bi bi-shield-check text-dark"></i> Nhật ký hệ thống
         </a>
@@ -264,6 +261,12 @@
         <span class="sidebar-section-label">Kho hàng</span>
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "InventoryManagement" ? "active" : "")" href="/Admin/InventoryManagement">
             <i class="bi bi-truck text-warning"></i> Nhập / Trả kho
+        </a>
+
+        <hr class="sidebar-divider" />
+        <span class="sidebar-section-label">AI</span>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RecommendationAnalytics" ? "active" : "")" href="/Admin/RecommendationAnalytics">
+            <i class="bi bi-graph-up-arrow text-primary"></i> Phân tích gợi ý
         </a>
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Inventory" ? "active" : "")" href="/Admin/Inventory">
             <i class="bi bi-robot" style="color:#6f42c1;"></i> Dự báo AI
