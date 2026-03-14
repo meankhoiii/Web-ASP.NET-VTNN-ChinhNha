@@ -13,6 +13,7 @@ public class DashboardViewModel
     public List<ForecastMiniChartViewModel> ForecastMiniCharts { get; set; } = new();
     public List<PeriodMetricViewModel> PeriodMetrics { get; set; } = new();
     public List<string> AdminAlerts { get; set; } = new();
+    public DashboardFilterViewModel Filter { get; set; } = new();
 
     public DateTime GeneratedAt { get; set; } = DateTime.Now;
 }
@@ -62,4 +63,14 @@ public class PeriodMetricViewModel
     public int OrderCount { get; set; }
     public decimal Revenue { get; set; }
     public string RangeLabel { get; set; } = string.Empty;
+}
+
+public class DashboardFilterViewModel
+{
+    public string Preset { get; set; } = "30d";
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public string? OrderStatus { get; set; }
+    public string PaymentState { get; set; } = "all";
+    public string AppliedRangeLabel { get; set; } = string.Empty;
 }

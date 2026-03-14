@@ -16,6 +16,7 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         return await _dbContext.Carts
             .Include(c => c.CartItems)
             .ThenInclude(i => i.Product)
+            .ThenInclude(p => p.Images)
             .Include(c => c.CartItems)
             .ThenInclude(i => i.ProductVariant)
             .FirstOrDefaultAsync(c => c.Id == cartId);
@@ -26,6 +27,7 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         IQueryable<Cart> query = _dbContext.Carts
             .Include(c => c.CartItems)
             .ThenInclude(i => i.Product)
+            .ThenInclude(p => p.Images)
             .Include(c => c.CartItems)
             .ThenInclude(i => i.ProductVariant);
 

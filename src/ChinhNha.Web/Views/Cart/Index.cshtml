@@ -76,6 +76,31 @@
         border-radius: 4px;
     }
 
+    .qty-stepper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .qty-btn {
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--green-main);
+        background-color: #f4fff4;
+        color: var(--text-main);
+        border-radius: 6px;
+        font-size: 1.2rem;
+        font-weight: 900;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qty-btn:hover {
+        background-color: #e8f5e9;
+    }
+
     .btn-delete {
         background-color: var(--bg-main);
         color: var(--price-red);
@@ -163,7 +188,12 @@
                         </div>
                         <div class="col-md-2 text-center d-flex d-md-block justify-content-between mb-2 mb-md-0">
                             <span class="d-md-none fw-bold fs-4">Số Lượng: </span>
-                            <input type="number" class="qty-input" value="@item.Quantity" min="1" readonly />
+                            <form method="post" action="/Cart/UpdateQuantity" class="qty-stepper m-0">
+                                <input type="hidden" name="cartItemId" value="@item.Id" />
+                                <button type="submit" name="quantity" value="@(Math.Max(1, item.Quantity - 1))" class="qty-btn" aria-label="Giảm số lượng">-</button>
+                                <input type="number" class="qty-input" value="@item.Quantity" min="1" readonly aria-label="Số lượng hiện tại" />
+                                <button type="submit" name="quantity" value="@(item.Quantity + 1)" class="qty-btn" aria-label="Tăng số lượng">+</button>
+                            </form>
                         </div>
                         <div class="col-md-3 text-end d-flex d-md-block justify-content-between">
                             <span class="d-md-none fw-bold fs-4">Cộng: </span>

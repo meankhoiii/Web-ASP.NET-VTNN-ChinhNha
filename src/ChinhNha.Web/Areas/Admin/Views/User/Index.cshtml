@@ -160,8 +160,8 @@
 
 <form id="antiForgeryForm" method="post">@Html.AntiForgeryToken()</form>
 
-<partial name="_CreateModal" />
-<partial name="_EditModal" />
+<partial name="_CreateModal" model="new UserFormViewModel()" />
+<partial name="_EditModal" model="new UserFormViewModel()" />
 <div id="detailModalHost"></div>
 
 @section Scripts {

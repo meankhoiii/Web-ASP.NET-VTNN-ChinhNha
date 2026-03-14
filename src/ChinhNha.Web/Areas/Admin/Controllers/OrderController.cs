@@ -2,6 +2,7 @@ using ChinhNha.Application.Interfaces;
 using ChinhNha.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
@@ -16,10 +17,22 @@ public class OrderController : Controller
         _orderService = orderService;
     }
 
-    public async Task<IActionResult> Index(OrderStatus? status = null)
+    public async Task<IActionResult> Index(OrderStatus? status = null, string? searchTerm = null)
     {
         var orders = await _orderService.GetAllOrdersAsync(status);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var keyword = searchTerm.Trim();
+            orders = orders.Where(o =>
+                o.Id.ToString(CultureInfo.InvariantCulture).Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(o.ShippingName) && o.ShippingName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrWhiteSpace(o.ShippingPhone) && o.ShippingPhone.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
         ViewBag.CurrentStatus = status;
+        ViewBag.CurrentSearchTerm = searchTerm;
         return View(orders);
     }
 

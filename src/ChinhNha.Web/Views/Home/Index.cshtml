@@ -133,9 +133,34 @@
         color: #B71C1C;
         font-size: clamp(1.2rem, 3vw, 1.6rem);
         font-weight: 900;
-        margin: 8px 0;
+        margin: 4px 0 0;
         display: block;
+    }
+
+    .product-price-wrap {
         margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-height: 60px;
+    }
+
+    .product-price-old {
+        color: #757575;
+        font-size: clamp(0.85rem, 2.1vw, 1rem);
+        text-decoration: line-through;
+        font-weight: 700;
+    }
+
+    .product-discount-badge {
+        background: #d32f2f;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 2px 8px;
+        letter-spacing: 0.2px;
     }
 
     .btn-buy-now {
@@ -366,6 +391,14 @@
         {
             foreach (var product in Model.FeaturedProducts)
             {
+                var effectivePrice = (product.SalePrice.HasValue && product.SalePrice.Value > 0 && product.SalePrice.Value < product.BasePrice)
+                    ? product.SalePrice.Value
+                    : product.BasePrice;
+                var hasDiscount = effectivePrice < product.BasePrice;
+                var discountPercent = hasDiscount && product.BasePrice > 0
+                    ? (int)Math.Round((product.BasePrice - effectivePrice) * 100m / product.BasePrice)
+                    : 0;
+
                 <div class="col mb-2 mb-md-3">
                     <div class="product-box h-100" style="cursor: pointer;" onclick="window.location.href='/san-pham/@product.Slug'">
                         @if (product.Images != null && product.Images.Any(i => i.IsPrimary))
@@ -381,8 +414,20 @@
                         
                         <div class="px-1 pt-1 d-flex flex-column flex-grow-1">
                             <a href="/san-pham/@product.Slug" class="product-name">@product.Name</a>
-                            <span class="product-price">@product.BasePrice.ToString("N0")₫</span>
-                            <button onclick="event.stopPropagation(); addToCart(@product.Id)" class="btn-buy-now mt-auto">
+                            <div class="product-price-wrap">
+                                <span class="product-price">@effectivePrice.ToString("N0")₫</span>
+                                @if (hasDiscount)
+                                {
+                                    <span class="product-price-old">@product.BasePrice.ToString("N0")₫</span>
+                                    <span class="product-discount-badge">-@discountPercent%</span>
+                                }
+                            </div>
+                            <button type="button"
+                                    class="btn-buy-now mt-auto"
+                                    data-product-id="@product.Id"
+                                    data-product-slug="@product.Slug"
+                                    data-has-variants="@(product.HasVariants ? "true" : "false")"
+                                    onclick="buyNowFromButton(this, event)">
                                 <i class="bi bi-cart-plus-fill me-1"></i> MUA
                             </button>
                         </div>
@@ -519,6 +564,32 @@
             recordRecommendationInteraction(recommendationId, 'cart');
             if (typeof addToCart === 'function') {
                 addToCart(recommendedProductId, 1);
+            }
+        }
+
+        function buyNowFromButton(button, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            const productId = parseInt(button.dataset.productId || '0', 10);
+            const slug = button.dataset.productSlug || '';
+            const hasVariants = (button.dataset.hasVariants || '').toLowerCase() === 'true';
+
+            if (!productId) {
+                return;
+            }
+
+            if (hasVariants && slug) {
+                window.location.href = '/san-pham/' + encodeURIComponent(slug) + '?focus=variant#chon-bien-the';
+                return;
+            }
+
+            if (typeof addToCartAndGoCart === 'function') {
+                addToCartAndGoCart(productId, 1);
+            } else if (typeof addToCart === 'function') {
+                addToCart(productId, 1);
+                window.location.href = '/Cart';
             }
         }
 

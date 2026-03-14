@@ -138,11 +138,7 @@ public class OrderService : IOrderService
 
     public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync(OrderStatus? status = null)
     {
-        var orders = await _orderRepository.GetAllOrdersWithDetailsAsync();
-        if (status.HasValue)
-        {
-            orders = orders.Where(o => o.Status == status.Value);
-        }
+        var orders = await _orderRepository.GetAllOrdersWithDetailsAsync(status);
         return await MapOrderDtosAsync(orders);
     }
 

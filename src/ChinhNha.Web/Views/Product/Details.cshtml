@@ -13,7 +13,13 @@
         .ThenBy(v => v.Id)
         .ToList() ?? new List<ChinhNha.Application.DTOs.Products.ProductVariantDto>();
     var defaultVariant = activeVariants.FirstOrDefault();
-    var initialPrice = defaultVariant?.SalePrice ?? defaultVariant?.Price ?? Model.Product.SalePrice ?? Model.Product.BasePrice;
+    var initialBasePrice = defaultVariant?.Price ?? Model.Product.BasePrice;
+    var initialSalePrice = defaultVariant?.SalePrice ?? Model.Product.SalePrice;
+    var initialHasDiscount = initialSalePrice.HasValue && initialSalePrice.Value > 0 && initialSalePrice.Value < initialBasePrice;
+    var initialPrice = initialHasDiscount ? initialSalePrice!.Value : initialBasePrice;
+    var initialDiscountPercent = initialHasDiscount && initialBasePrice > 0
+        ? (int)Math.Round((initialBasePrice - initialSalePrice!.Value) * 100m / initialBasePrice)
+        : 0;
     var initialStock = defaultVariant?.StockQuantity ?? Model.Product.StockQuantity;
     var initialSku = defaultVariant?.SKU ?? Model.Product.SKU;
     var initialUnit = defaultVariant != null ? defaultVariant.VariantName : Model.Product.Unit;
@@ -62,12 +68,36 @@
         font-size: clamp(1.8rem, 5vw, 2.5rem);
         color: var(--price-red);
         font-weight: 900;
-        margin-bottom: 20px;
         background-color: #fce4e4;
         padding: 10px 20px;
         display: inline-block;
         border-radius: 8px;
         border: 2px solid var(--price-red);
+    }
+
+    .detail-price-wrap {
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .detail-price-old {
+        font-size: clamp(1.05rem, 3vw, 1.3rem);
+        color: #6c757d;
+        text-decoration: line-through;
+        font-weight: 700;
+    }
+
+    .detail-discount-badge {
+        background: #1b5e20;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 4px 10px;
+        white-space: nowrap;
     }
 
     .variant-picker {
@@ -99,6 +129,19 @@
         border-color: #2e7d32;
         box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
         background: #f5fff5;
+    }
+
+    .variant-focus-highlight {
+        animation: variantFocusPulse 1.2s ease-in-out 1;
+    }
+
+    #chon-bien-the {
+        scroll-margin-top: 140px;
+    }
+
+    @@keyframes variantFocusPulse {
+        0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.55); }
+        100% { box-shadow: 0 0 0 14px rgba(46, 125, 50, 0); }
     }
 
     .info-block {
@@ -254,6 +297,10 @@
             padding: 12px;
         }
 
+        .detail-price-wrap {
+            justify-content: center;
+        }
+
         .detail-actions-row {
             flex-direction: column;
             align-items: stretch;
@@ -316,7 +363,11 @@
         <h1 class="detail-title">@Model.Product.Name</h1>
         <div class="detail-sku">Mã hàng: <span id="productSku">SP-@initialSku</span></div>
         
-        <div class="detail-price"><span id="productPrice">@initialPrice.ToString("N0")</span> VNĐ</div>
+        <div class="detail-price-wrap">
+            <div class="detail-price"><span id="productPrice">@initialPrice.ToString("N0")</span> VNĐ</div>
+            <span id="productPriceOld" class="detail-price-old" style="@(initialHasDiscount ? string.Empty : "display:none;")">@initialBasePrice.ToString("N0") VNĐ</span>
+            <span id="productDiscountBadge" class="detail-discount-badge" style="@(initialHasDiscount ? string.Empty : "display:none;")">-@initialDiscountPercent%</span>
+        </div>
         
         <div class="info-block">
             <p><strong><i class="bi bi-tags-fill me-2"></i> Danh mục:</strong> @(Model.Product.CategoryName ?? "Đang cập nhật")</p>
@@ -328,16 +379,18 @@
         <div class="p-3 p-md-4 border border-3 border-warning rounded" style="background-color: #fff9e6; overflow: visible;">
             @if (activeVariants.Any())
             {
-                <div class="fs-4 fw-bold mb-3">CHỌN BIẾN THỂ:</div>
-                <div class="variant-picker">
+                <div id="chon-bien-the">
+                    <div class="fs-4 fw-bold mb-3">CHỌN BIẾN THỂ:</div>
+                    <div class="variant-picker">
                     @foreach (var variant in activeVariants)
                     {
-                        var isActiveVariant = variant.Id == defaultVariant?.Id;
                         var variantEffectivePrice = variant.SalePrice ?? variant.Price;
                         <button type="button"
-                                class="variant-option @(isActiveVariant ? "active" : string.Empty)"
+                                class="variant-option"
                                 data-variant-id="@variant.Id"
-                                data-price="@variantEffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            data-price="@variantEffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            data-base-price="@variant.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            data-sale-price="@(variant.SalePrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
                                 data-stock="@variant.StockQuantity"
                                 data-sku="@variant.SKU"
                                 data-name="@variant.VariantName"
@@ -346,6 +399,7 @@
                             <small>@variantEffectivePrice.ToString("N0") VNĐ</small>
                         </button>
                     }
+                    </div>
                 </div>
             }
 
@@ -484,11 +538,29 @@
 @section Scripts {
     <script>
         const productId = @Model.Product.Id;
-        let selectedVariantId = @(defaultVariant?.Id ?? 0);
-        const productBasePrice = @((Model.Product.SalePrice ?? Model.Product.BasePrice).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        let selectedVariantId = null;
+        const hasVariantOptions = @activeVariants.Count > 0;
+        const productBasePrice = @(Model.Product.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture));
         const productBaseStock = @Model.Product.StockQuantity;
         const productBaseSku = '@(Model.Product.SKU ?? string.Empty)';
         const productBaseUnit = '@(Model.Product.Unit ?? string.Empty)';
+
+        function focusVariantSelection() {
+            const variantSection = document.getElementById('chon-bien-the');
+            if (!variantSection) {
+                return;
+            }
+
+            const header = document.querySelector('.main-navbar.sticky-top');
+            const headerOffset = header ? header.getBoundingClientRect().height + 16 : 96;
+            const top = Math.max(0, window.scrollY + variantSection.getBoundingClientRect().top - headerOffset);
+
+            window.scrollTo({ top: top, behavior: 'smooth' });
+            variantSection.classList.add('variant-focus-highlight');
+            setTimeout(function () {
+                variantSection.classList.remove('variant-focus-highlight');
+            }, 1400);
+        }
 
         function setMainImage(imageUrl, thumbEl) {
             const mainImage = document.getElementById('mainProductImage');
@@ -511,14 +583,48 @@
             }
         }
 
-        function parseVariantPrice(rawValue) {
-            if (!rawValue) {
-                return Number(productBasePrice) || 0;
+        function parseVariantPrice(rawValue, fallbackValue = 0) {
+            if (rawValue === undefined || rawValue === null || rawValue === '') {
+                return Number(fallbackValue) || 0;
             }
 
-            const normalized = rawValue.replace(/\s/g, '').replace(',', '.');
+            const normalized = String(rawValue).replace(/\s/g, '').replace(',', '.');
             const parsed = Number(normalized);
-            return Number.isNaN(parsed) ? (Number(productBasePrice) || 0) : parsed;
+            return Number.isNaN(parsed) ? (Number(fallbackValue) || 0) : parsed;
+        }
+
+        function resolvePriceState(basePrice, salePrice) {
+            const safeBase = Number(basePrice) > 0 ? Number(basePrice) : 0;
+            const safeSale = Number(salePrice) > 0 ? Number(salePrice) : 0;
+            const hasDiscount = safeSale > 0 && safeSale < safeBase;
+            const effective = hasDiscount ? safeSale : safeBase;
+            const discountPercent = hasDiscount && safeBase > 0
+                ? Math.round(((safeBase - safeSale) * 100) / safeBase)
+                : 0;
+
+            return {
+                base: safeBase,
+                effective: effective,
+                hasDiscount: hasDiscount,
+                discountPercent: discountPercent
+            };
+        }
+
+        function renderPriceState(priceState) {
+            document.getElementById('productPrice').textContent = new Intl.NumberFormat('vi-VN').format(priceState.effective);
+
+            const priceOld = document.getElementById('productPriceOld');
+            const discountBadge = document.getElementById('productDiscountBadge');
+
+            if (priceState.hasDiscount) {
+                priceOld.textContent = new Intl.NumberFormat('vi-VN').format(priceState.base) + ' VNĐ';
+                discountBadge.textContent = '-' + priceState.discountPercent + '%';
+                priceOld.style.display = '';
+                discountBadge.style.display = '';
+            } else {
+                priceOld.style.display = 'none';
+                discountBadge.style.display = 'none';
+            }
         }
 
         function selectVariant(button) {
@@ -529,12 +635,13 @@
             button.classList.add('active');
             selectedVariantId = parseInt(button.dataset.variantId || '0');
 
-            const price = parseVariantPrice(button.dataset.price);
+            const basePrice = parseVariantPrice(button.dataset.basePrice, Number(productBasePrice) || 0);
+            const salePrice = parseVariantPrice(button.dataset.salePrice, 0);
             const stock = parseInt(button.dataset.stock || productBaseStock, 10);
             const sku = button.dataset.sku || productBaseSku;
             const name = button.dataset.name || productBaseUnit;
 
-            document.getElementById('productPrice').textContent = new Intl.NumberFormat('vi-VN').format(price);
+            renderPriceState(resolvePriceState(basePrice, salePrice));
             document.getElementById('productStock').textContent = stock;
             document.getElementById('productSku').textContent = 'SP-' + sku;
             document.getElementById('productUnit').textContent = name;
@@ -547,12 +654,20 @@
         }
 
         function addToCartDetails(productId) {
-            let qty = parseInt(document.getElementById('qty').value);
-            if (typeof addToCart === "function") {
-                addToCart(productId, qty, selectedVariantId || null);
-                if (typeof showToast === "function") {
-                    showToast("Thành công", "Đã thêm " + qty + " sản phẩm vào giỏ hàng.");
+            if (hasVariantOptions && !selectedVariantId) {
+                focusVariantSelection();
+                if (typeof showToast === 'function') {
+                    showToast('Lưu ý', 'Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.', 'warning');
                 }
+                return;
+            }
+
+            let qty = parseInt(document.getElementById('qty').value);
+            if (typeof addToCartAndGoCart === "function") {
+                addToCartAndGoCart(productId, qty, selectedVariantId || null);
+            } else if (typeof addToCart === "function") {
+                addToCart(productId, qty, selectedVariantId || null);
+                window.location.href = '/Cart';
             }
         }
 
@@ -641,6 +756,12 @@
         document.addEventListener('DOMContentLoaded', function () {
             loadSimilarProducts();
             loadFrequentlyBoughtTogether();
+
+            const params = new URLSearchParams(window.location.search);
+            const focusVariant = params.get('focus') === 'variant' || window.location.hash === '#chon-bien-the';
+            if (focusVariant) {
+                focusVariantSelection();
+            }
         });
     </script>
 }

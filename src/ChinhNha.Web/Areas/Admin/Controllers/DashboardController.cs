@@ -25,35 +25,131 @@ public class DashboardController : Controller
         _forecastService = forecastService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(
+        string preset = "30d",
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        string? orderStatus = null,
+        string paymentState = "all")
     {
         // Avoid concurrent queries on the same scoped DbContext.
-        var orders = (await _orderService.GetAllOrdersAsync())
+        var allOrders = (await _orderService.GetAllOrdersAsync())
             .OrderByDescending(o => o.OrderDate)
             .ToList();
         var products = (await _productService.GetAllProductsAsync())
             .Where(p => p.IsActive)
             .ToList();
 
-        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
-        var newOrdersCount = orders.Count(o => o.OrderDate >= sevenDaysAgo);
+        var normalizedPreset = string.IsNullOrWhiteSpace(preset)
+            ? "30d"
+            : preset.Trim().ToLowerInvariant();
+        var normalizedPaymentState = string.IsNullOrWhiteSpace(paymentState)
+            ? "all"
+            : paymentState.Trim().ToLowerInvariant();
 
-        var paidRevenueLast7Days = orders
-            .Where(o => o.OrderDate >= sevenDaysAgo
-                && (o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase)))
+        var nowLocal = DateTime.Now;
+
+        DateTime? startLocal = null;
+        DateTime? endLocal = null;
+
+        switch (normalizedPreset)
+        {
+            case "7d":
+                endLocal = nowLocal;
+                startLocal = nowLocal.Date.AddDays(-6);
+                break;
+            case "30d":
+                endLocal = nowLocal;
+                startLocal = nowLocal.Date.AddDays(-29);
+                break;
+            case "90d":
+                endLocal = nowLocal;
+                startLocal = nowLocal.Date.AddDays(-89);
+                break;
+            case "ytd":
+                endLocal = nowLocal;
+                startLocal = new DateTime(nowLocal.Year, 1, 1);
+                break;
+            case "all":
+                break;
+            case "custom":
+                if (fromDate.HasValue)
+                {
+                    startLocal = fromDate.Value.Date;
+                }
+
+                if (toDate.HasValue)
+                {
+                    endLocal = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                }
+                break;
+            default:
+                normalizedPreset = "30d";
+                endLocal = nowLocal;
+                startLocal = nowLocal.Date.AddDays(-29);
+                break;
+        }
+
+        var filterOrderStatus = !string.IsNullOrWhiteSpace(orderStatus)
+            && Enum.TryParse<OrderStatus>(orderStatus, true, out var parsedStatus)
+            ? parsedStatus
+            : (OrderStatus?)null;
+
+        var filteredOrders = allOrders.Where(o =>
+        {
+            var localDate = o.OrderDate.ToLocalTime();
+
+            if (startLocal.HasValue && localDate < startLocal.Value)
+            {
+                return false;
+            }
+
+            if (endLocal.HasValue && localDate > endLocal.Value)
+            {
+                return false;
+            }
+
+            if (filterOrderStatus.HasValue && o.Status != filterOrderStatus.Value)
+            {
+                return false;
+            }
+
+            if (normalizedPaymentState == "paid")
+            {
+                var isPaid = o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase);
+                if (!isPaid)
+                {
+                    return false;
+                }
+            }
+            else if (normalizedPaymentState == "unpaid")
+            {
+                var isPaid = o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase);
+                if (isPaid)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }).ToList();
+
+        var newOrdersCount = filteredOrders.Count;
+
+        var paidRevenueFiltered = filteredOrders
+            .Where(o => o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase))
             .Sum(o => o.TotalAmount);
 
         // In test VNPay/COD flows, payment status may remain pending even when orders are operational.
         // Fall back to non-cancelled/returned order value so dashboard KPI is still meaningful.
-        var operationalRevenueLast7Days = orders
-            .Where(o => o.OrderDate >= sevenDaysAgo
-                && o.Status != OrderStatus.Cancelled
+        var operationalRevenueFiltered = filteredOrders
+            .Where(o => o.Status != OrderStatus.Cancelled
                 && o.Status != OrderStatus.Returned)
             .Sum(o => o.TotalAmount);
 
-        var deliveredRevenue = paidRevenueLast7Days > 0
-            ? paidRevenueLast7Days
-            : operationalRevenueLast7Days;
+        var deliveredRevenue = paidRevenueFiltered > 0
+            ? paidRevenueFiltered
+            : operationalRevenueFiltered;
 
         var lowStockProducts = products
             .Where(p => p.StockQuantity <= p.MinStockLevel)
@@ -68,7 +164,7 @@ public class DashboardController : Controller
             })
             .ToList();
 
-        var recentOrders = orders
+        var recentOrders = filteredOrders
             .Take(6)
             .Select(o => new RecentOrderViewModel
             {
@@ -80,7 +176,7 @@ public class DashboardController : Controller
             })
             .ToList();
 
-        var topSellingProducts = orders
+        var topSellingProducts = filteredOrders
             .Where(o => o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned)
             .SelectMany(o => o.Items)
             .GroupBy(i => new { i.ProductId, i.ProductName })
@@ -151,7 +247,7 @@ public class DashboardController : Controller
 
         var nowLocalDate = DateTime.Now.Date;
         var historyStart = nowLocalDate.AddDays(-56);
-        var validOrders = orders
+        var validOrders = filteredOrders
             .Where(o => o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned)
             .ToList();
 
@@ -324,6 +420,18 @@ public class DashboardController : Controller
             ForecastMiniCharts = miniCharts
         };
 
+        model.Filter = new DashboardFilterViewModel
+        {
+            Preset = normalizedPreset,
+            FromDate = fromDate,
+            ToDate = toDate,
+            OrderStatus = filterOrderStatus?.ToString(),
+            PaymentState = normalizedPaymentState,
+            AppliedRangeLabel = startLocal.HasValue || endLocal.HasValue
+                ? $"{(startLocal.HasValue ? startLocal.Value.ToString("dd/MM/yyyy") : "Từ đầu")} - {(endLocal.HasValue ? endLocal.Value.ToString("dd/MM/yyyy") : "Hiện tại")}"
+                : "Toàn thời gian"
+        };
+
         var now = DateTime.UtcNow;
         DateTime weekStartUtc = GetWeekStart(now, DayOfWeek.Monday);
         var monthStartUtc = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -341,7 +449,7 @@ public class DashboardController : Controller
 
         PeriodMetricViewModel BuildPeriodMetric(string key, string title, DateTime fromUtc, DateTime toUtc)
         {
-            var periodOrders = orders
+            var periodOrders = filteredOrders
                 .Where(o => o.OrderDate >= fromUtc && o.OrderDate <= toUtc)
                 .ToList();
 

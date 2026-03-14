@@ -4,61 +4,114 @@
     ViewData["Title"] = "Quản lý Đơn hàng Dành Cho Đại Lý";
     Layout = "_AdminLayout";
     OrderStatus? currentStatus = ViewBag.CurrentStatus as OrderStatus?;
+    string currentSearchTerm = ViewBag.CurrentSearchTerm as string ?? string.Empty;
+
+    string GetStatusLabel(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "Mới vào - chờ gọi",
+        OrderStatus.Processing => "Đang soạn hàng",
+        OrderStatus.Shipping => "Đang giao hàng",
+        OrderStatus.Delivered => "Đã giao xong",
+        OrderStatus.Cancelled => "Đã hủy",
+        OrderStatus.Returned => "Hoàn trả",
+        _ => status.ToString()
+    };
 }
 
 <style>
     .order-table th {
         background-color: #006400 !important;
         color: white !important;
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: bold;
-        padding: 15px !important;
+        padding: 12px 10px !important;
         border: 2px solid #004d00;
     }
     .order-table td {
-        font-size: 1.2rem;
-        padding: 15px !important;
+        font-size: 1rem;
+        padding: 12px 10px !important;
         border: 2px solid #ccc;
         vertical-align: middle;
         background-color: #fff;
     }
+
+    .order-header-box {
+        gap: 1rem;
+    }
+
+    .order-header-box h1 {
+        font-size: 1.9rem;
+    }
+
+    .order-filter-label {
+        font-size: 1rem;
+    }
     
     .phone-number {
-        font-size: 1.4rem;
+        font-size: 1rem;
         font-weight: 900;
         color: #CC0000;
     }
     
     .status-badge {
-        font-size: 1.1rem !important;
-        padding: 8px 12px !important;
+        font-size: 0.92rem !important;
+        padding: 6px 10px !important;
         border-radius: 4px !important;
         font-weight: bold !important;
         text-transform: uppercase;
     }
+
+    .order-action-btn {
+        font-size: 0.95rem;
+        padding: 0.55rem 0.8rem;
+    }
+
+    @@media (max-width: 991.98px) {
+        .order-table th,
+        .order-table td {
+            font-size: 0.92rem;
+            padding: 10px 8px !important;
+        }
+
+        .order-header-box h1 {
+            font-size: 1.4rem;
+        }
+    }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 border border-3 border-success rounded">
+<div class="order-header-box d-flex justify-content-between align-items-center flex-wrap mb-4 bg-white p-3 border border-3 border-success rounded">
     <h1 class="h2 fw-bold text-success mb-0"><i class="bi bi-cart-check-fill me-2"></i> DANH SÁCH ĐƠN ĐẶT HÀNG MỚI</h1>
-    <div>
-        <form method="get" class="d-flex align-items-center">
-            <label class="me-3 fw-bold fs-4 text-nowrap">LỌC THEO TRẠNG THÁI KHÁCH:</label>
-            <select name="status" class="form-select form-select-lg border-3 border-success fw-bold p-2" onchange="this.form.submit()" style="width: auto;">
-                <option value="">-- HIỂN THỊ TẤT CẢ DOANH SỐ --</option>
-                @foreach (var val in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+    <form method="get" class="d-flex align-items-center flex-wrap gap-2">
+        <label class="order-filter-label fw-bold text-nowrap mb-0">Lọc trạng thái:</label>
+        <select name="status" class="form-select border-3 border-success fw-bold p-2" style="width: auto; min-width: 280px;">
+            <option value="">-- Tất cả trạng thái --</option>
+            @foreach (var val in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+            {
+                if (currentStatus == val)
                 {
-                    if (currentStatus == val)
-                    {
-                        <option value="@val" selected>@val.ToString()</option>
-                    }
-                    else
-                    {
-                        <option value="@val">@val.ToString()</option>
-                    }
+                    <option value="@val" selected>@GetStatusLabel(val)</option>
                 }
-            </select>
-        </form>
-    </div>
+                else
+                {
+                    <option value="@val">@GetStatusLabel(val)</option>
+                }
+            }
+        </select>
+
+        <input
+            type="text"
+            name="searchTerm"
+            class="form-control border-3 border-success fw-semibold"
+            style="min-width: 280px;"
+            placeholder="Tìm theo mã đơn, tên người nhận, số điện thoại"
+            value="@currentSearchTerm" />
+
+        <button type="submit" class="btn btn-success fw-bold px-3">
+            <i class="bi bi-search me-1"></i>Tìm
+        </button>
+
+        <a asp-action="Index" class="btn btn-outline-secondary fw-bold px-3">Đặt lại</a>
+    </form>
 </div>
 
 <div class="table-responsive">
@@ -81,13 +134,13 @@
                 foreach (var o in Model)
                 {
                     <tr>
-                        <td class="fw-bold text-center fs-4">#@o.Id</td>
+                        <td class="fw-bold text-center fs-5">#@o.Id</td>
                         <td class="fw-bold text-muted">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td class="fw-bold fs-5 text-dark">@o.ShippingName</td>
+                        <td class="fw-bold text-dark">@o.ShippingName</td>
                         <td class="text-center">
                             <span class="phone-number">@o.ShippingPhone</span>
                         </td>
-                        <td class="text-end fw-bold text-danger fs-3">@o.TotalAmount.ToString("N0")₫</td>
+                        <td class="text-end fw-bold text-danger fs-4">@o.TotalAmount.ToString("N0")₫</td>
                         <td class="text-center">
                             @if (string.Equals(o.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
                             {
@@ -130,7 +183,7 @@
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-outline-success border-3 fw-bold fs-5">
+                            <a asp-action="Details" asp-route-id="@o.Id" class="order-action-btn btn btn-outline-success border-3 fw-bold">
                                 <i class="bi bi-eye-fill me-1"></i> XEM KỸ & GHI CHÚ
                             </a>
                         </td>
@@ -141,7 +194,7 @@
             {
                 <tr>
                     <td colspan="8" class="text-center py-5">
-                        <div class="alert alert-secondary fs-4 fw-bold mb-0">
+                        <div class="alert alert-secondary fs-5 fw-bold mb-0">
                             Không có đơn hàng nào vào lúc này!
                         </div>
                     </td>

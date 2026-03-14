@@ -47,6 +47,15 @@ public class MappingProfile : Profile
         CreateMap<CartItem, CartItemDto>()
             .ForMember(dest => dest.VariantId, opt => opt.MapFrom(src => src.ProductVariantId))
             .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.ProductVariant != null ? src.ProductVariant.VariantName : null))
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product != null ? src.Product.Name : string.Empty))
+            .ForMember(dest => dest.ProductImageUrl, opt => opt.MapFrom(src =>
+                src.Product != null
+                    ? src.Product.Images
+                        .OrderByDescending(i => i.IsPrimary)
+                        .ThenBy(i => i.DisplayOrder)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault()
+                    : null))
             .ReverseMap();
 
         // Customer

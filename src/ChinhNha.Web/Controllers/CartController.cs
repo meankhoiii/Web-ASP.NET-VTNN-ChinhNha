@@ -8,10 +8,12 @@ namespace ChinhNha.Web.Controllers;
 public class CartController : Controller
 {
     private readonly ICartService _cartService;
+    private readonly IProductService _productService;
 
-    public CartController(ICartService cartService)
+    public CartController(ICartService cartService, IProductService productService)
     {
         _cartService = cartService;
+        _productService = productService;
     }
 
     private string GetOrCreateSessionId()
@@ -45,6 +47,24 @@ public class CartController : Controller
     {
         try
         {
+            var product = await _productService.GetProductByIdAsync(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+            }
+
+            var hasActiveVariants = product.Variants != null && product.Variants.Any(v => v.IsActive);
+            if (hasActiveVariants && !variantId.HasValue)
+            {
+                return Json(new
+                {
+                    success = false,
+                    requiresVariantSelection = true,
+                    redirectUrl = $"/san-pham/{Uri.EscapeDataString(product.Slug)}?focus=variant#chon-bien-the",
+                    message = "Vui lòng chọn biến thể trước khi mua."
+                });
+            }
+
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var sessionId = GetOrCreateSessionId();
 
@@ -67,6 +87,18 @@ public class CartController : Controller
     {
         await _cartService.RemoveItemFromCartAsync(cartItemId);
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity)
+    {
+        if (quantity < 1)
+        {
+            quantity = 1;
+        }
+
+        await _cartService.UpdateCartItemQuantityAsync(cartItemId, quantity);
         return RedirectToAction(nameof(Index));
     }
 

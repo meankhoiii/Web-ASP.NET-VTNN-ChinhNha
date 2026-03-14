@@ -88,6 +88,57 @@
     </div>
 </div>
 
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-2">
+                <label class="form-label mb-1">Khoảng thời gian</label>
+                <select class="form-select" name="preset" id="presetFilter">
+                    <option value="7d" selected="@(Model.Filter.Preset == "7d")">7 ngày</option>
+                    <option value="30d" selected="@(Model.Filter.Preset == "30d")">30 ngày</option>
+                    <option value="90d" selected="@(Model.Filter.Preset == "90d")">90 ngày</option>
+                    <option value="ytd" selected="@(Model.Filter.Preset == "ytd")">Từ đầu năm</option>
+                    <option value="all" selected="@(Model.Filter.Preset == "all")">Toàn thời gian</option>
+                    <option value="custom" selected="@(Model.Filter.Preset == "custom")">Tùy chọn</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">Từ ngày</label>
+                <input class="form-control" type="date" name="fromDate" value="@(Model.Filter.FromDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">Đến ngày</label>
+                <input class="form-control" type="date" name="toDate" value="@(Model.Filter.ToDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">Trạng thái đơn</label>
+                <select class="form-select" name="orderStatus">
+                    <option value="">Tất cả</option>
+                    @foreach (var status in Enum.GetValues<ChinhNha.Domain.Enums.OrderStatus>())
+                    {
+                        <option value="@status" selected="@(Model.Filter.OrderStatus == status.ToString())">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">Thanh toán</label>
+                <select class="form-select" name="paymentState">
+                    <option value="all" selected="@(Model.Filter.PaymentState == "all")">Tất cả</option>
+                    <option value="paid" selected="@(Model.Filter.PaymentState == "paid")">Đã thanh toán</option>
+                    <option value="unpaid" selected="@(Model.Filter.PaymentState == "unpaid")">Chưa thanh toán</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">Lọc</button>
+                <a href="/Admin/Dashboard" class="btn btn-outline-secondary">Xóa</a>
+            </div>
+            <div class="col-12">
+                <small class="text-muted">Phạm vi áp dụng: @Model.Filter.AppliedRangeLabel</small>
+            </div>
+        </form>
+    </div>
+</div>
+
 @if (Model.AdminAlerts.Any())
 {
     <div class="card border-0 shadow-sm mb-3">
@@ -126,7 +177,7 @@
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Đơn mới 7 ngày</h6>
+                        <h6 class="text-uppercase mb-1">Đơn hàng</h6>
                         <h2 class="mb-0">@Model.NewOrdersCount</h2>
                     </div>
                     <i class="bi bi-cart fs-1 text-white-50"></i>
@@ -140,7 +191,7 @@
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Doanh thu 7 ngày</h6>
+                        <h6 class="text-uppercase mb-1">Doanh thu</h6>
                         <h2 class="mb-0">@Model.DeliveredRevenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</h2>
                     </div>
                     <i class="bi bi-currency-dollar fs-1 text-white-50"></i>

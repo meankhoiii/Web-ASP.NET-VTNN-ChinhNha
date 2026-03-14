@@ -76,7 +76,18 @@
                             <tr>
                                 <td>
                                     <div class="fw-bold">@item.ProductName</div>
-                                    @if(item.VariantId.HasValue){ <small class="text-muted">Biến thể: @item.VariantId</small> }
+                                    @if (!string.IsNullOrWhiteSpace(item.VariantName))
+                                    {
+                                        <div class="small text-muted">Biến thể: @item.VariantName</div>
+                                        @if (item.VariantId.HasValue)
+                                        {
+                                            <div class="small text-muted">Mã biến thể: #@item.VariantId</div>
+                                        }
+                                    }
+                                    else if (item.VariantId.HasValue)
+                                    {
+                                        <div class="small text-muted">Mã biến thể: #@item.VariantId</div>
+                                    }
                                 </td>
                                 <td class="text-end">@item.UnitPrice.ToString("N0")₫</td>
                                 <td class="text-center">@item.Quantity</td>
