@@ -15,6 +15,8 @@ public class OrderDto
     
     // Payment info: đơn giản, lưu dạng string vì Order entity chưa có payment fields
     public string PaymentMethod { get; set; } = "COD";
+    public string PaymentStatus { get; set; } = "Pending";
+    public string PaymentStatusDisplay { get; set; } = "Chờ thanh toán";
     public bool IsPaid { get; set; } = false;
     
     public decimal SubTotal { get; set; }

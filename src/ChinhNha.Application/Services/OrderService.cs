@@ -35,22 +35,18 @@ public class OrderService : IOrderService
         if (order == null || order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Cancelled)
             return false;
 
+        var previousStatus = order.Status;
+
         order.Status = OrderStatus.Cancelled;
         order.CancelReason = reason;
         order.UpdatedAt = DateTime.UtcNow;
 
-        // Hoàn lại kho
-        foreach (var item in order.OrderItems)
+        if (IsInventoryDeductedStatus(previousStatus))
         {
-            await _inventoryService.RecordTransactionAsync(
-                productId: item.ProductId,
-                type: TransactionType.Return,
-                quantity: item.Quantity,
-                note: $"Hoàn trả kho từ đơn hàng #{order.Id} bị hủy",
-                variantId: item.ProductVariantId,
-                orderId: order.Id
-            );
+            await RestoreInventoryForOrderAsync(order, "Hoàn trả kho từ đơn hàng bị hủy.");
         }
+
+        await SyncPaymentStatusByOrderStatusAsync(order.Id, order.Status);
 
         await _orderRepository.UpdateAsync(order);
         return true;
@@ -122,19 +118,6 @@ public class OrderService : IOrderService
                 : $"Khởi tạo thanh toán {parsedPaymentMethod}."
         });
 
-        // Deduct inventory for each item
-        foreach (var item in order.OrderItems)
-        {
-            await _inventoryService.RecordTransactionAsync(
-                productId: item.ProductId,
-                type: TransactionType.Export,
-                quantity: item.Quantity,
-                note: $"Xuất kho bán hàng. Đơn #{order.Id}",
-                variantId: item.ProductVariantId,
-                orderId: order.Id
-            );
-        }
-
         // Clear cart after order is created
         await _cartRepository.DeleteAsync(cart);
 
@@ -168,26 +151,38 @@ public class OrderService : IOrderService
         var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderId);
         if (order == null) return false;
 
-        if (order.Status == newStatus)
+        var previousStatus = order.Status;
+
+        if (previousStatus == newStatus)
         {
             return false;
         }
 
         // Final states should not be changed again; delivered can only move to returned.
-        if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Returned)
+        if (previousStatus == OrderStatus.Cancelled || previousStatus == OrderStatus.Returned)
         {
             return false;
         }
 
-        if (order.Status == OrderStatus.Delivered && newStatus != OrderStatus.Returned)
+        if (previousStatus == OrderStatus.Delivered && newStatus != OrderStatus.Returned)
         {
             return false;
         }
 
-        if (newStatus == OrderStatus.Cancelled || newStatus == OrderStatus.Returned)
+        // Deduct stock once when entering operational statuses.
+        if (!IsInventoryDeductedStatus(previousStatus) && IsInventoryDeductedStatus(newStatus))
+        {
+            await DeductInventoryForOrderAsync(order, $"Xuất kho theo trạng thái đơn {newStatus}.");
+        }
+
+        // Restore stock only if this order had already deducted stock.
+        if (IsInventoryDeductedStatus(previousStatus)
+            && (newStatus == OrderStatus.Cancelled || newStatus == OrderStatus.Returned))
         {
             await RestoreInventoryForOrderAsync(order, $"Hoàn kho do chuyển trạng thái đơn sang {newStatus}.");
         }
+
+        await SyncPaymentStatusByOrderStatusAsync(order.Id, newStatus);
 
         order.Status = newStatus;
         order.UpdatedAt = DateTime.UtcNow;
@@ -237,6 +232,8 @@ public class OrderService : IOrderService
         var dto = _mapper.Map<OrderDto>(order);
         var payment = await _paymentRepository.GetByOrderIdAsync(order.Id);
         dto.PaymentMethod = payment?.PaymentMethod.ToString() ?? PaymentMethod.COD.ToString();
+        dto.PaymentStatus = payment?.PaymentStatus.ToString() ?? PaymentStatus.Pending.ToString();
+        dto.PaymentStatusDisplay = BuildPaymentStatusDisplay(payment);
         dto.IsPaid = payment?.PaymentStatus == PaymentStatus.Paid;
         return dto;
     }
@@ -254,7 +251,16 @@ public class OrderService : IOrderService
             if (payments.TryGetValue(order.Id, out var payment))
             {
                 dto.PaymentMethod = payment.PaymentMethod.ToString();
+                dto.PaymentStatus = payment.PaymentStatus.ToString();
+                dto.PaymentStatusDisplay = BuildPaymentStatusDisplay(payment);
                 dto.IsPaid = payment.PaymentStatus == PaymentStatus.Paid;
+            }
+            else
+            {
+                dto.PaymentMethod = PaymentMethod.COD.ToString();
+                dto.PaymentStatus = PaymentStatus.Pending.ToString();
+                dto.PaymentStatusDisplay = "Chờ thanh toán";
+                dto.IsPaid = false;
             }
 
             result.Add(dto);
@@ -283,6 +289,111 @@ public class OrderService : IOrderService
                 orderId: order.Id
             );
         }
+    }
+
+    private async Task DeductInventoryForOrderAsync(Order order, string notePrefix)
+    {
+        foreach (var item in order.OrderItems)
+        {
+            await _inventoryService.RecordTransactionAsync(
+                productId: item.ProductId,
+                type: TransactionType.Export,
+                quantity: item.Quantity,
+                note: $"{notePrefix} Đơn #{order.Id}",
+                variantId: item.ProductVariantId,
+                orderId: order.Id
+            );
+        }
+    }
+
+    private static bool IsInventoryDeductedStatus(OrderStatus status)
+    {
+        return status is OrderStatus.Confirmed
+            or OrderStatus.Processing
+            or OrderStatus.Shipping
+            or OrderStatus.Delivered;
+    }
+
+    private async Task SyncPaymentStatusByOrderStatusAsync(int orderId, OrderStatus newStatus)
+    {
+        var payment = await _paymentRepository.GetByOrderIdAsync(orderId);
+        if (payment == null)
+        {
+            return;
+        }
+
+        var originalStatus = payment.PaymentStatus;
+        var newPaymentStatus = originalStatus;
+        string? note = null;
+
+        if (newStatus == OrderStatus.Delivered
+            && payment.PaymentMethod == PaymentMethod.COD
+            && originalStatus == PaymentStatus.Pending)
+        {
+            newPaymentStatus = PaymentStatus.Paid;
+            note = "Đơn COD đã giao thành công, cập nhật đã thu tiền.";
+        }
+        else if (newStatus == OrderStatus.Returned && originalStatus == PaymentStatus.Paid)
+        {
+            newPaymentStatus = PaymentStatus.Refunded;
+            note = payment.PaymentMethod == PaymentMethod.VNPay
+                ? "Đơn hàng trả lại, cần xử lý hoàn tiền VNPay."
+                : "Đơn COD trả lại, đã đánh dấu hoàn tiền.";
+        }
+        else if ((newStatus == OrderStatus.Cancelled || newStatus == OrderStatus.Returned)
+                 && originalStatus == PaymentStatus.Pending)
+        {
+            newPaymentStatus = PaymentStatus.Failed;
+            note = payment.PaymentMethod == PaymentMethod.VNPay
+                ? "Đơn đã hủy/trả khi chưa thanh toán VNPay."
+                : "Đơn COD đã hủy/trả trước khi thu tiền.";
+        }
+
+        if (newPaymentStatus == originalStatus)
+        {
+            return;
+        }
+
+        payment.PaymentStatus = newPaymentStatus;
+        payment.PaidAt = newPaymentStatus == PaymentStatus.Paid ? DateTime.UtcNow : payment.PaidAt;
+        payment.Note = note ?? payment.Note;
+        await _paymentRepository.UpdateAsync(payment);
+    }
+
+    private static string BuildPaymentStatusDisplay(Payment? payment)
+    {
+        if (payment == null)
+        {
+            return "Chờ thanh toán";
+        }
+
+        return payment.PaymentMethod switch
+        {
+            PaymentMethod.COD => payment.PaymentStatus switch
+            {
+                PaymentStatus.Paid => "Đã thu tiền COD",
+                PaymentStatus.Pending => "Chờ thu tiền COD",
+                PaymentStatus.Failed => "COD chưa thu/không thành công",
+                PaymentStatus.Refunded => "COD đã hoàn tiền",
+                _ => "Trạng thái COD không xác định"
+            },
+            PaymentMethod.VNPay => payment.PaymentStatus switch
+            {
+                PaymentStatus.Paid => "VNPay đã thanh toán",
+                PaymentStatus.Pending => "Chờ thanh toán VNPay",
+                PaymentStatus.Failed => "VNPay thanh toán thất bại",
+                PaymentStatus.Refunded => "VNPay đã hoàn tiền",
+                _ => "Trạng thái VNPay không xác định"
+            },
+            _ => payment.PaymentStatus switch
+            {
+                PaymentStatus.Paid => "Đã thanh toán",
+                PaymentStatus.Pending => "Chờ thanh toán",
+                PaymentStatus.Failed => "Thanh toán thất bại",
+                PaymentStatus.Refunded => "Đã hoàn tiền",
+                _ => "Trạng thái thanh toán không xác định"
+            }
+        };
     }
 
     private static string GenerateOrderCode()

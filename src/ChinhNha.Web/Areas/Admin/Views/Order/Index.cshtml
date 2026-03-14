@@ -89,13 +89,21 @@
                         </td>
                         <td class="text-end fw-bold text-danger fs-3">@o.TotalAmount.ToString("N0")₫</td>
                         <td class="text-center">
-                            @if (o.IsPaid)
+                            @if (string.Equals(o.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
                             {
-                                <div class="badge bg-success status-badge w-100">ĐÃ THU T.KHOẢN</div>
+                                <div class="badge bg-success status-badge w-100">@o.PaymentStatusDisplay</div>
+                            }
+                            else if (string.Equals(o.PaymentStatus, "Pending", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <div class="badge bg-warning text-dark status-badge w-100">@o.PaymentStatusDisplay</div>
+                            }
+                            else if (string.Equals(o.PaymentStatus, "Refunded", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <div class="badge bg-info text-dark status-badge w-100">@o.PaymentStatusDisplay</div>
                             }
                             else
                             {
-                                <div class="badge bg-danger status-badge w-100">CHƯA LẤY TIỀN (THU HỘ)</div>
+                                <div class="badge bg-danger status-badge w-100">@o.PaymentStatusDisplay</div>
                             }
                         </td>
                         <td class="text-center">

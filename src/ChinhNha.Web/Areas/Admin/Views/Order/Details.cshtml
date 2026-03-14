@@ -128,13 +128,21 @@
                 <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
                 <p>
                     <strong>Thanh toán:</strong> 
-                    @if (Model.IsPaid)
+                    @if (string.Equals(Model.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
                     {
-                        <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                        <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> @Model.PaymentStatusDisplay</span>
+                    }
+                    else if (string.Equals(Model.PaymentStatus, "Pending", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span class="text-warning fw-bold"><i class="bi bi-hourglass-split"></i> @Model.PaymentStatusDisplay</span>
+                    }
+                    else if (string.Equals(Model.PaymentStatus, "Refunded", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span class="text-info fw-bold"><i class="bi bi-arrow-counterclockwise"></i> @Model.PaymentStatusDisplay</span>
                     }
                     else
                     {
-                        <span class="text-muted">Chưa thanh toán (@Model.PaymentMethod)</span>
+                        <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> @Model.PaymentStatusDisplay</span>
                     }
                 </p>
             </div>
