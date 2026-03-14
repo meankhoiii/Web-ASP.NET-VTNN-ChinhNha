@@ -46,6 +46,39 @@
         color: #198754;
         font-weight: 600;
     }
+
+        .metric-card {
+            border: 1px solid #dce3ec;
+            border-radius: 12px;
+            background: #fff;
+            padding: 0.9rem 1rem;
+            height: 100%;
+        }
+
+        .metric-card .metric-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0d6efd;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .metric-card .metric-orders {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #212529;
+        }
+
+        .metric-card .metric-revenue {
+            font-size: 0.92rem;
+            color: #198754;
+            font-weight: 700;
+        }
+
+        .metric-card .metric-range {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
 </style>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -55,17 +88,37 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-header bg-white">
-        <h6 class="mb-0"><i class="bi bi-bell-fill text-warning me-2"></i>Cảnh báo hệ thống</h6>
+@if (Model.AdminAlerts.Any())
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-bell-fill text-warning me-2"></i>Cảnh báo hệ thống</h6>
+        </div>
+        <div class="card-body py-2">
+            @foreach (var alert in Model.AdminAlerts)
+            {
+                <div class="alert alert-warning py-2 mb-2">@alert</div>
+            }
+        </div>
     </div>
-    <div class="card-body py-2">
-        @foreach (var alert in Model.AdminAlerts)
+}
+
+@if (Model.PeriodMetrics.Any())
+{
+    <div class="row g-3 mb-3">
+        @foreach (var metric in Model.PeriodMetrics)
         {
-            <div class="alert alert-warning py-2 mb-2">@alert</div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="metric-card shadow-sm">
+                    <div class="metric-title">@metric.Title</div>
+                    <div class="metric-orders">@metric.OrderCount đơn</div>
+                    <div class="metric-revenue">@metric.Revenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</div>
+                    <div class="metric-range">@metric.RangeLabel</div>
+                </div>
+            </div>
         }
     </div>
-</div>
+}
 
 <div class="row">
     <div class="col-md-3 mb-3">
@@ -87,7 +140,7 @@
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-uppercase mb-1">Doanh thu</h6>
+                        <h6 class="text-uppercase mb-1">Doanh thu 7 ngày</h6>
                         <h2 class="mb-0">@Model.DeliveredRevenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</h2>
                     </div>
                     <i class="bi bi-currency-dollar fs-1 text-white-50"></i>
@@ -316,6 +369,7 @@
                                 pointRadius: 3,
                                 pointHoverRadius: 5,
                                 fill: true,
+                                clip: false,
                                 borderWidth: 2,
                                 borderJoinStyle: 'miter',
                                 tension: 0.4
@@ -327,6 +381,14 @@
                             interaction: {
                                 mode: 'index',
                                 intersect: false
+                            },
+                            layout: {
+                                padding: {
+                                    top: 8,
+                                    right: 12,
+                                    bottom: 8,
+                                    left: 8
+                                }
                             },
                             plugins: {
                                 legend: {
@@ -342,10 +404,12 @@
                                 },
                                 tooltip: {
                                     enabled: true,
+                                    position: 'nearest',
                                     mode: 'index',
                                     intersect: false,
                                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                                     padding: 12,
+                                    caretPadding: 6,
                                     titleFont: { size: 13, weight: 'bold' },
                                     bodyFont: { size: 12 },
                                     borderColor: '#0d6efd',
@@ -356,17 +420,22 @@
                                             return 'Ngày ' + context[0].label;
                                         },
                                         label: function(context) {
-                                            const value = Number(context.parsed.y || 0).toLocaleString('vi-VN');
+                                            const rawValue = Number(context.parsed.y || 0);
+                                            const value = rawValue.toLocaleString('vi-VN');
                                             return datasetLabel + ': ' + value + ' ' + unitLabel;
                                         },
                                         afterLabel: function(context) {
                                             const index = context.dataIndex;
                                             if (index > 0) {
-                                                const prevValue = values[index - 1];
-                                                const currValue = values[index];
+                                                const prevValue = Number(values[index - 1] || 0);
+                                                const currValue = Number(values[index] || 0);
+                                                if (!(prevValue > 0)) {
+                                                    return '(So với kỳ trước: N/A)';
+                                                }
+
                                                 const change = currValue - prevValue;
                                                 const changePercent = ((change / prevValue) * 100).toFixed(1);
-                                                return '(Thay đổi: ' + (change >= 0 ? '+' : '') + changePercent + '%)';
+                                                return '(So với kỳ trước: ' + (change >= 0 ? '+' : '') + changePercent + '%)';
                                             }
                                         }
                                     }

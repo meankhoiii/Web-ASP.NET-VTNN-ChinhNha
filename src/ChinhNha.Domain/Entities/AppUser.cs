@@ -11,8 +11,8 @@ public class AppUser
     public DateTime? DateOfBirth { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; } = true;
+    public string Role { get; set; } = "Customer";
     public DateTime? LastLoginAt { get; set; }
     
     public ICollection<Order> Orders { get; set; } = new List<Order>();
-    public ICollection<AppUserRole> UserRoles { get; set; } = new List<AppUserRole>();
 }

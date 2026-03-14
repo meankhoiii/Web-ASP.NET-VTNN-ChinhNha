@@ -1,7 +1,6 @@
 using AutoMapper;
 using ChinhNha.Application.DTOs.Products;
 using ChinhNha.Application.Interfaces;
-using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -10,25 +9,13 @@ namespace ChinhNha.Application.Services;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
-    private readonly IWishlistRepository _wishlistRepository;
-    private readonly IAppUserService _appUserService;
-    private readonly IEmailService _emailService;
-    private readonly ILogger<ProductService> _logger;
     private readonly IMapper _mapper;
 
     public ProductService(
         IProductRepository productRepository,
-        IWishlistRepository wishlistRepository,
-        IAppUserService appUserService,
-        IEmailService emailService,
-        ILogger<ProductService> logger,
         IMapper mapper)
     {
         _productRepository = productRepository;
-        _wishlistRepository = wishlistRepository;
-        _appUserService = appUserService;
-        _emailService = emailService;
-        _logger = logger;
         _mapper = mapper;
     }
 
@@ -116,9 +103,6 @@ public class ProductService : IProductService
         var product = await _productRepository.GetProductWithDetailsByIdAsync(request.Id);
         if (product == null) return false;
 
-        var previousEffectivePrice = product.SalePrice ?? product.BasePrice;
-        var newEffectivePrice = request.SalePrice ?? request.BasePrice;
-
         product.Name = request.Name;
         // Don't auto update slug once created to avoid breaking SEO, unless needed. We'll update if empty.
         if (string.IsNullOrEmpty(product.Slug))
@@ -161,11 +145,6 @@ public class ProductService : IProductService
 
         await _productRepository.UpdateAsync(product);
 
-        if (newEffectivePrice < previousEffectivePrice)
-        {
-            await SendWishlistPriceDropAlertsAsync(product, previousEffectivePrice, newEffectivePrice);
-        }
-
         return true;
     }
 
@@ -176,55 +155,5 @@ public class ProductService : IProductService
 
         await _productRepository.DeleteAsync(product);
         return true;
-    }
-
-    private async Task SendWishlistPriceDropAlertsAsync(Product product, decimal oldPrice, decimal newPrice)
-    {
-        try
-        {
-            var watchItems = await _wishlistRepository.GetWishlistsByProductAsync(product.Id);
-            if (!watchItems.Any())
-                return;
-
-            var uniqueUserIds = watchItems
-                .Select(w => w.UserId)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Distinct()
-                .ToList();
-
-            if (!uniqueUserIds.Any())
-                return;
-
-            foreach (var userId in uniqueUserIds)
-            {
-                var user = await _appUserService.GetUserByIdAsync(userId);
-                if (user == null || string.IsNullOrWhiteSpace(user.Email))
-                    continue;
-
-                var subject = $"[ChinhNha] San pham '{product.Name}' dang giam gia";
-                var htmlBody = $@"
-<div style='font-family:Arial,sans-serif;line-height:1.6'>
-    <h3 style='color:#1b5e20'>Thong bao giam gia tu ChinhNha</h3>
-    <p>San pham trong wishlist cua ban vua duoc dieu chinh gia:</p>
-    <ul>
-        <li><strong>San pham:</strong> {product.Name}</li>
-        <li><strong>Gia cu:</strong> {oldPrice:N0}đ</li>
-        <li><strong>Gia moi:</strong> {newPrice:N0}đ</li>
-    </ul>
-    <p>Ban co the dang nhap de dat hang ngay tai cua hang ChinhNha.</p>
-</div>";
-
-                await _emailService.SendAsync(user.Email, subject, htmlBody);
-            }
-
-            _logger.LogInformation(
-                "Wishlist sale alerts sent for product {ProductId} to {UserCount} users",
-                product.Id,
-                uniqueUserIds.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while sending wishlist sale alerts for product {ProductId}", product.Id);
-        }
     }
 }

@@ -21,6 +21,9 @@ public class BlogFormViewModel
     [Display(Name = "Hình ảnh đại diện (URL)")]
     public string? ImageUrl { get; set; }
 
+    [Display(Name = "Upload hình ảnh")]
+    public IFormFile? ImageFile { get; set; }
+
     [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn danh mục")]
     [Display(Name = "Danh mục")]
     public int CategoryId { get; set; }

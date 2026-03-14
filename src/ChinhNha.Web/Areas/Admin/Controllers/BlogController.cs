@@ -12,11 +12,16 @@ namespace ChinhNha.Web.Areas.Admin.Controllers;
 [Authorize(Policy = "AdminOnly")]
 public class BlogController : Controller
 {
-    private readonly IBlogService _blogService;
+    private static readonly HashSet<string> AllowedImageExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
 
-    public BlogController(IBlogService blogService)
+    private readonly IBlogService _blogService;
+    private readonly IWebHostEnvironment _environment;
+
+    public BlogController(IBlogService blogService, IWebHostEnvironment environment)
     {
         _blogService = blogService;
+        _environment = environment;
     }
 
     public async Task<IActionResult> Index()
@@ -43,6 +48,19 @@ public class BlogController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BlogFormViewModel model)
     {
+        if (model.ImageFile != null)
+        {
+            var uploadedImageUrl = await SaveImageAsync(model.ImageFile);
+            if (uploadedImageUrl == null)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), "Chỉ chấp nhận ảnh JPG, JPEG, PNG, WEBP, GIF.");
+            }
+            else
+            {
+                model.ImageUrl = uploadedImageUrl;
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             await PopulateDropdowns(model);
@@ -95,6 +113,19 @@ public class BlogController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(BlogFormViewModel model)
     {
+        if (model.ImageFile != null)
+        {
+            var uploadedImageUrl = await SaveImageAsync(model.ImageFile);
+            if (uploadedImageUrl == null)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), "Chỉ chấp nhận ảnh JPG, JPEG, PNG, WEBP, GIF.");
+            }
+            else
+            {
+                model.ImageUrl = uploadedImageUrl;
+            }
+        }
+
         if (!ModelState.IsValid)
         {
             await PopulateDropdowns(model);
@@ -129,5 +160,33 @@ public class BlogController : Controller
         if (success) TempData["SuccessMessage"] = "Đã xoá bài viết.";
         else TempData["ErrorMessage"] = "Có lỗi xảy ra khi xoá.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<string?> SaveImageAsync(IFormFile? imageFile)
+    {
+        if (imageFile == null || imageFile.Length == 0)
+        {
+            return null;
+        }
+
+        var extension = Path.GetExtension(imageFile.FileName);
+        if (string.IsNullOrWhiteSpace(extension) || !AllowedImageExtensions.Contains(extension))
+        {
+            return null;
+        }
+
+        var mediaFolder = Path.Combine(_environment.WebRootPath, "uploads", "media");
+        Directory.CreateDirectory(mediaFolder);
+
+        var safeName = Path.GetFileNameWithoutExtension(imageFile.FileName)
+            .Replace(" ", "-")
+            .Replace("..", string.Empty);
+        var uniqueName = $"{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}-{safeName}{extension}";
+        var filePath = Path.Combine(mediaFolder, uniqueName);
+
+        await using var stream = System.IO.File.Create(filePath);
+        await imageFile.CopyToAsync(stream);
+
+        return $"/uploads/media/{uniqueName}";
     }
 }

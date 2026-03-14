@@ -256,6 +256,9 @@
         <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Supplier" ? "active" : "")" href="/Admin/Supplier">
             <i class="bi bi-building text-secondary"></i> Nhà cung cấp
         </a>
+        <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active" : "")" href="/Admin/User">
+            <i class="bi bi-people text-success"></i> Quản lý người dùng
+        </a>
 
         <hr class="sidebar-divider" />
         <span class="sidebar-section-label">Kho hàng</span>

@@ -211,6 +211,7 @@
                                         <li><hr class="dropdown-divider"></li>
                                     }
                                     <li><a class="dropdown-item fs-5 py-2" href="/Customer/Orders"><i class="bi bi-clock-history me-1"></i> Lịch sử mua hàng</a></li>
+                                    <li><a class="dropdown-item fs-5 py-2" href="/Account/ChangePassword"><i class="bi bi-key me-1"></i> Đổi mật khẩu</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-action="Logout" asp-controller="Account" method="post" class="m-0">
@@ -627,7 +628,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/cart.js" asp-append-version="true"></script>
-    <script src="~/js/wishlist.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <script>

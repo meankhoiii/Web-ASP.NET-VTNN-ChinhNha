@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ChinhNha.Application.DTOs.Products;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ChinhNha.Web.Areas.Admin.Models;
@@ -69,7 +70,13 @@ public class ProductFormViewModel
     [Display(Name = "Hình ảnh (URL)")]
     public string? ImageUrl { get; set; }
 
+    [Display(Name = "Upload hình ảnh")]
+    public IFormFile? ImageFile { get; set; }
+
     // Dropdowns
     public IEnumerable<SelectListItem>? Categories { get; set; }
     public IEnumerable<SelectListItem>? Suppliers { get; set; }
+
+    // Variants (populated only in Edit)
+    public List<ProductVariantDto> Variants { get; set; } = new();
 }

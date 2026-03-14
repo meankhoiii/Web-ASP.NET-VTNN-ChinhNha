@@ -3,31 +3,27 @@ using ChinhNha.Application.Interfaces;
 using ChinhNha.Domain.Entities;
 using ChinhNha.Domain.Interfaces;
 using AutoMapper;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace ChinhNha.Application.Services;
 
 public class ProductSearchService : IProductSearchService
 {
     private readonly IProductRepository _productRepository;
-    private readonly ISavedSearchFilterRepository _savedFilterRepository;
-    private readonly ISearchAnalyticsRepository _searchAnalyticsRepository;
     private readonly IProductReviewService _reviewService;
     private readonly IMapper _mapper;
     private readonly ILogger<ProductSearchService> _logger;
+    private static readonly ConcurrentDictionary<string, List<SavedSearchFilterDto>> SavedFilters = new();
+    private static int _savedFilterIdSeed;
 
     public ProductSearchService(
         IProductRepository productRepository,
-        ISavedSearchFilterRepository savedFilterRepository,
-        ISearchAnalyticsRepository searchAnalyticsRepository,
         IProductReviewService reviewService,
         IMapper mapper,
         ILogger<ProductSearchService> logger)
     {
         _productRepository = productRepository;
-        _savedFilterRepository = savedFilterRepository;
-        _searchAnalyticsRepository = searchAnalyticsRepository;
         _reviewService = reviewService;
         _mapper = mapper;
         _logger = logger;
@@ -81,21 +77,7 @@ public class ProductSearchService : IProductSearchService
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)filters.PageSize);
 
-        // Log search analytics
-        try
-        {
-            var filtersJson = System.Text.Json.JsonSerializer.Serialize(filters);
-            await _searchAnalyticsRepository.LogSearchAsync(
-                filters.SearchQuery ?? "all",
-                totalCount,
-                null,
-                filtersJson);
-            _logger.LogInformation($"Search logged: '{filters.SearchQuery}' - {totalCount} results");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error logging search analytics");
-        }
+        _logger.LogInformation("Search executed: '{Query}' - {TotalCount} results", filters.SearchQuery, totalCount);
 
         return new ProductSearchPagedResultDto
         {
@@ -190,66 +172,87 @@ public class ProductSearchService : IProductSearchService
         return suggestions;
     }
 
-    public async Task<SavedSearchFilterDto> SaveSearchFilterAsync(string userId, string filterName, ProductSearchFilterDto filters)
+    public Task<SavedSearchFilterDto> SaveSearchFilterAsync(string userId, string filterName, ProductSearchFilterDto filters)
     {
-        var filtersJson = JsonSerializer.Serialize(filters);
-        var savedFilter = new SavedSearchFilter
+        var savedFilter = new SavedSearchFilterDto
         {
+            Id = Interlocked.Increment(ref _savedFilterIdSeed),
             UserId = userId,
             FilterName = filterName,
-            FiltersJson = filtersJson,
+            Filters = filters,
             CreatedAt = DateTime.UtcNow,
             UsageCount = 0
         };
 
-        await _savedFilterRepository.AddAsync(savedFilter);
-
-        return new SavedSearchFilterDto
+        var list = SavedFilters.GetOrAdd(userId, _ => new List<SavedSearchFilterDto>());
+        lock (list)
         {
-            Id = savedFilter.Id,
-            UserId = userId,
-            FilterName = filterName,
-            Filters = filters,
-            CreatedAt = savedFilter.CreatedAt,
-            LastUsedAt = savedFilter.LastUsedAt,
-            UsageCount = savedFilter.UsageCount
-        };
+            list.Add(savedFilter);
+        }
+
+        return Task.FromResult(savedFilter);
     }
 
     public async Task<IEnumerable<SavedSearchFilterDto>> GetUserSavedFiltersAsync(string userId)
     {
-        var filters = await _savedFilterRepository.GetUserFiltersAsync(userId);
-        return filters.Select(f => new SavedSearchFilterDto
+        await Task.CompletedTask;
+        if (!SavedFilters.TryGetValue(userId, out var list))
+            return Enumerable.Empty<SavedSearchFilterDto>();
+
+        lock (list)
         {
-            Id = f.Id,
-            UserId = f.UserId,
-            FilterName = f.FilterName,
-            Filters = JsonSerializer.Deserialize<ProductSearchFilterDto>(f.FiltersJson) ?? new ProductSearchFilterDto(),
-            CreatedAt = f.CreatedAt,
-            LastUsedAt = f.LastUsedAt,
-            UsageCount = f.UsageCount
-        });
+            return list.Select(f => new SavedSearchFilterDto
+            {
+                Id = f.Id,
+                UserId = f.UserId,
+                FilterName = f.FilterName,
+                Filters = f.Filters,
+                CreatedAt = f.CreatedAt,
+                LastUsedAt = f.LastUsedAt,
+                UsageCount = f.UsageCount
+            }).ToList();
+        }
     }
 
     public async Task<ProductSearchPagedResultDto> ApplySavedFilterAsync(string userId, int savedFilterId)
     {
-        var savedFilter = await _savedFilterRepository.GetUserFilterAsync(userId, savedFilterId);
+        await Task.CompletedTask;
+        if (!SavedFilters.TryGetValue(userId, out var list))
+            throw new KeyNotFoundException($"Saved filter {savedFilterId} not found");
+
+        SavedSearchFilterDto? savedFilter;
+        lock (list)
+        {
+            savedFilter = list.FirstOrDefault(f => f.Id == savedFilterId);
+        }
+
         if (savedFilter == null)
             throw new KeyNotFoundException($"Saved filter {savedFilterId} not found");
 
-        var filters = JsonSerializer.Deserialize<ProductSearchFilterDto>(savedFilter.FiltersJson) ?? new ProductSearchFilterDto();
+        var filters = savedFilter.Filters ?? new ProductSearchFilterDto();
         
         // Update last used and usage count
         savedFilter.LastUsedAt = DateTime.UtcNow;
         savedFilter.UsageCount++;
-        await _savedFilterRepository.UpdateAsync(savedFilter);
 
         return await SearchProductsAsync(filters);
     }
 
     public async Task<bool> DeleteSavedFilterAsync(string userId, int savedFilterId)
     {
-        return await _savedFilterRepository.DeleteUserFilterAsync(userId, savedFilterId);
+        await Task.CompletedTask;
+        if (!SavedFilters.TryGetValue(userId, out var list))
+            return false;
+
+        lock (list)
+        {
+            var index = list.FindIndex(f => f.Id == savedFilterId);
+            if (index < 0)
+                return false;
+
+            list.RemoveAt(index);
+            return true;
+        }
     }
 
     public async Task<IEnumerable<string>> GetTrendingSearchesAsync(int limit = 10)

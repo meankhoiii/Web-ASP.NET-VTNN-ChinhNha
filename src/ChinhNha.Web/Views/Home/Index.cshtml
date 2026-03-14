@@ -482,6 +482,10 @@
 @section Scripts {
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        const homeRecFallbackImage =
+            'data:image/svg+xml;utf8,' +
+            encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320"><rect width="480" height="320" fill="#f2f2f2"/><rect x="150" y="80" width="180" height="120" rx="10" fill="#e1e1e1"/><circle cx="195" cy="125" r="14" fill="#cccccc"/><path d="M170 185l45-40 30 26 28-22 37 36z" fill="#c7c7c7"/><text x="240" y="245" text-anchor="middle" fill="#9a9a9a" font-family="Arial" font-size="18">Chưa có ảnh</text></svg>');
+
         function formatHomeRecPrice(value) {
             return new Intl.NumberFormat('vi-VN').format(value || 0) + 'đ';
         }
@@ -519,21 +523,21 @@
         }
 
         function buildHomeRecCard(item) {
-            const image = item.recommendedProductImage || '/images/no-image.png';
+            const image = (item.recommendedProductImage || '').trim() || homeRecFallbackImage;
             const name = item.recommendedProductName || 'Sản phẩm';
             const price = item.recommendedProductSalePrice ?? item.recommendedProductPrice ?? 0;
-            const link = '/Product?searchQuery=' + encodeURIComponent(name);
+            const slug = (item.recommendedProductSlug || '').trim();
+            const link = slug ? '/san-pham/' + encodeURIComponent(slug) : '/Product?searchQuery=' + encodeURIComponent(name);
             const recommendationId = item.id || 0;
             const productId = item.recommendedProductId || 0;
 
             return '<div class="home-rec-card">'
-                + '<img src="' + image + '" alt="' + name + '" onerror="this.src=\'/images/no-image.png\'" />'
+                + '<img src="' + image + '" alt="' + name + '" loading="lazy" onerror="this.onerror=null;this.src=homeRecFallbackImage" />'
                 + '<a class="home-rec-name" href="' + link + '" onclick="return onHomeRecommendationClick(event, ' + recommendationId + ')">' + name + '</a>'
                 + '<div class="small text-muted">' + (item.recommendationReason || 'Đề xuất cho bạn') + '</div>'
                 + '<div class="home-rec-price">' + formatHomeRecPrice(price) + '</div>'
                 + '<div class="d-flex gap-2 mt-auto">'
                 + '<button class="btn btn-outline-primary btn-sm" type="button" onclick="addRecommendedToCart(' + productId + ', ' + recommendationId + ')">Thêm giỏ</button>'
-                + '<button class="btn btn-outline-danger btn-sm" type="button" onclick="addToWishlist(' + productId + ')">Yêu thích</button>'
                 + '</div>'
                 + '</div>';
         }

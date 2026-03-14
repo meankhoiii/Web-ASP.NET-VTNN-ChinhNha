@@ -1,4 +1,5 @@
 using ChinhNha.Domain.Entities;
+using ChinhNha.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using ChinhNha.Application.Interfaces;
 
@@ -6,29 +7,33 @@ namespace ChinhNha.Infrastructure.Data;
 
 public static class DbSeeder
 {
-    private const string DefaultAdminEmail = "admin@chinhnha.id.vn";
-    private const string DefaultAdminPassword = "Admin@123";
+    private const string DefaultAdminEmail = "minhkhoi78757@gmail.com";
+    private const string LegacyAdminEmail = "admin@chinhnha.id.vn";
+    private const string MistypedAdminEmail = "minhkhoi78797@gmail.com";
+    private const string DefaultAdminPassword = "Minhkhoi78757";
     private const string DefaultAdminFullName = "Administrator";
 
     public static async Task SeedAsync(AppDbContext context, IPasswordHashService passwordHashService)
     {
-        // 1. Tạo Roles
-        if (!await context.Roles.AnyAsync(r => r.Name == "Admin"))
-        {
-            context.Roles.Add(new Role { Name = "Admin" });
-        }
+        // 1. Upsert Admin User
+        var normalizedDefaultEmail = DefaultAdminEmail.ToLower();
+        var normalizedLegacyEmail = LegacyAdminEmail.ToLower();
+        var normalizedMistypedEmail = MistypedAdminEmail.ToLower();
 
-        if (!await context.Roles.AnyAsync(r => r.Name == "Customer"))
-        {
-            context.Roles.Add(new Role { Name = "Customer" });
-        }
-
-        await context.SaveChangesAsync();
-
-        // 2. Upsert Admin User
         var adminUser = await context.Users
-            .Include(u => u.UserRoles)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == DefaultAdminEmail.ToLower());
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedDefaultEmail);
+
+        if (adminUser == null)
+        {
+            adminUser = await context.Users
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedLegacyEmail);
+        }
+
+        if (adminUser == null)
+        {
+            adminUser = await context.Users
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedMistypedEmail);
+        }
 
         if (adminUser == null)
         {
@@ -36,6 +41,7 @@ public static class DbSeeder
             {
                 Email = DefaultAdminEmail,
                 FullName = DefaultAdminFullName,
+                Role = "Admin",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 PasswordHash = passwordHashService.HashPassword(DefaultAdminPassword)
@@ -44,27 +50,28 @@ public static class DbSeeder
             context.Users.Add(adminUser);
             await context.SaveChangesAsync();
         }
+
+        var mistypedAdminUser = await context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedMistypedEmail && u.Id != adminUser.Id);
+        if (mistypedAdminUser != null && mistypedAdminUser.Role == "Admin")
+        {
+            mistypedAdminUser.Role = "Customer";
+            await context.SaveChangesAsync();
+        }
         else
         {
             adminUser.Email = DefaultAdminEmail;
             adminUser.FullName = string.IsNullOrWhiteSpace(adminUser.FullName)
                 ? DefaultAdminFullName
                 : adminUser.FullName;
+            adminUser.Role = "Admin";
             adminUser.IsActive = true;
             adminUser.PasswordHash = passwordHashService.HashPassword(DefaultAdminPassword);
 
             await context.SaveChangesAsync();
         }
 
-        var adminRole = await context.Roles.FirstAsync(r => r.Name == "Admin");
-        var hasAdminRole = await context.UserRoles.AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
-        if (!hasAdminRole)
-        {
-            context.UserRoles.Add(new AppUserRole { UserId = adminUser.Id, RoleId = adminRole.Id });
-            await context.SaveChangesAsync();
-        }
-
-        // 3. Tạo Supplier Mẫu (Nếu chưa có)
+        // 2. Tạo Supplier Mẫu (Nếu chưa có)
         if (!await context.Suppliers.AnyAsync())
         {
             var suppliers = new List<Supplier>
@@ -76,7 +83,7 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 4. Tạo Category Mẫu (Nếu chưa có)
+        // 3. Tạo Category Mẫu (Nếu chưa có)
         if (!await context.ProductCategories.AnyAsync())
         {
             var categories = new List<ProductCategory>
@@ -92,7 +99,7 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 5. Tạo Blog Category Mẫu (Nếu chưa có)
+        // 4. Tạo Blog Category Mẫu (Nếu chưa có)
         if (!await context.BlogCategories.AnyAsync())
         {
             var blogCats = new List<BlogCategory>
@@ -105,7 +112,7 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 6. Tạo Products Mẫu (Nếu chưa có)
+        // 5. Tạo Products Mẫu (Nếu chưa có)
         if (!await context.Products.AnyAsync())
         {
             var supplier1 = await context.Suppliers.FirstAsync();
@@ -454,5 +461,589 @@ public static class DbSeeder
 
             await context.SaveChangesAsync();
         }
+
+        await SeedAdvancedDemandDataAsync(context, passwordHashService, adminUser);
+    }
+
+    private static async Task SeedAdvancedDemandDataAsync(
+        AppDbContext context,
+        IPasswordHashService passwordHashService,
+        AppUser adminUser)
+    {
+        const string seedMarkerKey = "seed-demo-2years-v1";
+        var markerExists = await context.SiteSettings
+            .AnyAsync(s => s.Group == "Seed" && s.Key == seedMarkerKey);
+
+        if (markerExists)
+        {
+            return;
+        }
+
+        var products = await context.Products
+            .Include(p => p.Variants)
+            .Where(p => p.IsActive)
+            .ToListAsync();
+
+        if (!products.Any())
+        {
+            return;
+        }
+
+        var seededCustomers = await EnsureSeedCustomersAsync(context, passwordHashService, 20);
+
+        var random = new Random(20260314);
+        var startDate = DateTime.UtcNow.Date.AddDays(-730); // 2 năm
+        var endDate = DateTime.UtcNow.Date.AddDays(-1);
+
+        var productDemandByDate = new Dictionary<(DateTime Day, int ProductId), int>();
+        var productReturnByDate = new Dictionary<(DateTime Day, int ProductId), int>();
+
+        var orders = new List<Order>(4000);
+        var payments = new List<Payment>(4000);
+        var orderCodeSeq = 1;
+
+        for (var day = startDate; day <= endDate; day = day.AddDays(1))
+        {
+            var orderCount = CalculateDailyOrderCount(day, random);
+
+            for (var i = 0; i < orderCount; i++)
+            {
+                var isGuest = random.NextDouble() < 0.58;
+                var customer = isGuest ? null : seededCustomers[random.Next(seededCustomers.Count)];
+
+                var status = PickOrderStatus(random);
+                var orderDate = day
+                    .AddHours(7 + random.Next(12))
+                    .AddMinutes(random.Next(0, 60));
+
+                var targetBasket = PickTargetBasketValue(random);
+                var selectedItems = BuildOrderItemsForBasket(products, targetBasket, random);
+                if (!selectedItems.Any())
+                {
+                    continue;
+                }
+
+                var subtotal = selectedItems.Sum(x => x.UnitPrice * x.Quantity);
+                var shipping = 30000m;
+                var discountRate = random.NextDouble() < 0.18
+                    ? (decimal)(0.03 + random.NextDouble() * 0.07)
+                    : 0m;
+                var discount = Math.Round(subtotal * discountRate, 0);
+                var totalAmount = Math.Max(0, subtotal + shipping - discount);
+
+                var receiverName = customer?.FullName ?? PickGuestName(random);
+                var receiverPhone = customer?.Phone ?? PickGuestPhone(random);
+                var receiverEmail = customer?.Email;
+
+                var order = new Order
+                {
+                    OrderCode = $"S2{day:yyyyMMdd}{random.Next(1000, 9999)}{orderCodeSeq % 10000:0000}",
+                    UserId = customer?.Id,
+                    OrderDate = orderDate,
+                    Status = status,
+                    SubTotal = subtotal,
+                    ShippingFee = shipping,
+                    Discount = discount,
+                    TotalAmount = totalAmount,
+                    ReceiverName = receiverName,
+                    ReceiverPhone = receiverPhone,
+                    ReceiverEmail = receiverEmail,
+                    ShippingProvince = "Cần Thơ",
+                    ShippingDistrict = PickDistrict(random),
+                    ShippingWard = "Phường An Bình",
+                    ShippingAddress = PickAddress(random),
+                    Note = random.NextDouble() < 0.28 ? "VNPay Test" : "Đơn seed mùa vụ",
+                    CreatedAt = orderDate,
+                    UpdatedAt = orderDate.AddHours(random.Next(4, 72))
+                };
+
+                foreach (var itemSeed in selectedItems)
+                {
+                    var lineTotal = itemSeed.UnitPrice * itemSeed.Quantity;
+                    var orderItem = new OrderItem
+                    {
+                        ProductId = itemSeed.Product.Id,
+                        ProductVariantId = itemSeed.Variant?.Id,
+                        ProductName = itemSeed.Product.Name,
+                        VariantName = itemSeed.Variant?.VariantName,
+                        UnitPrice = itemSeed.UnitPrice,
+                        Quantity = itemSeed.Quantity,
+                        TotalPrice = lineTotal
+                    };
+
+                    order.OrderItems.Add(orderItem);
+
+                    if (status is OrderStatus.Confirmed
+                        or OrderStatus.Processing
+                        or OrderStatus.Shipping
+                        or OrderStatus.Delivered)
+                    {
+                        var key = (day, itemSeed.Product.Id);
+                        productDemandByDate[key] = productDemandByDate.TryGetValue(key, out var existing)
+                            ? existing + itemSeed.Quantity
+                            : itemSeed.Quantity;
+                    }
+
+                    if (status == OrderStatus.Returned)
+                    {
+                        var key = (day, itemSeed.Product.Id);
+                        productReturnByDate[key] = productReturnByDate.TryGetValue(key, out var existing)
+                            ? existing + itemSeed.Quantity
+                            : itemSeed.Quantity;
+                    }
+                }
+
+                var paymentMethod = PickPaymentMethod(random);
+                var paymentStatus = ResolvePaymentStatus(status, paymentMethod, random);
+
+                payments.Add(new Payment
+                {
+                    Order = order,
+                    PaymentMethod = paymentMethod,
+                    PaymentStatus = paymentStatus,
+                    Amount = totalAmount,
+                    TransactionId = paymentMethod == PaymentMethod.VNPay && paymentStatus == PaymentStatus.Paid
+                        ? $"VNP-{day:yyyyMMdd}-{orderCodeSeq:000000}"
+                        : null,
+                    PaidAt = paymentStatus == PaymentStatus.Paid ? orderDate.AddMinutes(random.Next(5, 120)) : null,
+                    Note = paymentMethod == PaymentMethod.VNPay
+                        ? "VNPay Test"
+                        : "Seed dữ liệu thanh toán",
+                    CreatedAt = orderDate
+                });
+
+                orders.Add(order);
+                orderCodeSeq++;
+            }
+        }
+
+        if (orders.Any())
+        {
+            await context.Orders.AddRangeAsync(orders);
+            await context.Payments.AddRangeAsync(payments);
+            await context.SaveChangesAsync();
+        }
+
+        var productStock = products.ToDictionary(
+            p => p.Id,
+            p => Math.Max(p.StockQuantity, 180 + random.Next(40, 160)));
+
+        var inventoryTx = new List<InventoryTransaction>(12000);
+
+        foreach (var product in products)
+        {
+            var initialQty = productStock[product.Id];
+            inventoryTx.Add(new InventoryTransaction
+            {
+                ProductId = product.Id,
+                TransactionType = TransactionType.Import,
+                Quantity = initialQty,
+                StockBefore = 0,
+                StockAfter = initialQty,
+                ReferenceType = "SeedOpening",
+                Note = "Seed tồn đầu kỳ 2 năm",
+                CreatedById = adminUser.Id,
+                CreatedAt = startDate.AddDays(-1).AddHours(8)
+            });
+        }
+
+        for (var day = startDate; day <= endDate; day = day.AddDays(1))
+        {
+            var seasonalFactor = GetSeasonalDemandMultiplier(day.Month);
+
+            foreach (var product in products)
+            {
+                var productId = product.Id;
+                var currentStock = productStock[productId];
+
+                if (day.DayOfWeek == DayOfWeek.Monday
+                    && (currentStock < product.MinStockLevel * 3 || random.NextDouble() < 0.08 * (double)seasonalFactor))
+                {
+                    var importQty = Math.Max(40, (int)Math.Round((80 + random.Next(40, 220)) * seasonalFactor));
+                    var before = currentStock;
+                    currentStock += importQty;
+                    productStock[productId] = currentStock;
+
+                    inventoryTx.Add(new InventoryTransaction
+                    {
+                        ProductId = productId,
+                        TransactionType = TransactionType.Import,
+                        Quantity = importQty,
+                        StockBefore = before,
+                        StockAfter = currentStock,
+                        ReferenceType = "PurchaseOrder",
+                        Note = "Seed nhập hàng theo mùa vụ",
+                        UnitCost = Math.Round(product.BasePrice * 0.72m, 0),
+                        CreatedById = adminUser.Id,
+                        CreatedAt = day.AddHours(9)
+                    });
+                }
+
+                var exportKey = (day, productId);
+                if (productDemandByDate.TryGetValue(exportKey, out var exportQty) && exportQty > 0)
+                {
+                    if (currentStock < exportQty)
+                    {
+                        var topUp = Math.Max(exportQty - currentStock + 30, 50);
+                        var beforeImport = currentStock;
+                        currentStock += topUp;
+                        productStock[productId] = currentStock;
+
+                        inventoryTx.Add(new InventoryTransaction
+                        {
+                            ProductId = productId,
+                            TransactionType = TransactionType.Import,
+                            Quantity = topUp,
+                            StockBefore = beforeImport,
+                            StockAfter = currentStock,
+                            ReferenceType = "EmergencyStock",
+                            Note = "Seed bù tồn phục vụ xuất hàng",
+                            UnitCost = Math.Round(product.BasePrice * 0.74m, 0),
+                            CreatedById = adminUser.Id,
+                            CreatedAt = day.AddHours(10)
+                        });
+                    }
+
+                    var beforeExport = currentStock;
+                    currentStock = Math.Max(0, currentStock - exportQty);
+                    productStock[productId] = currentStock;
+
+                    inventoryTx.Add(new InventoryTransaction
+                    {
+                        ProductId = productId,
+                        TransactionType = TransactionType.Export,
+                        Quantity = exportQty,
+                        StockBefore = beforeExport,
+                        StockAfter = currentStock,
+                        ReferenceType = "Order",
+                        Note = "Seed xuất kho theo đơn hàng",
+                        CreatedById = adminUser.Id,
+                        CreatedAt = day.AddHours(14)
+                    });
+                }
+
+                if (productReturnByDate.TryGetValue(exportKey, out var returnQty) && returnQty > 0)
+                {
+                    var beforeReturn = currentStock;
+                    currentStock += returnQty;
+                    productStock[productId] = currentStock;
+
+                    inventoryTx.Add(new InventoryTransaction
+                    {
+                        ProductId = productId,
+                        TransactionType = TransactionType.Return,
+                        Quantity = returnQty,
+                        StockBefore = beforeReturn,
+                        StockAfter = currentStock,
+                        ReferenceType = "OrderReturn",
+                        Note = "Seed hoàn kho từ đơn trả",
+                        CreatedById = adminUser.Id,
+                        CreatedAt = day.AddHours(16)
+                    });
+                }
+            }
+        }
+
+        await context.InventoryTransactions.AddRangeAsync(inventoryTx);
+
+        foreach (var product in products)
+        {
+            product.StockQuantity = productStock[product.Id];
+            product.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await context.SaveChangesAsync();
+
+        // Seed historical forecasts with ActualDemand + MAPE for backtest (3-6 tháng)
+        var forecastRows = new List<InventoryForecast>(2000);
+        var forecastStart = DateTime.UtcNow.Date.AddMonths(-6);
+        var forecastEnd = DateTime.UtcNow.Date.AddDays(-7);
+
+        foreach (var product in products)
+        {
+            for (var weekStart = GetWeekStart(forecastStart); weekStart <= forecastEnd; weekStart = weekStart.AddDays(7))
+            {
+                decimal actual = 0;
+                for (var d = 0; d < 7; d++)
+                {
+                    var day = weekStart.AddDays(d);
+                    if (productDemandByDate.TryGetValue((day, product.Id), out var qty))
+                    {
+                        actual += qty;
+                    }
+                }
+
+                if (actual <= 0 && random.NextDouble() < 0.65)
+                {
+                    continue;
+                }
+
+                var predictionNoise = (decimal)(random.NextDouble() * 0.36 - 0.18);
+                var predicted = Math.Max(0, Math.Round(actual * (1m + predictionNoise), 2));
+                decimal? mape = actual > 0
+                    ? Math.Round(Math.Abs((actual - predicted) / actual) * 100m, 2)
+                    : null;
+
+                forecastRows.Add(new InventoryForecast
+                {
+                    ProductId = product.Id,
+                    ForecastDate = weekStart.AddDays(7),
+                    PredictedDemand = predicted,
+                    ConfidenceLower = Math.Max(0, Math.Round(predicted * 0.82m, 2)),
+                    ConfidenceUpper = Math.Round(predicted * 1.18m, 2),
+                    ActualDemand = Math.Round(actual, 2),
+                    MAPE = mape,
+                    ModelVersion = "SeedBaseline_v2",
+                    GeneratedAt = weekStart.AddDays(1)
+                });
+            }
+        }
+
+        if (forecastRows.Any())
+        {
+            await context.InventoryForecasts.AddRangeAsync(forecastRows);
+            await context.SaveChangesAsync();
+        }
+
+        context.SiteSettings.Add(new SiteSettings
+        {
+            Group = "Seed",
+            Key = seedMarkerKey,
+            Value = DateTime.UtcNow.ToString("O")
+        });
+
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task<List<AppUser>> EnsureSeedCustomersAsync(
+        AppDbContext context,
+        IPasswordHashService passwordHashService,
+        int requiredCount)
+    {
+        const string seedPrefix = "seed.customer";
+        var existing = await context.Users
+            .Where(u => u.Role == "Customer" && u.Email.StartsWith(seedPrefix))
+            .OrderBy(u => u.Email)
+            .ToListAsync();
+
+        if (existing.Count >= requiredCount)
+        {
+            return existing.Take(requiredCount).ToList();
+        }
+
+        var toCreate = new List<AppUser>();
+        for (var i = existing.Count + 1; i <= requiredCount; i++)
+        {
+            toCreate.Add(new AppUser
+            {
+                Email = $"{seedPrefix}{i:00}@chinhnha.local",
+                FullName = $"Khách hàng seed {i:00}",
+                Phone = $"09{i:00}{(100000 + i):000000}",
+                Role = "Customer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-800 + (i * 7)),
+                PasswordHash = passwordHashService.HashPassword("Customer@123")
+            });
+        }
+
+        if (toCreate.Any())
+        {
+            await context.Users.AddRangeAsync(toCreate);
+            await context.SaveChangesAsync();
+            existing.AddRange(toCreate);
+        }
+
+        return existing.Take(requiredCount).ToList();
+    }
+
+    private static int CalculateDailyOrderCount(DateTime day, Random random)
+    {
+        var monthFactor = GetSeasonalDemandMultiplier(day.Month);
+        var weekFactor = GetWeekOfMonthFactor(day);
+        var dayOfWeekFactor = day.DayOfWeek switch
+        {
+            DayOfWeek.Monday => 1.15m,
+            DayOfWeek.Tuesday => 1.05m,
+            DayOfWeek.Wednesday => 1.00m,
+            DayOfWeek.Thursday => 1.00m,
+            DayOfWeek.Friday => 1.10m,
+            DayOfWeek.Saturday => 0.92m,
+            _ => 0.80m
+        };
+
+        var noise = (decimal)(0.70 + random.NextDouble() * 0.75);
+        var demand = 2.8m * monthFactor * weekFactor * dayOfWeekFactor * noise;
+        return Math.Max(0, (int)Math.Round(demand));
+    }
+
+    private static decimal GetSeasonalDemandMultiplier(int month)
+    {
+        return month switch
+        {
+            11 or 12 or 1 => 1.50m, // Vụ Đông Xuân
+            2 or 3 => 1.00m,
+            4 or 5 => 1.30m, // Vụ Hè Thu chuẩn bị
+            6 or 7 or 8 => 0.70m, // Ít canh tác mùa lũ
+            _ => 1.00m // 9-10 Thu Đông trung bình
+        };
+    }
+
+    private static decimal GetWeekOfMonthFactor(DateTime day)
+    {
+        var week = ((day.Day - 1) / 7) + 1;
+        return week switch
+        {
+            1 => 1.24m,
+            2 => 1.12m,
+            3 => 1.00m,
+            4 => 0.88m,
+            _ => 0.78m
+        };
+    }
+
+    private static OrderStatus PickOrderStatus(Random random)
+    {
+        var roll = random.NextDouble();
+        if (roll < 0.48) return OrderStatus.Delivered;
+        if (roll < 0.60) return OrderStatus.Shipping;
+        if (roll < 0.70) return OrderStatus.Processing;
+        if (roll < 0.76) return OrderStatus.Confirmed;
+        if (roll < 0.90) return OrderStatus.Pending;
+        if (roll < 0.97) return OrderStatus.Cancelled;
+        return OrderStatus.Returned;
+    }
+
+    private static PaymentMethod PickPaymentMethod(Random random)
+    {
+        var roll = random.NextDouble();
+        if (roll < 0.45) return PaymentMethod.COD;
+        if (roll < 0.90) return PaymentMethod.VNPay;
+        return PaymentMethod.BankTransfer;
+    }
+
+    private static PaymentStatus ResolvePaymentStatus(OrderStatus status, PaymentMethod method, Random random)
+    {
+        if (status == OrderStatus.Cancelled)
+        {
+            return random.NextDouble() < 0.7 ? PaymentStatus.Failed : PaymentStatus.Pending;
+        }
+
+        if (status == OrderStatus.Returned)
+        {
+            return PaymentStatus.Refunded;
+        }
+
+        if (status == OrderStatus.Delivered)
+        {
+            return random.NextDouble() < 0.80 ? PaymentStatus.Paid : PaymentStatus.Pending;
+        }
+
+        if (method == PaymentMethod.VNPay && random.NextDouble() < 0.15)
+        {
+            return PaymentStatus.Failed;
+        }
+
+        return random.NextDouble() < 0.25 ? PaymentStatus.Paid : PaymentStatus.Pending;
+    }
+
+    private static decimal PickTargetBasketValue(Random random)
+    {
+        var roll = random.NextDouble();
+        var baseValue = roll switch
+        {
+            < 0.18 => 100000m,
+            < 0.42 => 200000m,
+            < 0.72 => 500000m,
+            < 0.90 => 1000000m,
+            _ => 2000000m
+        };
+
+        var variation = (decimal)(0.82 + random.NextDouble() * 0.42);
+        return Math.Max(80000m, Math.Round(baseValue * variation, 0));
+    }
+
+    private sealed class ItemSeed
+    {
+        public Product Product { get; init; } = null!;
+        public ProductVariant? Variant { get; init; }
+        public decimal UnitPrice { get; init; }
+        public int Quantity { get; init; }
+    }
+
+    private static List<ItemSeed> BuildOrderItemsForBasket(List<Product> products, decimal targetBasket, Random random)
+    {
+        var lines = random.Next(1, 5);
+        var remaining = targetBasket;
+        var items = new List<ItemSeed>(lines);
+
+        for (var i = 0; i < lines; i++)
+        {
+            var product = products[random.Next(products.Count)];
+            var activeVariants = product.Variants.Where(v => v.IsActive).ToList();
+            var variant = activeVariants.Any()
+                ? activeVariants[random.Next(activeVariants.Count)]
+                : null;
+
+            var unitPrice = variant?.SalePrice
+                ?? variant?.Price
+                ?? product.SalePrice
+                ?? product.BasePrice;
+
+            var maxQty = Math.Max(1, (int)Math.Min(8, Math.Ceiling((double)(remaining / Math.Max(unitPrice, 1m)))));
+            var quantity = i == lines - 1
+                ? Math.Max(1, maxQty)
+                : Math.Max(1, random.Next(1, maxQty + 1));
+
+            items.Add(new ItemSeed
+            {
+                Product = product,
+                Variant = variant,
+                UnitPrice = unitPrice,
+                Quantity = quantity
+            });
+
+            remaining -= unitPrice * quantity;
+        }
+
+        return items;
+    }
+
+    private static string PickGuestName(Random random)
+    {
+        var names = new[]
+        {
+            "Nguyễn Văn Tài", "Trần Thị Hồng", "Lê Văn Phúc", "Phạm Văn Lộc", "Võ Thị Cẩm",
+            "Huỳnh Văn Khoa", "Đặng Thị Mai", "Bùi Văn Nông", "Phan Thị Lan", "Trương Văn Hiếu"
+        };
+        return names[random.Next(names.Length)];
+    }
+
+    private static string PickGuestPhone(Random random)
+    {
+        return $"09{random.Next(10000000, 99999999)}";
+    }
+
+    private static string PickDistrict(Random random)
+    {
+        var districts = new[]
+        {
+            "Ninh Kiều", "Bình Thủy", "Cái Răng", "Ô Môn", "Thốt Nốt", "Phong Điền"
+        };
+        return districts[random.Next(districts.Length)];
+    }
+
+    private static string PickAddress(Random random)
+    {
+        var prefixes = new[]
+        {
+            "Ấp", "Tổ", "Số", "Khu vực"
+        };
+        return $"{prefixes[random.Next(prefixes.Length)]} {random.Next(1, 12)}, Đường {random.Next(1, 40)}";
+    }
+
+    private static DateTime GetWeekStart(DateTime date)
+    {
+        var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return date.Date.AddDays(-diff);
     }
 }

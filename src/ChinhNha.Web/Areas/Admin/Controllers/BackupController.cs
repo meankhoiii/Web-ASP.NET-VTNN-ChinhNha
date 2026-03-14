@@ -62,7 +62,7 @@ public class BackupController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi tạo backup database.");
-            TempData["ErrorMessage"] = "Không thể tạo bản sao lưu. Vui lòng kiểm tra quyền ghi file và quyền SQL BACKUP.";
+            TempData["ErrorMessage"] = $"Không thể tạo bản sao lưu. {ex.Message}";
 
             if (!string.IsNullOrWhiteSpace(userId))
             {

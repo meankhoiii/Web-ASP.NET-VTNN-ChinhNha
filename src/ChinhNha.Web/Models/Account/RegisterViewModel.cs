@@ -9,9 +9,11 @@ public class RegisterViewModel
     [Display(Name = "Họ và tên")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập Email.")]
-    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
-    [Display(Name = "Địa chỉ Email")]
+    [Required(ErrorMessage = "Vui lòng nhập Email hoặc SĐT.")]
+    [RegularExpression(
+        @"^([^@\s]+@[^@\s]+\.[^@\s]+|(\+?84|0)[0-9\.\-\s]{8,12})$",
+        ErrorMessage = "Vui lòng nhập đúng định dạng Email hoặc SĐT.")]
+    [Display(Name = "Địa chỉ Email (hoặc SĐT)")]
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập Mật khẩu.")]

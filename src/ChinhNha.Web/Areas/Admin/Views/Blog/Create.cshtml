@@ -15,7 +15,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body p-4">
-        <form asp-action="Create" method="post">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="row">
@@ -52,14 +52,17 @@
                             </div>
 
                             <div class="mb-3">
-                                <label asp-for="ImageUrl" class="form-label fw-bold"></label>
-                                <div class="input-group">
-                                    <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                                <label asp-for="ImageFile" class="form-label fw-bold">Ảnh đại diện</label>
+                                <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                                <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                                <div class="d-flex gap-2 mt-2">
                                     <button type="button" class="btn btn-outline-secondary" onclick="CNMediaPicker.open('ImageUrl')">
-                                        <i class="bi bi-images"></i>
+                                        <i class="bi bi-images me-1"></i> Chọn từ media
                                     </button>
                                 </div>
-                                <div class="form-text">URL hình ảnh thu nhỏ đại diện.</div>
+                                <input asp-for="ImageUrl" type="hidden" />
+                                <div class="form-text">Bạn có thể upload trực tiếp hoặc chọn ảnh từ thư viện media.</div>
+                                <img id="ImageUrl-preview" src="" alt="Preview" class="img-thumbnail mt-2 d-none" style="max-height:120px;" />
                             </div>
 
                             <div class="form-check form-switch mb-3 mt-3">
@@ -113,8 +116,29 @@
                 if (input) {
                     input.value = value;
                     input.dispatchEvent(new Event('change', { bubbles: true }));
+                    updatePreview(value);
                 }
             }
         };
+
+        function updatePreview(imageUrl) {
+            const preview = document.getElementById('ImageUrl-preview');
+            if (!preview) return;
+
+            if (imageUrl) {
+                preview.src = imageUrl;
+                preview.classList.remove('d-none');
+            } else {
+                preview.src = '';
+                preview.classList.add('d-none');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const imageUrlInput = document.getElementById('ImageUrl');
+            if (imageUrlInput) {
+                updatePreview(imageUrlInput.value);
+            }
+        });
     </script>
 }

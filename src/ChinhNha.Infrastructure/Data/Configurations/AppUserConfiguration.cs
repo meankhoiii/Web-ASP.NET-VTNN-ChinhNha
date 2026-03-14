@@ -22,6 +22,10 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.Property(u => u.FullName).IsRequired().HasMaxLength(200);
         builder.Property(u => u.AvatarUrl).HasMaxLength(500);
+        builder.Property(u => u.Role)
+            .IsRequired()
+            .HasMaxLength(50)
+            .HasDefaultValue("Customer");
 
         builder.HasIndex(u => u.Email).IsUnique();
         

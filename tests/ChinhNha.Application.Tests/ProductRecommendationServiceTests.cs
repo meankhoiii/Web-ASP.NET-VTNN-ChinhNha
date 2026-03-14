@@ -14,7 +14,6 @@ public class ProductRecommendationServiceTests
     private readonly Mock<IProductRepository> _productRepository = new();
     private readonly Mock<IProductReviewService> _reviewService = new();
     private readonly Mock<IOrderRepository> _orderRepository = new();
-    private readonly Mock<ISearchAnalyticsRepository> _searchAnalyticsRepository = new();
     private readonly Mock<IMapper> _mapper = new();
     private readonly Mock<ILogger<ProductRecommendationService>> _logger = new();
 
@@ -58,7 +57,6 @@ public class ProductRecommendationServiceTests
             _productRepository.Object,
             _reviewService.Object,
             _orderRepository.Object,
-            _searchAnalyticsRepository.Object,
             _mapper.Object,
             _logger.Object);
     }

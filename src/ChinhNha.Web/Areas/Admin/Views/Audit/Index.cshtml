@@ -3,6 +3,7 @@
 
 @{
     ViewData["Title"] = "Nhật ký hệ thống";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
     var stats = (AuditLogStatsDto?)ViewBag.AuditStats;
 }
 
@@ -149,36 +150,13 @@
         <i class="bi bi-database-check"></i> Nhật ký hệ thống
     </h1>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
     @if (stats != null)
     {
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value">@stats.TotalAuditLogs</div>
-                <div class="stat-label">Tổng số log</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" style="color: #4CAF50;">@stats.SuccessfulActions</div>
-                <div class="stat-label">Thành công</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" style="color: #f44336;">@stats.FailedActions</div>
-                <div class="stat-label">Thất bại</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">
-                    @if (stats.TotalAuditLogs > 0)
-                    {
-                        <text>@((stats.SuccessfulActions * 100.0 / stats.TotalAuditLogs).ToString("F0"))%</text>
-                    }
-                    else
-                    {
-                        <span>Không có</span>
-                    }
-                </div>
-                <div class="stat-label">Tỷ lệ thành công</div>
-            </div>
-        </div>
-
         <div class="filter-section">
             <h5 class="fw-bold mb-3">Bộ lọc nhật ký</h5>
             <form method="get" action="/Admin/Audit/Filter" class="filter-form">

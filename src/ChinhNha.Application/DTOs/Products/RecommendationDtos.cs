@@ -1,49 +1,12 @@
 namespace ChinhNha.Application.DTOs.Products;
 
-/// <summary>Wishlist item data transfer object</summary>
-public class WishlistDto
-{
-    public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public int ProductId { get; set; }
-    public string? ProductName { get; set; }
-    public string? ProductImage { get; set; }
-    public decimal ProductPrice { get; set; }
-    public decimal? ProductSalePrice { get; set; }
-    public string? WishlistName { get; set; }
-    public bool IsDefault { get; set; }
-    public string? Notes { get; set; }
-    public int Priority { get; set; }
-    public DateTime AddedAt { get; set; }
-    public DateTime? PurchasedAt { get; set; }
-    public decimal? PriceWhenAdded { get; set; }
-    public decimal? PriceChange { get; set; } // Current price - Price when added
-}
-
-/// <summary>Create/Add item to wishlist</summary>
-public class CreateWishlistDto
-{
-    public int ProductId { get; set; }
-    public string? WishlistName { get; set; }
-    public string? Notes { get; set; }
-    public int Priority { get; set; } = 3;
-}
-
-/// <summary>Update wishlist item</summary>
-public class UpdateWishlistDto
-{
-    public string? WishlistName { get; set; }
-    public string? Notes { get; set; }
-    public int? Priority { get; set; }
-    public bool? IsDefault { get; set; }
-}
-
 /// <summary>Product recommendation DTO</summary>
 public class ProductRecommendationDto
 {
     public int Id { get; set; }
     public int RecommendedProductId { get; set; }
     public string RecommendedProductName { get; set; } = string.Empty;
+    public string? RecommendedProductSlug { get; set; }
     public string? RecommendedProductImage { get; set; }
     public decimal RecommendedProductPrice { get; set; }
     public decimal? RecommendedProductSalePrice { get; set; }

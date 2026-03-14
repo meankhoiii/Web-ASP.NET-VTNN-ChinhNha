@@ -29,8 +29,6 @@ public class CookieAuthService : IAuthService
     public async Task<AuthResult> LoginAsync(string email, string password, bool rememberMe)
     {
         var user = await _context.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
 
         if (user == null)
@@ -44,7 +42,7 @@ public class CookieAuthService : IAuthService
             return new AuthResult { Succeeded = false, ErrorMessage = "Email hoặc mật khẩu không chính xác." };
         }
 
-        var roles = user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList();
+        var roles = new List<string> { user.Role };
         await SignInInternalAsync(user, roles, rememberMe);
 
         user.LastLoginAt = DateTime.UtcNow;
@@ -68,18 +66,11 @@ public class CookieAuthService : IAuthService
             return new AuthResult { Succeeded = false, ErrorMessage = "Email đã tồn tại." };
         }
 
-        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
-        if (role == null)
-        {
-            role = new Role { Name = roleName };
-            _context.Roles.Add(role);
-            await _context.SaveChangesAsync();
-        }
-
         var user = new AppUser
         {
             Email = email,
             FullName = fullName,
+            Role = string.IsNullOrWhiteSpace(roleName) ? "Customer" : roleName.Trim(),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -89,14 +80,7 @@ public class CookieAuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        _context.UserRoles.Add(new AppUserRole
-        {
-            UserId = user.Id,
-            RoleId = role.Id
-        });
-        await _context.SaveChangesAsync();
-
-        var roles = new List<string> { role.Name };
+        var roles = new List<string> { user.Role };
         await SignInInternalAsync(user, roles, false);
 
         return new AuthResult
@@ -106,6 +90,33 @@ public class CookieAuthService : IAuthService
             Email = user.Email,
             FullName = user.FullName,
             Roles = roles
+        };
+    }
+
+    public async Task<AuthResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+        if (user == null)
+        {
+            return new AuthResult { Succeeded = false, ErrorMessage = "Không tìm thấy tài khoản." };
+        }
+
+        var isCurrentPasswordValid = _passwordHashService.VerifyPassword(currentPassword, user.PasswordHash);
+        if (!isCurrentPasswordValid)
+        {
+            return new AuthResult { Succeeded = false, ErrorMessage = "Mật khẩu hiện tại không đúng." };
+        }
+
+        user.PasswordHash = _passwordHashService.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+
+        return new AuthResult
+        {
+            Succeeded = true,
+            UserId = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Roles = new List<string> { user.Role }
         };
     }
 
@@ -120,13 +131,15 @@ public class CookieAuthService : IAuthService
 
     public async Task<IReadOnlyList<string>> GetRolesAsync(string userId)
     {
-        var roles = await _context.UserRoles
-            .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.Role.Name)
-            .Distinct()
-            .ToListAsync();
+        var role = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.Role)
+            .FirstOrDefaultAsync();
 
-        return roles;
+        if (string.IsNullOrWhiteSpace(role))
+            return Array.Empty<string>();
+
+        return new[] { role };
     }
 
     private async Task SignInInternalAsync(AppUser user, IReadOnlyList<string> roles, bool rememberMe)

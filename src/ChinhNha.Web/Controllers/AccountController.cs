@@ -1,6 +1,9 @@
 using ChinhNha.Application.Interfaces;
 using ChinhNha.Web.Models.Account;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
+using System.Security.Claims;
 
 namespace ChinhNha.Web.Controllers;
 
@@ -47,7 +50,16 @@ public class AccountController : Controller
 
         if (ModelState.IsValid)
         {
-            var result = await _authService.LoginAsync(model.Email, model.Password, model.RememberMe);
+            var loginId = NormalizeEmailOrPhone(model.Email);
+            if (loginId == null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Vui lòng nhập đúng định dạng Email hoặc SĐT.");
+                return View(model);
+            }
+
+            model.Email = loginId;
+
+            var result = await _authService.LoginAsync(loginId, model.Password, model.RememberMe);
             if (result.Succeeded && !string.IsNullOrEmpty(result.UserId))
             {
                 // ====================================================
@@ -99,7 +111,16 @@ public class AccountController : Controller
 
         if (ModelState.IsValid)
         {
-            var result = await _authService.RegisterAsync(model.FullName, model.Email, model.Password, "Customer");
+            var loginId = NormalizeEmailOrPhone(model.Email);
+            if (loginId == null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Vui lòng nhập đúng định dạng Email hoặc SĐT.");
+                return View(model);
+            }
+
+            model.Email = loginId;
+
+            var result = await _authService.RegisterAsync(model.FullName, loginId, model.Password, "Customer");
 
             if (result.Succeeded && !string.IsNullOrEmpty(result.UserId))
             {
@@ -121,6 +142,74 @@ public class AccountController : Controller
         }
 
         return View(model);
+    }
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View(new ChangePasswordViewModel());
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            await _authService.SignOutAsync();
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (model.CurrentPassword == model.NewPassword)
+        {
+            ModelState.AddModelError(nameof(model.NewPassword), "Mật khẩu mới phải khác mật khẩu hiện tại.");
+            return View(model);
+        }
+
+        var result = await _authService.ChangePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Đổi mật khẩu thất bại.");
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Đổi mật khẩu thành công.";
+        return RedirectToAction("Profile", "Customer");
+    }
+
+    private static string? NormalizeEmailOrPhone(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return null;
+
+        var value = input.Trim();
+
+        if (value.Contains('@'))
+        {
+            return Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+                ? value.ToLowerInvariant()
+                : null;
+        }
+
+        var digits = Regex.Replace(value, @"\D", string.Empty);
+
+        if (digits.StartsWith("84") && digits.Length == 11)
+        {
+            digits = "0" + digits.Substring(2);
+        }
+
+        if (digits.Length == 10 && digits.StartsWith("0"))
+        {
+            return digits;
+        }
+
+        return null;
     }
 
     [HttpPost]

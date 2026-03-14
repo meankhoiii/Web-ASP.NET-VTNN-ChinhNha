@@ -1,0 +1,173 @@
+@model UserListViewModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+    .user-page-title {
+        font-weight: 800;
+        color: #0b5e20;
+    }
+
+    .user-stat-card {
+        border: 1px solid #dceadf;
+        border-radius: 12px;
+        padding: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fff9 100%);
+        box-shadow: 0 2px 8px rgba(0, 77, 0, 0.06);
+        height: 100%;
+    }
+
+    .user-stat-label {
+        color: #50635a;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0d5a1f;
+        line-height: 1.1;
+    }
+
+    .user-filter-card,
+    .user-table-card {
+        background: #fff;
+        border: 1px solid #dceadf;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0, 77, 0, 0.05);
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #ddd;
+    }
+
+    .user-badge-role {
+        font-size: 0.72rem;
+    }
+
+    .dt-action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 38px;
+    }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0 user-page-title"><i class="fa-solid fa-users me-2"></i>Quản lý người dùng</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" id="btnBulkActivate" class="btn btn-outline-success btn-sm">
+            <i class="fa-solid fa-user-check me-1"></i>Kích hoạt đã chọn
+        </button>
+        <button type="button" id="btnBulkDeactivate" class="btn btn-outline-warning btn-sm">
+            <i class="fa-solid fa-user-slash me-1"></i>Khóa đã chọn
+        </button>
+        <button type="button" id="btnExportSelected" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-file-export me-1"></i>Xuất đã chọn
+        </button>
+        <button type="button" id="btnExportAll" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-file-excel me-1"></i>Xuất danh sách
+        </button>
+        <button type="button" id="btnOpenCreate" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="fa-solid fa-user-plus me-1"></i>Thêm người dùng
+        </button>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Tổng user</div><div class="user-stat-value" id="statTotal">@Model.Stats.TotalUsers</div></div></div>
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Đang hoạt động</div><div class="user-stat-value" id="statActive">@Model.Stats.ActiveUsers</div></div></div>
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Đang khóa</div><div class="user-stat-value" id="statInactive">@Model.Stats.InactiveUsers</div></div></div>
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Admin</div><div class="user-stat-value" id="statAdmin">@Model.Stats.AdminUsers</div></div></div>
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Staff</div><div class="user-stat-value" id="statStaff">@Model.Stats.StaffUsers</div></div></div>
+    <div class="col-md-2 col-6"><div class="user-stat-card"><div class="user-stat-label">Customer</div><div class="user-stat-value" id="statCustomer">@Model.Stats.CustomerUsers</div></div></div>
+</div>
+
+<div class="user-filter-card p-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Tìm kiếm</label>
+            <input type="text" id="filterSearch" class="form-control" placeholder="Tên, email, số điện thoại" value="@Model.Filter.SearchTerm" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Vai trò</label>
+            <select id="filterRole" class="form-select js-select2">
+                <option value="">Tất cả</option>
+                <option value="Admin" selected="@(Model.Filter.Role == "Admin")">Admin</option>
+                <option value="Staff" selected="@(Model.Filter.Role == "Staff")">Staff</option>
+                <option value="Customer" selected="@(Model.Filter.Role == "Customer")">Customer</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Trạng thái</label>
+            <select id="filterActive" class="form-select js-select2">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.Filter.ActiveStatus))">Tất cả</option>
+                <option value="active" selected="@(Model.Filter.ActiveStatus == "active")">Đang hoạt động</option>
+                <option value="inactive" selected="@(Model.Filter.ActiveStatus == "inactive")">Đang khóa</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Tạo từ ngày</label>
+            <input type="date" id="filterCreatedFrom" class="form-control" value="@(Model.Filter.CreatedFrom?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Tạo đến ngày</label>
+            <input type="date" id="filterCreatedTo" class="form-control" value="@(Model.Filter.CreatedTo?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="col-md-1 d-grid">
+            <button type="button" id="btnApplyFilter" class="btn btn-success">Lọc</button>
+        </div>
+    </div>
+</div>
+
+<div class="user-table-card p-3">
+    <div class="table-responsive">
+        <table id="userTable" class="table table-striped table-hover align-middle w-100">
+            <thead class="table-success">
+                <tr>
+                    <th style="width:32px;"><input type="checkbox" id="chkAll" /></th>
+                    <th>FullName</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>IsActive</th>
+                    <th>createdAt</th>
+                    <th>lastLoginAt</th>
+                    <th style="width:140px;">Hành động</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<form id="antiForgeryForm" method="post">@Html.AntiForgeryToken()</form>
+
+<partial name="_CreateModal" />
+<partial name="_EditModal" />
+<div id="detailModalHost"></div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/admin/user-management.js" asp-append-version="true"></script>
+}

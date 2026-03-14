@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -27,6 +28,7 @@ public class ChatbotService : IChatbotService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IAiModelSelectionService _aiModelService;
     private readonly ILogger<ChatbotService> _logger;
+    private static readonly ConcurrentDictionary<string, List<InMemoryChatMessage>> InMemoryHistory = new();
     private const string HotlineNumber = "0352.787.350";
 
     private const string CustomerSystemPrompt =
@@ -344,21 +346,24 @@ public class ChatbotService : IChatbotService
 
     public async Task<IEnumerable<ChatMessageDto>> GetHistoryAsync(string sessionId, int limit = 20)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await Task.CompletedTask;
+        if (!InMemoryHistory.TryGetValue(sessionId, out var list))
+            return Enumerable.Empty<ChatMessageDto>();
 
-        return await db.ChatMessages
-            .Where(m => m.SessionId == sessionId)
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(limit)
-            .OrderBy(m => m.CreatedAt)
-            .Select(m => new ChatMessageDto
-            {
-                Role = m.Role,
-                Content = m.Content,
-                CreatedAt = m.CreatedAt
-            })
-            .ToListAsync();
+        lock (list)
+        {
+            return list
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(limit)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new ChatMessageDto
+                {
+                    Role = m.Role,
+                    Content = m.Content,
+                    CreatedAt = m.CreatedAt
+                })
+                .ToList();
+        }
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -479,23 +484,32 @@ public class ChatbotService : IChatbotService
     private static async Task<ChatHistory> BuildChatHistoryAsync(
         AppDbContext db, string sessionId, bool isAdmin)
     {
+        _ = db;
         var systemPrompt = isAdmin ? AdminSystemPrompt : CustomerSystemPrompt;
         var history = new ChatHistory(systemPrompt);
 
-        var past = await db.ChatMessages
-            .Where(m => m.SessionId == sessionId && m.IsAdmin == isAdmin)
-            .OrderBy(m => m.CreatedAt)
-            .Take(20) // Giữ tối đa 20 lượt gần nhất để tiết kiệm context
-            .ToListAsync();
-
-        foreach (var msg in past)
+        if (InMemoryHistory.TryGetValue(sessionId, out var list))
         {
-            if (msg.Role == "user")
-                history.AddUserMessage(msg.Content);
-            else
-                history.AddAssistantMessage(msg.Content);
+            List<InMemoryChatMessage> past;
+            lock (list)
+            {
+                past = list
+                    .Where(m => m.IsAdmin == isAdmin)
+                    .OrderBy(m => m.CreatedAt)
+                    .TakeLast(20)
+                    .ToList();
+            }
+
+            foreach (var msg in past)
+            {
+                if (msg.Role == "user")
+                    history.AddUserMessage(msg.Content);
+                else
+                    history.AddAssistantMessage(msg.Content);
+            }
         }
 
+        await Task.CompletedTask;
         return history;
     }
 
@@ -503,25 +517,34 @@ public class ChatbotService : IChatbotService
         AppDbContext db, string sessionId, string userMsg, string assistantMsg,
         bool isAdmin, string? userEmail)
     {
-        db.ChatMessages.AddRange(
-            new ChatMessage
+        _ = db;
+        _ = userEmail;
+
+        var list = InMemoryHistory.GetOrAdd(sessionId, _ => new List<InMemoryChatMessage>());
+        lock (list)
+        {
+            list.Add(new InMemoryChatMessage
             {
-                SessionId = sessionId,
-                UserEmail = userEmail,
-                IsAdmin = isAdmin,
                 Role = "user",
-                Content = userMsg
-            },
-            new ChatMessage
+                Content = userMsg,
+                CreatedAt = DateTime.UtcNow,
+                IsAdmin = isAdmin
+            });
+            list.Add(new InMemoryChatMessage
             {
-                SessionId = sessionId,
-                UserEmail = userEmail,
-                IsAdmin = isAdmin,
                 Role = "assistant",
-                Content = assistantMsg
-            }
-        );
-        await db.SaveChangesAsync();
+                Content = assistantMsg,
+                CreatedAt = DateTime.UtcNow,
+                IsAdmin = isAdmin
+            });
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private sealed class InMemoryChatMessage : ChatMessageDto
+    {
+        public bool IsAdmin { get; set; }
     }
 
     private async Task<ChatMessageContent> GetChatResponseWithFallbackAsync(

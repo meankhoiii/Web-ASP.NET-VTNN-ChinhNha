@@ -9,17 +9,12 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<AppUser> Users => Set<AppUser>();
-    public DbSet<Role> Roles => Set<Role>();
-    public DbSet<AppUserRole> UserRoles => Set<AppUserRole>();
-
-    public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
     
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
-    public DbSet<SavedSearchFilter> SavedSearchFilters => Set<SavedSearchFilter>();
     
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
@@ -34,8 +29,6 @@ public class AppDbContext : DbContext
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<SearchAnalytics> SearchAnalytics => Set<SearchAnalytics>();
-    public DbSet<Wishlist> Wishlists => Set<Wishlist>();
     public DbSet<ProductRecommendation> ProductRecommendations => Set<ProductRecommendation>();
     
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -43,7 +36,6 @@ public class AppDbContext : DbContext
     public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<InventoryForecast> InventoryForecasts => Set<InventoryForecast>();
-    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

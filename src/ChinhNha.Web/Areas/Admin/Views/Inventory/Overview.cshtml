@@ -1,0 +1,93 @@
+@model ChinhNha.Web.Areas.Admin.Models.InventoryForecastViewModel
+@{
+    ViewData["Title"] = "Tổng quan cảnh báo tồn kho (AI)";
+    Layout = "_AdminLayout";
+
+    string GetStatusBadgeClass(string statusCode)
+    {
+        return statusCode switch
+        {
+            "need" => "bg-danger text-white",
+            "warning" => "bg-warning text-dark",
+            _ => "bg-success text-white"
+        };
+    }
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Tổng quan cảnh báo tồn kho</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a class="btn btn-sm btn-outline-primary" asp-action="Index" asp-route-filter="all">Làm mới</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="btn-group" role="group" aria-label="Bộ lọc trạng thái">
+            <a class="btn @(Model.AlertFilter == "all" ? "btn-primary" : "btn-outline-primary")" asp-action="Index" asp-route-filter="all">Tất cả</a>
+            <a class="btn @(Model.AlertFilter == "need" ? "btn-danger" : "btn-outline-danger")" asp-action="Index" asp-route-filter="need">Cần nhập</a>
+            <a class="btn @(Model.AlertFilter == "warning" ? "btn-warning" : "btn-outline-warning")" asp-action="Index" asp-route-filter="warning">Sắp hết</a>
+            <a class="btn @(Model.AlertFilter == "ok" ? "btn-success" : "btn-outline-success")" asp-action="Index" asp-route-filter="ok">Đủ hàng</a>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover table-bordered align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên SP</th>
+                <th class="text-end">Tồn kho hiện tại</th>
+                <th class="text-end">Tối thiểu</th>
+                <th class="text-end">Reorder Point</th>
+                <th class="text-center">Trạng thái</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.AlertItems.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Không có dữ liệu phù hợp bộ lọc hiện tại.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.AlertItems)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.ProductCode</td>
+                        <td>@item.ProductName</td>
+                        <td class="text-end fw-semibold">@item.CurrentStock.ToString("N0")</td>
+                        <td class="text-end">@item.MinStockLevel.ToString("N0")</td>
+                        <td class="text-end">@item.ReorderPoint.ToString("N0")</td>
+                        <td class="text-center">
+                            <span class="badge @GetStatusBadgeClass(item.StatusCode)">@item.StatusLabel</span>
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Detail" asp-route-productId="@item.ProductId" class="btn btn-sm btn-outline-primary">
+                                Xem dự báo chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

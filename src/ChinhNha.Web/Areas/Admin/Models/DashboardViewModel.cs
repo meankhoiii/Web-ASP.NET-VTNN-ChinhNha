@@ -11,6 +11,7 @@ public class DashboardViewModel
     public List<RecentOrderViewModel> RecentOrders { get; set; } = new();
     public List<TopSellingProductViewModel> TopSellingProducts { get; set; } = new();
     public List<ForecastMiniChartViewModel> ForecastMiniCharts { get; set; } = new();
+    public List<PeriodMetricViewModel> PeriodMetrics { get; set; } = new();
     public List<string> AdminAlerts { get; set; } = new();
 
     public DateTime GeneratedAt { get; set; } = DateTime.Now;
@@ -52,4 +53,13 @@ public class ForecastMiniChartViewModel
     public string TrendLabel { get; set; } = string.Empty;
     public List<string> Labels { get; set; } = new();
     public List<decimal> Values { get; set; } = new();
+}
+
+public class PeriodMetricViewModel
+{
+    public string Key { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public int OrderCount { get; set; }
+    public decimal Revenue { get; set; }
+    public string RangeLabel { get; set; } = string.Empty;
 }

@@ -2,16 +2,30 @@
 @{
     ViewData["Title"] = "Dự báo Kế hoạch Nhập kho (AI - ML.NET)";
     Layout = "_AdminLayout";
+
+    string FormatWeekRange(DateTime weekStart)
+    {
+        var weekEnd = weekStart.AddDays(6);
+        return $"{weekStart:dd/MM} – {weekEnd:dd/MM}";
+    }
 }
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Dự báo Kế hoạch Nhập kho (AI - ML.NET)</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <form asp-action="TrainAi" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật và huấn luyện lại mô hình AI ngay bây giờ? Quá trình này có thể tốn vài phút tùy thuộc vào lượng dữ liệu.');">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="productId" value="@Model.SelectedProductId" />
             <button type="submit" class="btn btn-sm btn-outline-primary shadow-sm fw-bold">
                 <i class="bi bi-arrow-clockwise me-1"></i> Cập nhật Dữ liệu AI
             </button>
         </form>
+        @if (Model.LastModelUpdatedAt.HasValue)
+        {
+            <span class="ms-3 small text-muted align-self-center">
+                Lần cập nhật gần nhất: @Model.LastModelUpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+            </span>
+        }
     </div>
 </div>
 
@@ -32,7 +46,7 @@
 
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body bg-light p-4 rounded">
-        <form method="get" action="/Admin/Inventory" class="row align-items-end">
+        <form method="get" asp-action="Detail" class="row align-items-end">
             <div class="col-md-6 mb-3 mb-md-0">
                 <label for="productId" class="form-label fw-bold">Chọn sản phẩm cần dự báo:</label>
                 <select name="productId" id="productId" class="form-select form-select-lg">
@@ -61,7 +75,24 @@
 
 @if (Model.Forecasts != null && Model.Forecasts.Any())
 {
-    var futureForecasts = Model.Forecasts.Where(f => !f.IsHistorical).ToList();
+    var currentStock = Model.SelectedProduct?.StockQuantity ?? 0;
+    var analysis = Model.ReorderAnalysis;
+    var safetyStock = analysis != null ? (int)Math.Ceiling(analysis.SafetyStock) : (Model.SelectedProduct?.MinStockLevel ?? 0);
+    var reorderPointFromAnalysis = analysis != null ? (int)Math.Ceiling(analysis.ReorderPoint) : safetyStock;
+    var suggestedImportFromAnalysis = analysis != null ? (int)Math.Ceiling(Math.Max(0, analysis.SuggestedOrderQty)) : 0;
+    var needsReorder = analysis?.NeedsReorder ?? (currentStock <= reorderPointFromAnalysis);
+    var leadTimeDays = analysis?.LeadTimeDays ?? 7;
+    var orderedForecasts = Model.Forecasts.OrderBy(x => x.TargetDate).ToList();
+    var historicalForecasts = orderedForecasts.Where(x => x.IsHistorical).ToList();
+    var futureForecasts = orderedForecasts.Where(x => !x.IsHistorical).ToList();
+    var historicalFrom = historicalForecasts.FirstOrDefault()?.TargetDate;
+    var historicalTo = historicalForecasts.LastOrDefault()?.TargetDate.AddDays(6);
+    var historicalDataSummary = historicalForecasts.Any()
+        ? $"{historicalForecasts.Count} tuần lịch sử ({historicalFrom:dd/MM} – {historicalTo:dd/MM})"
+        : "0 tuần lịch sử";
+    var confidenceSummary = (Model.ConfidenceLower.HasValue && Model.ConfidenceUpper.HasValue)
+        ? $"[ {Math.Round(Model.ConfidenceLower.Value, 0):N0} - {Math.Round(Model.ConfidenceUpper.Value, 0):N0} ]"
+        : "-";
     
     <div class="row mb-4">
         <div class="col-12">
@@ -71,6 +102,9 @@
                 </div>
                 <div class="card-body">
                     <canvas id="forecastChart" height="100"></canvas>
+                    <div class="mt-3 small text-muted">
+                        Khoảng tin cậy rộng cho thấy mô hình hiện còn thiếu độ chắc chắn. Nên cập nhật thêm dữ liệu xuất kho lịch sử để mô hình học tốt hơn.
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,20 +117,23 @@
                 <table class="table table-hover table-bordered bg-white align-middle">
                     <thead class="table-success">
                         <tr>
-                            <th>Thời gian (Tháng)</th>
+                            <th>Thời gian (Tuần)</th>
                             <th class="text-end">Nhu cầu thực tế</th>
                             <th class="text-end">Dự báo AI (SSA)</th>
+                            <th class="text-end">Tồn hiện tại</th>
+                            <th class="text-end">Safety Stock</th>
+                            <th class="text-end">Reorder Point</th>
                             <th class="text-end text-muted">Khoảng tin cậy</th>
                             <th class="text-center">Hành động Gợi ý</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var f in Model.Forecasts)
+                        @foreach (var f in orderedForecasts)
                         {
                             var rowClass = f.IsHistorical ? "text-muted bg-light" : "fw-bold";
                             <tr class="@rowClass">
                                 <td>
-                                    @f.TargetDate.ToString("MM/yyyy")
+                                    @FormatWeekRange(f.TargetDate)
                                     @if(f.IsHistorical)
                                     {
                                         <span class="badge bg-secondary ms-2 small">Lịch sử</span>
@@ -107,24 +144,36 @@
                                     }
                                 </td>
                                 <td class="text-end">@(f.ActualDemand.HasValue ? f.ActualDemand.Value.ToString("N0") : "-")</td>
-                                <td class="text-end text-primary">@Math.Round(f.PredictedDemand, 0).ToString("N0")</td>
+                                <td class="text-end text-primary">@(f.IsHistorical ? "-" : Math.Round(f.PredictedDemand, 0).ToString("N0"))</td>
+                                <td class="text-end">@currentStock.ToString("N0")</td>
+                                <td class="text-end">@(f.IsHistorical ? "-" : safetyStock.ToString("N0"))</td>
+                                <td class="text-end">@(f.IsHistorical ? "-" : reorderPointFromAnalysis.ToString("N0"))</td>
                                 <td class="text-end text-muted small">
-                                    [ @Math.Round(f.ConfidenceLower ?? 0, 0).ToString("N0") - @Math.Round(f.ConfidenceUpper ?? 0, 0).ToString("N0") ]
+                                    @(f.IsHistorical
+                                        ? "-"
+                                        : $"[ {Math.Round(f.ConfidenceLower ?? 0, 0):N0} - {Math.Round(f.ConfidenceUpper ?? 0, 0):N0} ]")
                                 </td>
                                 <td class="text-center">
                                     @if (!f.IsHistorical)
                                     {
-                                        if (f.PredictedDemand > 100)
+                                        if (needsReorder)
                                         {
-                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-box-arrow-in-down"></i> Lên KH Nhập Lớn</button>
-                                        }
-                                        else if (f.PredictedDemand > 0)
-                                        {
-                                            <button class="btn btn-sm btn-outline-warning"><i class="bi bi-box-arrow-in-down"></i> Nhập Ít</button>
+                                            <form asp-action="CreateSuggestedPo" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@Model.SelectedProductId" />
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-danger text-white"
+                                                        title="@($"{suggestedImportFromAnalysis:N0} = Reorder Point ({reorderPointFromAnalysis:N0}) − Tồn hiện tại ({currentStock:N0})")">
+                                                    <i class="bi bi-box-arrow-in-down"></i> Nên nhập @suggestedImportFromAnalysis.ToString("N0")
+                                                </button>
+                                            </form>
+                                            <div class="small text-muted mt-1">@($"{suggestedImportFromAnalysis:N0} = Reorder Point ({reorderPointFromAnalysis:N0}) − Tồn hiện tại ({currentStock:N0})")</div>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">Không cần nhập</span>
+                                            <span class="badge bg-success text-white">
+                                                Tồn kho an toàn
+                                            </span>
                                         }
                                     }
                                     else
@@ -136,6 +185,68 @@
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-success mb-3">
+                        <i class="bi bi-bar-chart-steps me-2"></i>
+                        Giải thích dự báo cho: @(Model.SelectedProduct?.Name ?? "Sản phẩm đã chọn")
+                    </h5>
+                    <ul class="mb-0 ps-3">
+                        <li class="mb-2">
+                            Mô hình sử dụng: SSA (Singular Spectrum Analysis) — ML.NET.
+                            Phân tích chuỗi thời gian dữ liệu xuất kho lịch sử.
+                        </li>
+                        <li class="mb-2">
+                            Dữ liệu đầu vào: @historicalDataSummary.
+                            @if (historicalForecasts.Count < 8)
+                            {
+                                <span class="text-warning-emphasis fw-semibold"> Cảnh báo: dữ liệu còn ít, dự báo sẽ ổn định hơn khi có từ 8+ tuần.</span>
+                            }
+                        </li>
+                        <li class="mb-2">
+                            Cách tính trong hệ thống:
+                            Nhu cầu dự báo trung bình: @Model.AvgForecastDemand.ToString("N0")/tuần,
+                            Lead time nhà cung cấp: @leadTimeDays ngày,
+                            Safety Stock = (Max bán/ngày − TB bán/ngày) × Lead time
+                            = (@(analysis?.MaxDailySales.ToString("N2") ?? "0") − @(analysis?.AvgDailySales.ToString("N2") ?? "0")) × @leadTimeDays
+                            = @(analysis?.SafetyStock.ToString("N0") ?? "0"),
+                            Reorder Point = (TB bán/ngày × Lead time) + Safety Stock
+                            = (@(analysis?.AvgDailySales.ToString("N2") ?? "0") × @leadTimeDays) + @(analysis?.SafetyStock.ToString("N0") ?? "0")
+                            = @(analysis?.ReorderPoint.ToString("N0") ?? "0").
+                        </li>
+                        <li class="mb-2">
+                            Kết luận:
+                            Tồn kho hiện tại (@currentStock.ToString("N0"))
+                            @(currentStock < reorderPointFromAnalysis ? "<" : ">=")
+                            Reorder Point (@reorderPointFromAnalysis.ToString("N0"))
+                            @if (suggestedImportFromAnalysis > 0)
+                            {
+                                <span>-> Nên nhập thêm @suggestedImportFromAnalysis.ToString("N0") đơn vị.</span>
+                            }
+                            else
+                            {
+                                <span>-> Tồn kho đang ở mức an toàn, chưa cần nhập thêm.</span>
+                            }
+                        </li>
+                        <li>
+                            Độ tin cậy: khoảng tin cậy @confidenceSummary.
+                            @if (Model.ConfidenceWidthPercent.HasValue && Model.ConfidenceWidthPercent.Value > 60)
+                            {
+                                <span class="text-warning-emphasis fw-semibold"> Khoảng rộng do thiếu dữ liệu lịch sử. Cập nhật thêm dữ liệu xuất kho để cải thiện.</span>
+                            }
+                            @if (Model.LatestMape.HasValue)
+                            {
+                                <span> Sai số dự báo (MAPE): @Model.LatestMape.Value.ToString("N2")%.</span>
+                            }
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -152,11 +263,11 @@
             @foreach(var f in Model.Forecasts.OrderBy(x => x.TargetDate))
             {
                 <text>
-                labels.push('@f.TargetDate.ToString("MM/yyyy")');
+                labels.push(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(FormatWeekRange(f.TargetDate))));
                 actualData.push(@(f.ActualDemand.HasValue ? f.ActualDemand.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"));
-                predictedData.push(@Math.Round(f.PredictedDemand, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                lowerBound.push(@Math.Round(f.ConfidenceLower ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
-                upperBound.push(@Math.Round(f.ConfidenceUpper ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                predictedData.push(@(f.IsHistorical ? "null" : Math.Round(f.PredictedDemand, 2).ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                lowerBound.push(@(f.IsHistorical ? "null" : Math.Round(f.ConfidenceLower ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                upperBound.push(@(f.IsHistorical ? "null" : Math.Round(f.ConfidenceUpper ?? 0, 2).ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 </text>
             }
 
@@ -169,13 +280,11 @@
                         {
                             label: 'Nhu cầu Thực tế',
                             data: actualData,
-                            borderColor: '#6c757d',
-                            backgroundColor: '#6c757d',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            tension: 0.3,
-                            pointBackgroundColor: '#6c757d',
-                            spanGaps: true
+                            type: 'bar',
+                            borderColor: 'rgba(13, 110, 253, 0.8)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.35)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
                         },
                         {
                             label: 'Dự báo AI (SSA ML.NET)',
@@ -186,7 +295,9 @@
                             fill: false,
                             tension: 0.3,
                             pointBackgroundColor: '#dc3545',
-                            pointRadius: 5
+                            pointRadius: 5,
+                            spanGaps: true,
+                            yAxisID: 'y'
                         },
                         {
                             label: 'Mức cao nhất (Khoảng tin cậy)',
@@ -197,7 +308,9 @@
                             borderDash: [3, 3],
                             pointRadius: 0,
                             fill: false,
-                            tension: 0.3
+                            tension: 0.3,
+                            spanGaps: true,
+                            yAxisID: 'y'
                         },
                         {
                             label: 'Mức thấp nhất',
@@ -208,7 +321,9 @@
                             borderDash: [3, 3],
                             pointRadius: 0,
                             fill: '-1', // Fill to previous dataset (upper)
-                            tension: 0.3
+                            tension: 0.3,
+                            spanGaps: true,
+                            yAxisID: 'y'
                         }
                     ]
                 },

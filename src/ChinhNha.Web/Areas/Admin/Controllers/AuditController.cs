@@ -37,7 +37,12 @@ public class AuditController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Loi khi tai nhat ky he thong");
-            return BadRequest("Không thể tải nhật ký hệ thống.");
+            TempData["ErrorMessage"] = "Không thể tải nhật ký hệ thống.";
+            ViewBag.AuditStats = new AuditLogStatsDto();
+            ViewBag.CurrentPage = 1;
+            ViewBag.TotalPages = 1;
+            ViewBag.TotalLogs = 0;
+            return View(Enumerable.Empty<AuditLogDto>());
         }
     }
 

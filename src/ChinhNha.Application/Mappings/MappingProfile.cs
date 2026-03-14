@@ -62,9 +62,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.TransactionDate, opt => opt.MapFrom(src => src.CreatedAt))
             .ForMember(dest => dest.CreatedByUserId, opt => opt.MapFrom(src => src.CreatedById))
             .ReverseMap();
-        CreateMap<InventoryForecast, InventoryForecastDto>()
-            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name))
-            .ReverseMap();
         CreateMap<Supplier, SupplierDto>().ReverseMap();
         CreateMap<PurchaseOrder, PurchaseOrderDto>()
             .ForMember(dest => dest.SupplierName, opt => opt.MapFrom(src => src.Supplier.Name))
@@ -89,9 +86,5 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
             .ReverseMap();
 
-        // Saved Search Filters
-        CreateMap<SavedSearchFilter, ChinhNha.Application.DTOs.Products.SavedSearchFilterDto>()
-            .ForMember(dest => dest.Filters, opt => opt.Ignore()) // Handled manually in service
-            .ReverseMap();
     }
 }

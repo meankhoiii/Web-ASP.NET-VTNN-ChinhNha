@@ -14,7 +14,6 @@ public class ProductRecommendationService : IProductRecommendationService
     private readonly IProductRepository _productRepository;
     private readonly IProductReviewService _reviewService;
     private readonly IOrderRepository _orderRepository;
-    private readonly ISearchAnalyticsRepository _searchAnalyticsRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<ProductRecommendationService> _logger;
 
@@ -23,7 +22,6 @@ public class ProductRecommendationService : IProductRecommendationService
         IProductRepository productRepository,
         IProductReviewService reviewService,
         IOrderRepository orderRepository,
-        ISearchAnalyticsRepository searchAnalyticsRepository,
         IMapper mapper,
         ILogger<ProductRecommendationService> logger)
     {
@@ -31,7 +29,6 @@ public class ProductRecommendationService : IProductRecommendationService
         _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
         _reviewService = reviewService ?? throw new ArgumentNullException(nameof(reviewService));
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
-        _searchAnalyticsRepository = searchAnalyticsRepository ?? throw new ArgumentNullException(nameof(searchAnalyticsRepository));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -71,11 +68,11 @@ public class ProductRecommendationService : IProductRecommendationService
     {
         try
         {
-            var mainProduct = await _productRepository.GetByIdAsync(productId);
+            var mainProduct = await _productRepository.GetProductWithDetailsByIdAsync(productId);
             if (mainProduct == null)
                 throw new Exception("Product not found");
 
-            var allProducts = await _productRepository.ListAllAsync();
+            var allProducts = await _productRepository.GetProductsWithDetailsAsync();
             var similar = new List<(Product Product, int Score)>();
 
             // Find products with same category
@@ -268,6 +265,7 @@ public class ProductRecommendationService : IProductRecommendationService
             {
                 RecommendedProductId = prod.Id,
                 RecommendedProductName = prod.Name,
+                RecommendedProductSlug = prod.Slug,
                 RecommendedProductImage = prod.ImageUrl,
                 RecommendedProductPrice = prod.BasePrice,
                 RecommendedProductSalePrice = prod.SalePrice,
@@ -416,7 +414,7 @@ public class ProductRecommendationService : IProductRecommendationService
 
         foreach (var rec in recommendations)
         {
-            var product = await _productRepository.GetByIdAsync(rec.RecommendedProductId);
+            var product = await _productRepository.GetProductWithDetailsByIdAsync(rec.RecommendedProductId);
             if (product != null)
             {
                 var stats = await _reviewService.GetProductReviewStatsAsync(product.Id);
@@ -425,6 +423,7 @@ public class ProductRecommendationService : IProductRecommendationService
                     Id = rec.Id,
                     RecommendedProductId = rec.RecommendedProductId,
                     RecommendedProductName = product.Name,
+                    RecommendedProductSlug = product.Slug,
                     RecommendedProductImage = product.Images?.FirstOrDefault()?.ImageUrl,
                     RecommendedProductPrice = product.BasePrice,
                     RecommendedProductSalePrice = product.SalePrice,

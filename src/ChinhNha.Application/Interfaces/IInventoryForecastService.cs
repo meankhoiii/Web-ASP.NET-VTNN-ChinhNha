@@ -1,4 +1,5 @@
 using ChinhNha.Application.DTOs.Inventory;
+using ChinhNha.Domain.Entities;
 
 namespace ChinhNha.Application.Interfaces;
 
@@ -17,4 +18,19 @@ public interface IInventoryForecastService
     /// Trains and saves forecast models for products using historical data.
     /// </summary>
     Task TrainModelsAsync();
+
+    /// <summary>
+    /// Backfills actual demand and computes MAPE for closed forecast windows.
+    /// </summary>
+    Task UpdateActualDemandAsync();
+
+    /// <summary>
+    /// Computes inventory reorder analysis from recent transaction history.
+    /// </summary>
+    Task<ReorderAnalysisDto?> CalculateReorderPointAsync(int productId);
+
+    /// <summary>
+    /// Creates a draft AI-suggested purchase order when product needs reorder.
+    /// </summary>
+    Task<PurchaseOrder?> CreateAISuggestedPOAsync(int productId);
 }

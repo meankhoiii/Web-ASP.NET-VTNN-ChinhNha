@@ -8,7 +8,7 @@ public class AdminAuditLoggingMiddleware
 {
     private static readonly HashSet<string> ExcludedControllers = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Audit"
+        "Media"
     };
 
     private readonly RequestDelegate _next;
@@ -24,7 +24,9 @@ public class AdminAuditLoggingMiddleware
     {
         var shouldAudit = ShouldAudit(context);
 
-        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? context.User.FindFirstValue("sub")
+            ?? context.User.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
         var routeValues = context.Request.RouteValues;
         var action = routeValues.TryGetValue("action", out var actionValue) ? actionValue?.ToString() : null;
         var entityType = routeValues.TryGetValue("controller", out var controllerValue) ? controllerValue?.ToString() : null;
@@ -79,10 +81,9 @@ public class AdminAuditLoggingMiddleware
 
     private static bool ShouldAudit(HttpContext context)
     {
-        if (!HttpMethods.IsPost(context.Request.Method)
-            && !HttpMethods.IsPut(context.Request.Method)
-            && !HttpMethods.IsDelete(context.Request.Method)
-            && !HttpMethods.IsPatch(context.Request.Method))
+        if (HttpMethods.IsHead(context.Request.Method)
+            || HttpMethods.IsOptions(context.Request.Method)
+            || HttpMethods.IsTrace(context.Request.Method))
         {
             return false;
         }

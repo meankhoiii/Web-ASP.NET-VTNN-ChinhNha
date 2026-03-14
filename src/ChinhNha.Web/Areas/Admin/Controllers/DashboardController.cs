@@ -3,6 +3,7 @@ using ChinhNha.Domain.Enums;
 using ChinhNha.Web.Areas.Admin.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace ChinhNha.Web.Areas.Admin.Controllers;
 
@@ -34,12 +35,25 @@ public class DashboardController : Controller
             .Where(p => p.IsActive)
             .ToList();
 
-        var completedStatuses = new[] { OrderStatus.Confirmed, OrderStatus.Processing, OrderStatus.Shipping, OrderStatus.Delivered };
-        var revenueOrders = orders.Where(o => completedStatuses.Contains(o.Status));
-        var deliveredRevenue = revenueOrders.Sum(o => o.TotalAmount);
-
         var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
         var newOrdersCount = orders.Count(o => o.OrderDate >= sevenDaysAgo);
+
+        var paidRevenueLast7Days = orders
+            .Where(o => o.OrderDate >= sevenDaysAgo
+                && (o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase)))
+            .Sum(o => o.TotalAmount);
+
+        // In test VNPay/COD flows, payment status may remain pending even when orders are operational.
+        // Fall back to non-cancelled/returned order value so dashboard KPI is still meaningful.
+        var operationalRevenueLast7Days = orders
+            .Where(o => o.OrderDate >= sevenDaysAgo
+                && o.Status != OrderStatus.Cancelled
+                && o.Status != OrderStatus.Returned)
+            .Sum(o => o.TotalAmount);
+
+        var deliveredRevenue = paidRevenueLast7Days > 0
+            ? paidRevenueLast7Days
+            : operationalRevenueLast7Days;
 
         var lowStockProducts = products
             .Where(p => p.StockQuantity <= p.MinStockLevel)
@@ -59,7 +73,7 @@ public class DashboardController : Controller
             .Select(o => new RecentOrderViewModel
             {
                 OrderId = o.Id,
-                CustomerName = string.IsNullOrWhiteSpace(o.UserFullName) ? "Khach hang" : o.UserFullName,
+                CustomerName = string.IsNullOrWhiteSpace(o.UserFullName) ? "Khách hàng" : o.UserFullName,
                 OrderDate = o.OrderDate.ToLocalTime(),
                 StatusLabel = o.Status.ToString(),
                 TotalAmount = o.TotalAmount
@@ -81,27 +95,30 @@ public class DashboardController : Controller
             .Take(5)
             .ToList();
 
-        var forecastProductIds = topSellingProducts
-            .Select(x => x.ProductId)
-            .Concat(products.OrderByDescending(p => p.ViewCount).Select(p => p.Id))
-            .Distinct()
-            .Take(3)
-            .ToList();
-
-        string BuildTrendLabel(IReadOnlyList<decimal> values)
+        static string BuildTrendLabel(IReadOnlyList<decimal> values)
         {
             if (values.Count < 2)
             {
-                return "Ổn định";
+                return "Chưa đủ dữ liệu";
             }
 
             var first = values.First();
             if (first == 0)
             {
-                return values.Last() == 0 ? "Ổn định" : "Tăng nhẹ";
+                return values.Last() == 0 ? "Không biến động" : "Tăng";
             }
 
             var deltaPercent = (values.Last() - first) / first;
+            var avg = values.Average();
+            var variance = values.Sum(v => (v - avg) * (v - avg)) / values.Count;
+            var stdDev = (decimal)Math.Sqrt((double)variance);
+            var volatilityRatio = avg <= 0 ? 0 : stdDev / avg;
+
+            if (Math.Abs(deltaPercent) < 0.01m && volatilityRatio < 0.03m)
+            {
+                return "Ít biến động";
+            }
+
             if (deltaPercent >= 0.08m)
             {
                 return "Tăng";
@@ -122,7 +139,7 @@ public class DashboardController : Controller
                 return "Giảm nhẹ";
             }
 
-            return "Ổn định";
+            return "Ổn định ngắn hạn";
         }
 
         var chartMetas = new[]
@@ -132,37 +149,162 @@ public class DashboardController : Controller
             new { Title = "Sản phẩm bán ra dự báo", Dataset = "Sản phẩm", YAxis = "Sản phẩm", Unit = "sản phẩm" }
         };
 
-        var miniCharts = new List<ForecastMiniChartViewModel>();
-        for (var i = 0; i < forecastProductIds.Count; i++)
+        var nowLocalDate = DateTime.Now.Date;
+        var historyStart = nowLocalDate.AddDays(-56);
+        var validOrders = orders
+            .Where(o => o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned)
+            .ToList();
+
+        var orderCountByDate = validOrders
+            .GroupBy(o => o.OrderDate.ToLocalTime().Date)
+            .ToDictionary(g => g.Key, g => (decimal)g.Count());
+
+        var productCountByDate = validOrders
+            .GroupBy(o => o.OrderDate.ToLocalTime().Date)
+            .ToDictionary(g => g.Key, g => (decimal)g.Sum(x => x.Items.Sum(i => i.Quantity)));
+
+        var revenueByDate = validOrders
+            .GroupBy(o => o.OrderDate.ToLocalTime().Date)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.TotalAmount));
+
+        var dailyDates = Enumerable
+            .Range(0, (nowLocalDate - historyStart).Days + 1)
+            .Select(offset => historyStart.AddDays(offset))
+            .ToList();
+
+        static List<decimal> BuildSeries(IReadOnlyList<DateTime> dates, IReadOnlyDictionary<DateTime, decimal> valuesByDate)
         {
-            var productId = forecastProductIds[i];
+            return dates
+                .Select(d => valuesByDate.TryGetValue(d, out var value) ? value : 0m)
+                .ToList();
+        }
+
+        static List<decimal> ForecastDailySeries(IReadOnlyList<DateTime> historyDates, IReadOnlyList<decimal> historyValues, int horizonDays)
+        {
+            if (historyDates.Count == 0 || historyValues.Count == 0 || historyDates.Count != historyValues.Count)
+            {
+                return Enumerable.Repeat(0m, horizonDays).ToList();
+            }
+
+            var last7 = historyValues.TakeLast(Math.Min(7, historyValues.Count)).ToList();
+            var prev7 = historyValues.Skip(Math.Max(0, historyValues.Count - 14)).Take(Math.Min(7, historyValues.Count)).ToList();
+
+            var shortAvg = last7.Any() ? last7.Average() : 0m;
+            var prevAvg = prev7.Any() ? prev7.Average() : shortAvg;
+            var trend = prevAvg <= 0 ? 0m : (shortAvg - prevAvg) / prevAvg;
+
+            var weekdayAverages = historyDates
+                .Zip(historyValues, (date, value) => new { date.DayOfWeek, Value = value })
+                .GroupBy(x => x.DayOfWeek)
+                .ToDictionary(g => g.Key, g => g.Average(x => x.Value));
+
+            var lastDate = historyDates.Last();
+            var forecast = new List<decimal>(horizonDays);
+            for (var i = 1; i <= horizonDays; i++)
+            {
+                var targetDate = lastDate.AddDays(i);
+                var weekdayBase = weekdayAverages.TryGetValue(targetDate.DayOfWeek, out var avg)
+                    ? avg
+                    : shortAvg;
+
+                var blendedBase = (weekdayBase * 0.7m) + (shortAvg * 0.3m);
+                var trendFactor = 1m + (trend * (i / 7m) * 0.45m);
+                var value = Math.Max(0m, blendedBase * trendFactor);
+                forecast.Add(value);
+            }
+
+            return forecast;
+        }
+
+        static List<decimal> AggregateWeekly(IReadOnlyList<decimal> dailyValues, int weeks)
+        {
+            var result = new List<decimal>(weeks);
+            for (var i = 0; i < weeks; i++)
+            {
+                var weekSum = dailyValues.Skip(i * 7).Take(7).Sum();
+                result.Add(Math.Round(weekSum, 2));
+            }
+
+            return result;
+        }
+
+        var orderHistory = BuildSeries(dailyDates, orderCountByDate);
+        var productHistory = BuildSeries(dailyDates, productCountByDate);
+        var revenueHistory = BuildSeries(dailyDates, revenueByDate);
+
+        var forecastWeeks = 4;
+        var forecastDays = forecastWeeks * 7;
+
+        var orderForecastDaily = ForecastDailySeries(dailyDates, orderHistory, forecastDays);
+        var productForecastDaily = ForecastDailySeries(dailyDates, productHistory, forecastDays);
+        var revenueForecastDaily = ForecastDailySeries(dailyDates, revenueHistory, forecastDays);
+
+        var weekStart = nowLocalDate;
+        var weeklyLabels = Enumerable.Range(1, forecastWeeks)
+            .Select(i => weekStart.AddDays(i * 7).ToString("dd/MM", CultureInfo.InvariantCulture))
+            .ToList();
+
+        var miniCharts = new List<ForecastMiniChartViewModel>
+        {
+            new()
+            {
+                ProductId = 0,
+                ProductName = "Toan he thong",
+                ChartTitle = chartMetas[0].Title,
+                DatasetLabel = chartMetas[0].Dataset,
+                YAxisLabel = chartMetas[0].YAxis,
+                UnitLabel = chartMetas[0].Unit,
+                Labels = weeklyLabels,
+                Values = AggregateWeekly(revenueForecastDaily, forecastWeeks)
+            },
+            new()
+            {
+                ProductId = 0,
+                ProductName = "Toan he thong",
+                ChartTitle = chartMetas[1].Title,
+                DatasetLabel = chartMetas[1].Dataset,
+                YAxisLabel = chartMetas[1].YAxis,
+                UnitLabel = chartMetas[1].Unit,
+                Labels = weeklyLabels,
+                Values = AggregateWeekly(orderForecastDaily, forecastWeeks)
+            },
+            new()
+            {
+                ProductId = 0,
+                ProductName = "Toan he thong",
+                ChartTitle = chartMetas[2].Title,
+                DatasetLabel = chartMetas[2].Dataset,
+                YAxisLabel = chartMetas[2].YAxis,
+                UnitLabel = chartMetas[2].Unit,
+                Labels = weeklyLabels,
+                Values = AggregateWeekly(productForecastDaily, forecastWeeks)
+            }
+        };
+
+        foreach (var chart in miniCharts)
+        {
+            chart.TrendLabel = BuildTrendLabel(chart.Values);
+        }
+
+        // If AI model already has a richer product-specific forecast, append up to one chart as optional reference.
+        var highlightedProductId = topSellingProducts.FirstOrDefault()?.ProductId;
+        if (highlightedProductId.HasValue)
+        {
             try
             {
-                var forecastData = (await _forecastService.GetForecastForProductAsync(productId, 6))
+                var forecastData = (await _forecastService.GetForecastForProductAsync(highlightedProductId.Value, 4))
                     .Where(x => !x.IsHistorical)
                     .OrderBy(x => x.TargetDate)
                     .ToList();
 
-                if (!forecastData.Any())
+                if (forecastData.Any())
                 {
-                    continue;
+                    var aiValues = forecastData.Select(x => Math.Round(x.PredictedDemand, 2)).ToList();
+                    miniCharts[2].Values = aiValues;
+                    miniCharts[2].Labels = forecastData.Select(x => x.TargetDate.ToLocalTime().ToString("dd/MM")).ToList();
+                    miniCharts[2].TrendLabel = BuildTrendLabel(miniCharts[2].Values);
+                    miniCharts[2].ProductName = forecastData.First().ProductName;
                 }
-
-                var values = forecastData.Select(x => Math.Round(x.PredictedDemand, 2)).ToList();
-                var chartMeta = chartMetas[Math.Min(i, chartMetas.Length - 1)];
-
-                miniCharts.Add(new ForecastMiniChartViewModel
-                {
-                    ProductId = productId,
-                    ProductName = forecastData.First().ProductName,
-                    ChartTitle = chartMeta.Title,
-                    DatasetLabel = chartMeta.Dataset,
-                    YAxisLabel = chartMeta.YAxis,
-                    UnitLabel = chartMeta.Unit,
-                    TrendLabel = BuildTrendLabel(values),
-                    Labels = forecastData.Select(x => x.TargetDate.ToLocalTime().ToString("dd/MM")).ToList(),
-                    Values = values
-                });
             }
             catch
             {
@@ -182,19 +324,60 @@ public class DashboardController : Controller
             ForecastMiniCharts = miniCharts
         };
 
+        var now = DateTime.UtcNow;
+        DateTime weekStartUtc = GetWeekStart(now, DayOfWeek.Monday);
+        var monthStartUtc = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var quarterStartMonth = ((now.Month - 1) / 3) * 3 + 1;
+        var quarterStartUtc = new DateTime(now.Year, quarterStartMonth, 1, 0, 0, 0, DateTimeKind.Utc);
+        var yearStartUtc = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        model.PeriodMetrics = new List<PeriodMetricViewModel>
+        {
+            BuildPeriodMetric("year", "Năm", yearStartUtc, now),
+            BuildPeriodMetric("quarter", "Quý", quarterStartUtc, now),
+            BuildPeriodMetric("month", "Tháng", monthStartUtc, now),
+            BuildPeriodMetric("week", "Tuần", weekStartUtc, now)
+        };
+
+        PeriodMetricViewModel BuildPeriodMetric(string key, string title, DateTime fromUtc, DateTime toUtc)
+        {
+            var periodOrders = orders
+                .Where(o => o.OrderDate >= fromUtc && o.OrderDate <= toUtc)
+                .ToList();
+
+            var paidRevenue = periodOrders
+                .Where(o => o.IsPaid || string.Equals(o.PaymentStatus, PaymentStatus.Paid.ToString(), StringComparison.OrdinalIgnoreCase))
+                .Sum(o => o.TotalAmount);
+
+            var fallbackRevenue = periodOrders
+                .Where(o => o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned)
+                .Sum(o => o.TotalAmount);
+
+            return new PeriodMetricViewModel
+            {
+                Key = key,
+                Title = title,
+                OrderCount = periodOrders.Count,
+                Revenue = paidRevenue > 0 ? paidRevenue : fallbackRevenue,
+                RangeLabel = $"{fromUtc.ToLocalTime():dd/MM/yyyy} - {toUtc.ToLocalTime():dd/MM/yyyy}"
+            };
+        }
+
         if (model.LowStockCount > 0)
         {
-            model.AdminAlerts.Add($"Canh bao: co {model.LowStockCount} san pham dang o muc ton kho thap.");
+            model.AdminAlerts.Add($"Cảnh báo: có {model.LowStockCount} sản phẩm đang ở mức tồn kho thấp.");
             foreach (var p in model.LowStockProducts.Take(3))
             {
-                model.AdminAlerts.Add($"{p.ProductName}: ton {p.StockQuantity}, muc toi thieu {p.MinStockLevel}.");
+                model.AdminAlerts.Add($"{p.ProductName}: tồn {p.StockQuantity}, mức tối thiểu {p.MinStockLevel}.");
             }
-        }
-        else
-        {
-            model.AdminAlerts.Add("Khong co canh bao ton kho thap trong he thong.");
         }
 
         return View(model);
+    }
+
+    private static DateTime GetWeekStart(DateTime date, DayOfWeek startOfWeek)
+    {
+        var diff = (7 + (date.DayOfWeek - startOfWeek)) % 7;
+        return date.Date.AddDays(-diff);
     }
 }

@@ -15,7 +15,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body p-4">
-        <form asp-action="Edit" method="post">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="Id" />
 
@@ -57,19 +57,17 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label asp-for="ImageUrl" class="form-label fw-bold"></label>
-                        <div class="input-group">
-                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        <label asp-for="ImageFile" class="form-label fw-bold">Ảnh đại diện</label>
+                        <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                        <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                        <div class="d-flex gap-2 mt-2">
                             <button type="button" class="btn btn-outline-secondary" onclick="CNMediaPicker.open('ImageUrl')">
-                                <i class="bi bi-images"></i>
+                                <i class="bi bi-images me-1"></i> Chọn từ media
                             </button>
                         </div>
-                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                        {
-                            <div class="mt-2">
-                                <img src="@Model.ImageUrl" alt="Current Image" class="img-thumbnail" style="max-height: 100px;" />
-                            </div>
-                        }
+                        <input asp-for="ImageUrl" type="hidden" />
+                        <div class="form-text">Upload ảnh mới hoặc chọn ảnh từ thư viện media.</div>
+                        <img id="ImageUrl-preview" src="@Model.ImageUrl" alt="Current Image" class="img-thumbnail mt-2 @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")" style="max-height: 120px;" />
                     </div>
                 </div>
 
@@ -161,6 +159,157 @@
     </div>
 </div>
 
+<!-- ===== Variant Management Section ===== -->
+<div class="card shadow-sm mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-boxes me-2"></i>Biến thể sản phẩm</h5>
+        <button type="button" class="btn btn-sm btn-primary" onclick="openVariantModal(0)">
+            <i class="bi bi-plus-lg me-1"></i> Thêm biến thể
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tên biến thể</th>
+                        <th>SKU</th>
+                        <th class="text-end">Giá bán</th>
+                        <th class="text-end">Giá KM</th>
+                        <th class="text-end">Tồn kho</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center">KL (kg)</th>
+                        <th class="text-center">STT</th>
+                        <th class="text-end" style="width:90px"></th>
+                    </tr>
+                </thead>
+                <tbody id="variantRows">
+                    @if (!Model.Variants.Any())
+                    {
+                        <tr id="emptyRow">
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="bi bi-box me-2"></i>Chưa có biến thể nào
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var v in Model.Variants)
+                    {
+                        <tr id="vrow-@v.Id">
+                            <td class="fw-semibold vn-VariantName">@v.VariantName</td>
+                            <td class="text-muted small vn-SKU">@v.SKU</td>
+                            <td class="text-end vn-Price">@v.Price.ToString("N0") ₫</td>
+                            <td class="text-end vn-SalePrice">@(v.SalePrice.HasValue ? v.SalePrice.Value.ToString("N0") + " ₫" : "—")</td>
+                            <td class="text-end vn-StockQuantity">@v.StockQuantity</td>
+                            <td class="text-center">
+                                <span class="badge vn-Badge @(v.IsActive ? "bg-success" : "bg-secondary")">
+                                    @(v.IsActive ? "Hiển thị" : "Ẩn")
+                                </span>
+                            </td>
+                            <td class="text-center vn-Weight">@(v.Weight.HasValue ? v.Weight.Value.ToString("N2") : "—")</td>
+                            <td class="text-center vn-DisplayOrder">@v.DisplayOrder</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                        onclick="openVariantModal(@v.Id)" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="deleteVariant(@v.Id)" title="Xoá">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Add/Edit Modal -->
+<div class="modal fade" id="variantModal" tabindex="-1" aria-labelledby="variantModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="variantModalTitle">Thêm biến thể</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <form id="variantForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" id="vId" value="0" />
+                    <input type="hidden" name="ProductId" id="vProductId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên biến thể <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="VariantName" id="vVariantName"
+                               placeholder="Ví dụ: Bao 50kg, Chai 1L..." required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mã SKU</label>
+                        <input type="text" class="form-control" name="SKU" id="vSKU" placeholder="Tùy chọn" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Giá bán <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="Price" id="vPrice"
+                                       step="1" min="0" required />
+                                <span class="input-group-text">₫</span>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Giá khuyến mãi</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="SalePrice" id="vSalePrice"
+                                       step="1" min="0" placeholder="Để trống nếu không có" />
+                                <span class="input-group-text">₫</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Tồn kho</label>
+                            <input type="number" class="form-control" name="StockQuantity" id="vStockQuantity"
+                                   step="1" min="0" value="0" />
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Trọng lượng (kg)</label>
+                            <input type="number" class="form-control" name="Weight" id="vWeight"
+                                   step="0.01" min="0" placeholder="Để trống nếu không có" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-semibold">Thứ tự hiển thị</label>
+                            <input type="number" class="form-control" name="DisplayOrder" id="vDisplayOrder"
+                                   min="0" value="0" />
+                        </div>
+                        <div class="col-6 mb-3 d-flex align-items-end pb-1">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vIsActive" checked />
+                                <label class="form-check-label fw-semibold" for="vIsActive">Hiển thị</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="variantFormError" class="alert alert-danger d-none mb-0"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveVariantBtn" onclick="saveVariant()">
+                    <i class="bi bi-save me-1"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -174,8 +323,183 @@
                 if (input) {
                     input.value = value;
                     input.dispatchEvent(new Event('change', { bubbles: true }));
+                    updatePreview(value);
                 }
             }
         };
+
+        function updatePreview(imageUrl) {
+            const preview = document.getElementById('ImageUrl-preview');
+            if (!preview) return;
+
+            if (imageUrl) {
+                preview.src = imageUrl;
+                preview.classList.remove('d-none');
+            } else {
+                preview.src = '';
+                preview.classList.add('d-none');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const imageUrlInput = document.getElementById('ImageUrl');
+            if (imageUrlInput) {
+                updatePreview(imageUrlInput.value);
+            }
+        });
+
+        // ===== Variant management =====
+        const variantsMap = {};
+        @foreach (var v in Model.Variants)
+        {
+            @:variantsMap[@v.Id] = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { id = v.Id, productId = v.ProductId, variantName = v.VariantName, sku = v.SKU, price = v.Price, salePrice = v.SalePrice, stockQuantity = v.StockQuantity, weight = v.Weight, isActive = v.IsActive, displayOrder = v.DisplayOrder }));
+        }
+
+        let _variantModal = null;
+        function getVariantModal() {
+            if (!_variantModal) {
+                _variantModal = new bootstrap.Modal(document.getElementById('variantModal'));
+            }
+            return _variantModal;
+        }
+
+        function openVariantModal(variantId) {
+            document.getElementById('variantFormError').classList.add('d-none');
+            if (variantId === 0) {
+                document.getElementById('variantModalTitle').textContent = 'Thêm biến thể';
+                document.getElementById('vId').value = '0';
+                document.getElementById('vVariantName').value = '';
+                document.getElementById('vSKU').value = '';
+                document.getElementById('vPrice').value = '';
+                document.getElementById('vSalePrice').value = '';
+                document.getElementById('vStockQuantity').value = '0';
+                document.getElementById('vWeight').value = '';
+                document.getElementById('vDisplayOrder').value = '0';
+                document.getElementById('vIsActive').checked = true;
+            } else {
+                const v = variantsMap[variantId];
+                if (!v) return;
+                document.getElementById('variantModalTitle').textContent = 'Sửa biến thể';
+                document.getElementById('vId').value = v.id;
+                document.getElementById('vVariantName').value = v.variantName || '';
+                document.getElementById('vSKU').value = v.sku || '';
+                document.getElementById('vPrice').value = v.price ?? '';
+                document.getElementById('vSalePrice').value = v.salePrice != null ? v.salePrice : '';
+                document.getElementById('vStockQuantity').value = v.stockQuantity ?? 0;
+                document.getElementById('vWeight').value = v.weight != null ? v.weight : '';
+                document.getElementById('vDisplayOrder').value = v.displayOrder ?? 0;
+                document.getElementById('vIsActive').checked = v.isActive;
+            }
+            getVariantModal().show();
+        }
+
+        async function saveVariant() {
+            const variantName = document.getElementById('vVariantName').value.trim();
+            if (!variantName) { showVariantError('Tên biến thể không được để trống'); return; }
+
+            const saveBtn = document.getElementById('saveVariantBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
+
+            const form = document.getElementById('variantForm');
+            const data = new FormData(form);
+            // Explicitly set IsActive since unchecked checkbox won't appear in FormData
+            data.set('IsActive', document.getElementById('vIsActive').checked ? 'true' : 'false');
+
+            try {
+                const resp = await fetch('/Admin/Product/SaveVariant', { method: 'POST', body: data });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showVariantError(err.error || 'Có lỗi xảy ra, vui lòng thử lại.');
+                    return;
+                }
+                const variant = await resp.json();
+                const isNew = document.getElementById('vId').value === '0';
+                variantsMap[variant.id] = variant;
+
+                const emptyRow = document.getElementById('emptyRow');
+                if (emptyRow) emptyRow.remove();
+
+                if (isNew) {
+                    document.getElementById('variantRows').insertAdjacentHTML('beforeend', buildVariantRow(variant));
+                } else {
+                    updateVariantRow(variant);
+                }
+                getVariantModal().hide();
+            } catch {
+                showVariantError('Lỗi kết nối. Vui lòng thử lại.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="bi bi-save me-1"></i> Lưu';
+            }
+        }
+
+        async function deleteVariant(variantId) {
+            if (!confirm('Xoá biến thể này?')) return;
+            const token = document.querySelector('#variantForm input[name="__RequestVerificationToken"]');
+            const data = new FormData();
+            if (token) data.append('__RequestVerificationToken', token.value);
+            try {
+                const resp = await fetch(`/Admin/Product/DeleteVariant/${variantId}?productId=@Model.Id`, { method: 'POST', body: data });
+                if (resp.ok) {
+                    const row = document.getElementById('vrow-' + variantId);
+                    if (row) row.remove();
+                    delete variantsMap[variantId];
+                    const tbody = document.getElementById('variantRows');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        tbody.innerHTML = '<tr id="emptyRow"><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-box me-2"></i>Chưa có biến thể nào</td></tr>';
+                    }
+                } else {
+                    alert('Có lỗi xảy ra khi xoá biến thể.');
+                }
+            } catch {
+                alert('Lỗi kết nối.');
+            }
+        }
+
+        function showVariantError(msg) {
+            const el = document.getElementById('variantFormError');
+            el.textContent = msg;
+            el.classList.remove('d-none');
+        }
+
+        function buildVariantRow(v) {
+            const salePriceText = v.salePrice != null ? fmtNum(v.salePrice) + ' ₫' : '—';
+            const weightText = v.weight != null ? v.weight.toFixed(2) : '—';
+            const badgeClass = v.isActive ? 'bg-success' : 'bg-secondary';
+            const badgeText = v.isActive ? 'Hiển thị' : 'Ẩn';
+            return `<tr id="vrow-${v.id}">
+                <td class="fw-semibold vn-VariantName">${escHtml(v.variantName)}</td>
+                <td class="text-muted small vn-SKU">${escHtml(v.sku || '')}</td>
+                <td class="text-end vn-Price">${fmtNum(v.price)} ₫</td>
+                <td class="text-end vn-SalePrice">${salePriceText}</td>
+                <td class="text-end vn-StockQuantity">${v.stockQuantity}</td>
+                <td class="text-center"><span class="badge vn-Badge ${badgeClass}">${badgeText}</span></td>
+                <td class="text-center vn-Weight">${weightText}</td>
+                <td class="text-center vn-DisplayOrder">${v.displayOrder}</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="openVariantModal(${v.id})" title="Sửa"><i class="bi bi-pencil"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteVariant(${v.id})" title="Xoá"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+        }
+
+        function updateVariantRow(v) {
+            const row = document.getElementById('vrow-' + v.id);
+            if (!row) return;
+            row.querySelector('.vn-VariantName').textContent = v.variantName;
+            row.querySelector('.vn-SKU').textContent = v.sku || '';
+            row.querySelector('.vn-Price').textContent = fmtNum(v.price) + ' ₫';
+            row.querySelector('.vn-SalePrice').textContent = v.salePrice != null ? fmtNum(v.salePrice) + ' ₫' : '—';
+            row.querySelector('.vn-StockQuantity').textContent = v.stockQuantity;
+            row.querySelector('.vn-Weight').textContent = v.weight != null ? v.weight.toFixed(2) : '—';
+            row.querySelector('.vn-DisplayOrder').textContent = v.displayOrder;
+            const badge = row.querySelector('.vn-Badge');
+            badge.className = `badge vn-Badge ${v.isActive ? 'bg-success' : 'bg-secondary'}`;
+            badge.textContent = v.isActive ? 'Hiển thị' : 'Ẩn';
+        }
+
+        function fmtNum(n) { return new Intl.NumberFormat('vi-VN').format(n); }
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     </script>
 }
